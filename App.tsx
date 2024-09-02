@@ -14,12 +14,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import RouteSelectionLayout from './layout/RouteSelectionLayout';
 import SelectionRouteOperationLayout from './layout/SelectionRouteOperationLayout';
+import InventoryOperationLayout from './layout/InventoryOperationLayout';
 
 import tw from 'twrnc';
 
 export type RootStackParamList = {
   routeSelection: undefined;
   selectionRouteOperation: undefined;
+  inventoryOperation: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -29,7 +31,7 @@ function App(): React.JSX.Element {
     <NavigationContainer>
       <PaperProvider>
         <View style={tw`w-full h-full`}>
-          <Stack.Navigator initialRouteName="routeSelection">
+          <Stack.Navigator initialRouteName="inventoryOperation">
             <Stack.Screen
               name="routeSelection"
               component={RouteSelectionLayout}
@@ -38,6 +40,10 @@ function App(): React.JSX.Element {
               name="selectionRouteOperation"
               component={SelectionRouteOperationLayout}
               options={{ headerShown: false}}/>
+            <Stack.Screen
+              name="inventoryOperation"
+              component={InventoryOperationLayout}
+              options={{  headerShown: false }} />
           </Stack.Navigator>
         </View>
       </PaperProvider>

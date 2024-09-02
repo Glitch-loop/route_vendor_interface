@@ -37,8 +37,10 @@ const RouteSelectionLayout = ({ navigation }) => {
             arrRouteDays.push(routeDay);
           });
 
-          currentRoute = currentRouteData;
-          currentRoute.routeDays = arrRouteDays;
+          currentRoute = {
+            ...currentRouteData,
+            routeDays: arrRouteDays,
+          };
 
           // Avoiding store routes without days.
           if(arrRouteDays[0] !== undefined) {

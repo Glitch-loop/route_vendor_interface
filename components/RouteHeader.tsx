@@ -3,9 +3,11 @@ import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { standard_format } from '../utils/moment_format';
+
 const RouteHeader = (
   {routeName, routeDay}:
   {routeName:string, routeDay:string}) => {
+    
   return (
     <View style={tw`w-full flex flex-row justify-around text-center items-center`}>
       <Pressable style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}>
