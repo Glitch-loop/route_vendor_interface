@@ -53,11 +53,17 @@ export interface IRouteDay {
   id_day: number;
 }
 
-
 export interface IUser {
   id_vendor: number;
   cellphone?: string;
   name: string;
   password?: string;
   status?: number;
+}
+
+export interface ICurrency {
+  id_denomination: number;
+  value: number;
+  amount?: number; // Field to describe the amount of that currency they currently have.
+  coin?: boolean;
 }

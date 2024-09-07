@@ -1,35 +1,35 @@
 import React, {useEffect, useState } from 'react';
 import { TextInput, Text } from 'react-native';
-import { IProductInventory } from '../interfaces/interfaces';
+import { ICurrency, IProductInventory } from '../interfaces/interfaces';
 import { DataTable } from 'react-native-paper';
 import tw from 'twrnc';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
+import MXN_CURRENCY from '../lib/mxnCurrency';
 
-const Cash_repection = (
+const TableCashReception = (
   {cashInventoryOperation, setCashInventoryOperation}:
-  {inventoryOperation:IProductInventory[], setInventoryOperation:any}) => {
+  {cashInventoryOperation:ICurrency[], setCashInventoryOperation:any}) => {
   // Importing context
   const dispatch:AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
 
   // Inventory
-  const handleChangeInventory = (id_product:number, input: string) => {
-    console.log("Dineros")
-    // const index:number|undefined = inventoryOperation.findIndex(
-    // (product:IProductInventory) => product.id_product === id_product);
+  const handleChangeAmountCash = (id_denomination:number, input: string) => {
+    const index:number|undefined = cashInventoryOperation.findIndex(
+    (product:ICurrency) => product.id_denomination === id_denomination);
 
-    // const updatedInventory: IProductInventory[] = [...inventoryOperation];
+    const updatedCashInventory: ICurrency[] = [...cashInventoryOperation];
 
-    // if ((index !== undefined || index !== -1) && input !== '') {
-    //   const updatedProduct = { ...updatedInventory[index] };
+    if ((index !== undefined || index !== -1) && input !== '') {
+      const updatedCash = { ...updatedCashInventory[index] };
 
-    //   updatedProduct.amount = parseInt(input, 32) || 0;
+      updatedCash.amount = parseInt(input, 32) || 0;
 
-    //   updatedInventory[index] = updatedProduct;
+      updatedCashInventory[index] = updatedCash;
 
-    //   setInventoryOperation(updatedInventory);
-    // }
+      setCashInventoryOperation(updatedCashInventory);
+    }
   };
 
 
@@ -37,24 +37,25 @@ const Cash_repection = (
     <DataTable style={tw`w-full`}>
       <DataTable.Header>
         <DataTable.Title style={tw`flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Producto</Text>
+          <Text style={tw`text-black`}>Denominación</Text>
         </DataTable.Title>
         <DataTable.Title style={tw`flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Inventario real</Text>
+          <Text style={tw`text-black`}>Cantidad</Text>
         </DataTable.Title>
       </DataTable.Header>
-      {inventoryOperation.map((product) => (
+      {cashInventoryOperation.map((denomination:ICurrency) => (
         <DataTable.Row
-        key={product.id_product}>
+        key={denomination.id_denomination}>
           <DataTable.Cell style={tw`flex flex-row justify-center`}>
-            <Text style={tw`text-black`}>{product.product_name}</Text>
+            <Text style={tw`text-black`}>${denomination.value}</Text>
           </DataTable.Cell>
           <DataTable.Cell style={tw`flex flex-row justify-center`}>
             <TextInput
               style={tw`h-10 w-full 
                 border border-black rounded-lg px-4 bg-slate-100 
                 text-xs text-black text-center`}
-              onChangeText={(amount:string) => handleChangeInventory(product.id_product, amount)}
+              onChangeText={(input:string) =>
+                handleChangeAmountCash(denomination.id_denomination, input)}
               placeholder={'Cantidad'}
               keyboardType={'numeric'}
               />
@@ -65,4 +66,4 @@ const Cash_repection = (
   );
 };
 
-export default TableInventoryOperations;
+export default TableCashReception;
