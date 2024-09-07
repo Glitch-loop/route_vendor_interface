@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 const Card = (
   {navigation, goTo, route, day, description}:
-  {route:string, day:string, description:string|undefined}) => (
+  {goTo:string, route:string, day:string, description:string|undefined}) => (
   <View style={
     tw`my-2 bg-blue-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white`
     }>

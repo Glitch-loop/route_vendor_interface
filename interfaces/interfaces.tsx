@@ -47,3 +47,12 @@ export interface IRouteDay {
   id_route: number;
   id_day: number;
 }
+
+
+export interface IUser {
+  id_vendor: number;
+  number?: string;
+  name: string;
+  password?: string;
+  status?: number;
+};

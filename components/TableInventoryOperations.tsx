@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { View, ScrollView, TextInput } from 'react-native';
+import { TextInput, Text } from 'react-native';
 import { getAllProducts } from '../endpoints/endpoint';
 import { IProduct } from '../interfaces/interfaces';
 import { DataTable } from 'react-native-paper';
 import tw from 'twrnc';
+import React from 'react';
 
 interface IProductInventory extends IProduct {
   amount: number
@@ -23,55 +24,46 @@ const TableInventoryOperations = () => {
   }, []);
 
   return (
-    <View>
-      <ScrollView>
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title
-              style={tw`text-center flex flex-row justify-center`}>
-                Producto
-            </DataTable.Title>
-            {/* <DataTable.Title numeric>
-              Inventario sugerido
-            </DataTable.Title> */}
-            <DataTable.Title
-              style={tw`text-center flex flex-row justify-center`}>
-              Inicio de ruta
-            </DataTable.Title>
-          </DataTable.Header>
-
-          {inventory.map((product) => (
-            <DataTable.Row key={product.id_product}>
-              <DataTable.Cell
-                style={tw`text-center flex flex-row justify-center`}>
-                {product.product_name}
-              </DataTable.Cell>
-              <DataTable.Cell
-                style={tw`text-center flex flex-row justify-center`}>
-                {/* <TextInput
-                  value={number}
-                  placeholder="useless placeholder"
-                  keyboardType="numeric"
-                  /> */}
-                {product.price}
-              </DataTable.Cell>
-            </DataTable.Row>
-          ))}
-
-          {/* <DataTable.Pagination
-            page={page}
-            numberOfPages={Math.ceil(items.length / itemsPerPage)}
-            onPageChange={(page) => setPage(page)}
-            label={`${from + 1}-${to} of ${items.length}`}
-            numberOfItemsPerPageList={numberOfItemsPerPageList}
-            numberOfItemsPerPage={itemsPerPage}
-            onItemsPerPageChange={onItemsPerPageChange}
-            showFastPaginationControls
-            selectPageDropdownLabel={'Rows per page'}
-          /> */}
-        </DataTable>
-      </ScrollView>
-    </View>
+    <DataTable style={tw`w-full`}>
+      <DataTable.Header>
+        <DataTable.Title style={tw`text-wrap flex flex-row justify-center text-center`}>
+          <Text style={tw`text-black`}>Producto</Text>
+        </DataTable.Title>
+        <DataTable.Title style={tw`text-wrap flex flex-row justify-center text-center`}>
+          <Text style={tw`text-black`}>Sugerido</Text>
+        </DataTable.Title>
+        <DataTable.Title style={tw`text-wrap flex flex-row justify-center text-center`}>
+          <Text style={tw`text-black`}>Inventario real</Text>
+        </DataTable.Title>
+        <DataTable.Title style={tw`text-wrap flex flex-row justify-center text-center`}>
+          <Text >Otro</Text>
+        </DataTable.Title>
+      </DataTable.Header>
+      {inventory.map((product) => (
+        <DataTable.Row
+        key={product.id_product}>
+          <DataTable.Cell style={tw`text-wrap flex flex-row justify-center`}>
+            <Text style={tw`text-black`}>{product.product_name}</Text>
+          </DataTable.Cell>
+          <DataTable.Cell style={tw`text-wrap flex flex-row justify-center`}>
+            <Text style={tw`text-black`}> {product.price} </Text>
+          </DataTable.Cell>
+          <DataTable.Cell style={tw`text-wrap flex flex-row justify-center`}>
+            <TextInput
+              style={tw`h-10 w-full 
+                border border-black rounded-lg px-4 bg-slate-100 
+                text-xs text-black text-center`}
+              // value={product.amount.toString()}
+              placeholder={'Cantidad'}
+              keyboardType={'numeric'}
+              />
+          </DataTable.Cell>
+          <DataTable.Cell style={tw`text-wrap flex flex-row justify-center`}>
+              <Text> {product.price} </Text>
+          </DataTable.Cell>
+        </DataTable.Row>
+      ))}
+    </DataTable>
   );
 };
 
