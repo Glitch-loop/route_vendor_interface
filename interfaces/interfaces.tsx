@@ -51,7 +51,7 @@ export interface IRouteDay {
 
 export interface IUser {
   id_vendor: number;
-  number?: string;
+  cellphone?: string;
   name: string;
   password?: string;
   status?: number;

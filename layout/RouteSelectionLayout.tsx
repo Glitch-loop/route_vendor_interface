@@ -3,12 +3,13 @@ import { View } from 'react-native';
 import tw from 'twrnc';
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { 
-  getAllRoutesByVendor,
-  getAllDaysByRoute,
-} from '../endpoints/endpoint';
+import { getAllRoutesByVendor, getAllDaysByRoute } from '../endpoints/endpoint';
 import { IDay, IRoute, IRouteDay } from '../interfaces/interfaces';
 import DAYS from '../lib/days';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '@reduxjs/toolkit/query';
+import { setUser } from '../redux/slices/userSlice';
 
 interface ICompleteRouteDay extends IRouteDay {
   day: IDay
@@ -19,7 +20,12 @@ interface ICompleteRoute extends IRoute {
 }
 
 const RouteSelectionLayout = ({ navigation }) => {
+  // Use states definition
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
+
+  // Redux (context definitions)
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch: AppDispatch = useDispatch();
 
   useEffect(() => {
     // Getting all routes
@@ -52,11 +58,20 @@ const RouteSelectionLayout = ({ navigation }) => {
         });
       });
     });
+
+    // Setting the john doe user for testing
+    dispatch(setUser({
+      id_vendor: 1,
+      cellphone: '322-897-1324',
+      name: 'Renet',
+      password: '',
+      status: 1,
+    }));
   },[]);
 
   return (
     <View style={tw`w-full h-full`}>
-      <MainMenuHeader user={'John Doe'}  cellphone={'xxx-xxx-xxxx'} />
+      <MainMenuHeader/>
       {routes.map((route:ICompleteRoute) => {
         return <View
           style={tw`w-full h-full flex flex-col items-center`}

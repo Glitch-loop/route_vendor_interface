@@ -16,7 +16,6 @@ const CounterScreen = () => {
     <View style={styles.container}>
       <Text style={styles.text}>Count: {count}</Text>
       <Button title="Increment" onPress={() => {
-        console.log("Hwllo")
         dispatch(increment())}} />
       <Button title="Decrement" onPress={() => dispatch(decrement())} />
       <Button title="Increment by 5" onPress={() => dispatch(incrementByAmount(5))} />

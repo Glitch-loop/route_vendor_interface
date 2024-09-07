@@ -3,7 +3,7 @@ import { IUser } from '../../interfaces/interfaces';
 
 const initialState: IUser = {
   id_vendor: 0,
-  number: '',
+  cellphone: '',
   name: '',
   password: '',
   status: 0,
@@ -15,6 +15,7 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<IUser>) => {
+      console.log(action)
       state = action.payload;
     },
   },
