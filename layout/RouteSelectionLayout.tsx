@@ -50,9 +50,6 @@ const RouteSelectionLayout = ({ navigation }) => {
 
           // Avoiding store routes without days.
           if(arrRouteDays[0] !== undefined) {
-            console.log("ROUTE: ", currentRoute.route_name)
-            console.log("ROUTE DAYS: ", arrRouteDays)
-            console.log("ROUTE DAYS: ", arrRouteDays.length)
             setRoutes([...routes, currentRoute]);
           }
         });
@@ -82,10 +79,11 @@ const RouteSelectionLayout = ({ navigation }) => {
                 key={routeDay.id_day}
                 navigation={navigation}
                 goTo={'selectionRouteOperation'}
-                route={route.route_name}
+                routeName={route.route_name}
                 day={routeDay.day.day_name}
                 description={route.description}
-                completeRoute={route}
+                route={route}
+                routeDay={routeDay}
                 />
             );
           })}

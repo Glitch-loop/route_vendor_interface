@@ -6,9 +6,8 @@ const initialState: IRoute = {
   route_name: '',
   description: '',
   route_status: '',
-  id_vendor: 0
+  id_vendor: 0,
 };
-
 
 const routeSlice = createSlice({
   name: 'route',

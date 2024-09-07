@@ -11,6 +11,7 @@ import { RootState } from '../redux/store';
 const RouteHeader = ({navigation, goTo}:{goTo:string}) => {
   // Redux (context definitions)
   const route = useSelector((state: RootState) => state.route);
+  const routeDay = useSelector((state: RootState) => state.routeday);
   return (
     <View style={tw`w-full flex flex-row justify-around text-center items-center`}>
       <Pressable
@@ -22,7 +23,7 @@ const RouteHeader = ({navigation, goTo}:{goTo:string}) => {
       <Text style={tw`text-2xl text-black`}>|</Text>
       <View style={tw`flex flex-col`}>
         <Text style={tw`text-base text-black text-center`}>{standard_format()}</Text>
-        <Text style={tw`text-base text-black text-center`}>{}</Text>
+        <Text style={tw`text-base text-black text-center`}>{DAYS[routeDay.id_day].day_name}</Text>
       </View>
     </View>
   );

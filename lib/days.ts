@@ -1,4 +1,3 @@
-import { IDay } from '../interfaces/interfaces';
 const DAYS:any = {
   '1': {
     id_day: 1,
