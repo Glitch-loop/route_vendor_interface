@@ -6,8 +6,8 @@ import tw from 'twrnc';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 
-const TableInventoryOperations = (
-  {inventoryOperation, setInventoryOperation}:
+const Cash_repection = (
+  {cashInventoryOperation, setCashInventoryOperation}:
   {inventoryOperation:IProductInventory[], setInventoryOperation:any}) => {
   // Importing context
   const dispatch:AppDispatch = useDispatch();
@@ -15,20 +15,21 @@ const TableInventoryOperations = (
 
   // Inventory
   const handleChangeInventory = (id_product:number, input: string) => {
-    const index:number|undefined = inventoryOperation.findIndex(
-    (product:IProductInventory) => product.id_product === id_product);
+    console.log("Dineros")
+    // const index:number|undefined = inventoryOperation.findIndex(
+    // (product:IProductInventory) => product.id_product === id_product);
 
-    const updatedInventory: IProductInventory[] = [...inventoryOperation];
+    // const updatedInventory: IProductInventory[] = [...inventoryOperation];
 
-    if ((index !== undefined || index !== -1) && input !== '') {
-      const updatedProduct = { ...updatedInventory[index] };
+    // if ((index !== undefined || index !== -1) && input !== '') {
+    //   const updatedProduct = { ...updatedInventory[index] };
 
-      updatedProduct.amount = parseInt(input, 32) || 0;
+    //   updatedProduct.amount = parseInt(input, 32) || 0;
 
-      updatedInventory[index] = updatedProduct;
+    //   updatedInventory[index] = updatedProduct;
 
-      setInventoryOperation(updatedInventory);
-    }
+    //   setInventoryOperation(updatedInventory);
+    // }
   };
 
 

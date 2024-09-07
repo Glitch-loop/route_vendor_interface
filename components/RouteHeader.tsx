@@ -11,7 +11,8 @@ import { RootState } from '../redux/store';
 const RouteHeader = ({navigation, goTo}:{goTo:string}) => {
   // Redux (context definitions)
   const route = useSelector((state: RootState) => state.route);
-  const routeDay = useSelector((state: RootState) => state.routeday);
+  const routeDay = useSelector((state: RootState) => state.routeDay);
+
   return (
     <View style={tw`w-full flex flex-row justify-around text-center items-center`}>
       <Pressable

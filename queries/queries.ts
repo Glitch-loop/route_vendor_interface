@@ -1,6 +1,6 @@
-import { supabase } from "../lib/supabase";
-import TABLES from "../utils/tables";
-import { IDay, IProduct, IRoute, IRouteDays } from "../interfaces/interfaces";
+import { supabase } from '../lib/supabase';
+import TABLES from '../utils/tables';
+import { IDay, IProduct, IRoute, IRouteDay } from '../interfaces/interfaces';
 
 export async function getAllDays ():Promise<IDay[]> {
   try {

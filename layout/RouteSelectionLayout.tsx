@@ -3,12 +3,12 @@ import { View } from 'react-native';
 import tw from 'twrnc';
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { getAllRoutesByVendor, getAllDaysByRoute } from '../endpoints/endpoint';
+import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
 import { IDay, IRoute, IRouteDay } from '../interfaces/interfaces';
 import DAYS from '../lib/days';
 
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@reduxjs/toolkit/query';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
 
 interface ICompleteRouteDay extends IRouteDay {
@@ -24,7 +24,6 @@ const RouteSelectionLayout = ({ navigation }) => {
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
 
   // Redux (context definitions)
-  const user = useSelector((state: RootState) => state.user);
   const dispatch: AppDispatch = useDispatch();
 
   useEffect(() => {
@@ -50,6 +49,8 @@ const RouteSelectionLayout = ({ navigation }) => {
 
           // Avoiding store routes without days.
           if(arrRouteDays[0] !== undefined) {
+            console.log(...routes)
+            console.log(currentRoute)
             setRoutes([...routes, currentRoute]);
           }
         });

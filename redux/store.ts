@@ -1,15 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
-import conuterSlice from './slices/conuterSlice';
 import userSlice from './slices/userSlice';
 import routeSlice from './slices/routeSlice';
 import routeDaySlice from './slices/routeDaySlice';
+import productsInventorySlice from './slices/productsInventorySlice';
 
 const store = configureStore({
   reducer: {
-    counter: conuterSlice,
     user: userSlice,
     route: routeSlice,
-    routeday: routeDaySlice,
+    routeDay: routeDaySlice,
+    productsInventory: productsInventorySlice,
   },
 });
 

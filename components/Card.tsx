@@ -3,11 +3,12 @@ import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { IRoute, IRouteDay } from '../interfaces/interfaces';
-
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store';
 import { setRoute } from '../redux/slices/routeSlice';
 import { setRouteDay } from '../redux/slices/routeDaySlice';
+
+
 
 const Card = (
   {navigation, goTo, routeName, day, description, route, routeDay}:

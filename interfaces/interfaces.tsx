@@ -8,11 +8,16 @@ export interface IProduct {
   id_product: number;
   product_name: string;
   barcode?: string;
-  weight?: string; 
+  weight?: string;
   unit?: string;
   comission: number;
   price: number
   product_status: number;
+}
+
+export interface IProductInventory
+extends IProduct {
+  amount: number;
 }
 
 export interface IRoute {
@@ -55,4 +60,4 @@ export interface IUser {
   name: string;
   password?: string;
   status?: number;
-};
+}
