@@ -19,12 +19,12 @@ const SelectionRouteOperationLayout = ({navigation}) => {
         <Pressable
         style={tw`bg-indigo-300 mr-3 w-52 h-44 rounded-full flex flex-row justify-center items-center  max-w-44`}
         onPress={() => navigation.navigate('inventoryOperation')}>
-          <Text style={tw`text-3xl text-center text-white text-wrap`}>
+          <Text style={tw`text-3xl text-center text-white`}>
             Auto-register of inventory
           </Text>
         </Pressable>
         <Pressable style={tw`bg-indigo-200 w-52 h-44 rounded-full flex flex-row justify-center items-center max-w-44`}>
-          <Text style={tw`text-3xl text-center text-white text-wrap`}>
+          <Text style={tw`text-3xl text-center text-white`}>
             Manager register of inventory
           </Text>
         </Pressable>

@@ -18,10 +18,7 @@ import store from './redux/store';
 import RouteSelectionLayout from './layout/RouteSelectionLayout';
 import SelectionRouteOperationLayout from './layout/SelectionRouteOperationLayout';
 import InventoryOperationLayout from './layout/InventoryOperationLayout';
-
 import tw from 'twrnc';
-import CounterScreen from './components/CounterScreen';
-
 
 export type RootStackParamList = {
   routeSelection: undefined;
@@ -39,10 +36,6 @@ function App(): React.JSX.Element {
         <PaperProvider>
           <View style={tw`w-full h-full`}>
             <Stack.Navigator initialRouteName="routeSelection">
-              {/* <Stack.Screen
-                name="counterScreen"
-                component={CounterScreen}
-                options={{ headerShown: false}}/> */}
               <Stack.Screen
                 name="routeSelection"
                 component={RouteSelectionLayout}

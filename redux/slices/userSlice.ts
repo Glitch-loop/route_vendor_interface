@@ -15,8 +15,11 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<IUser>) => {
-      console.log(action)
-      state = action.payload;
+      state.id_vendor = action.payload.id_vendor;
+      state.name      = action.payload.name;
+      state.cellphone = action.payload.cellphone;
+      state.password  = action.payload.password;
+      state.status    = action.payload.status;
     },
   },
 });

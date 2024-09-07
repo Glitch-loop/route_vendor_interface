@@ -85,6 +85,7 @@ const RouteSelectionLayout = ({ navigation }) => {
                 route={route.route_name}
                 day={routeDay.day.day_name}
                 description={route.description}
+                completeRoute={route}
                 />
             );
           })}
