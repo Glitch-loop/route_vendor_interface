@@ -28,7 +28,7 @@ const RouteSelectionLayout = ({ navigation }) => {
 
   useEffect(() => {
     // Getting all routes
-    getAllRoutesByVendor(1).then(routesData => {
+    getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257').then(routesData => {
       // Getting all the days in a route
       routesData.forEach(currentRouteData => {
         getAllDaysByRoute(currentRouteData.id_route)
@@ -59,7 +59,7 @@ const RouteSelectionLayout = ({ navigation }) => {
 
     // Setting the john doe user for testing
     dispatch(setUser({
-      id_vendor: 1,
+      id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
       cellphone: '322-897-1324',
       name: 'Renet',
       password: '',

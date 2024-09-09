@@ -20,10 +20,14 @@ const TableInventoryOperations = (
 
     const updatedInventory: IProductInventory[] = [...inventoryOperation];
 
-    if ((index !== undefined || index !== -1) && input !== '') {
+    if (index !== undefined || index !== -1) {
       const updatedProduct = { ...updatedInventory[index] };
 
-      updatedProduct.amount = parseInt(input, 32) || 0;
+      if (input === '') {
+        updatedProduct.amount = 0;
+      } else {
+        updatedProduct.amount = parseInt(input, 32) || 0;
+      }
 
       updatedInventory[index] = updatedProduct;
 

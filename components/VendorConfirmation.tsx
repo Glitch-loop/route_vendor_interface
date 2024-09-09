@@ -2,10 +2,34 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import tw from 'twrnc';
+import { ICurrency, IProductInventory } from '../interfaces/interfaces';
 
-const VendorConfirmation = ({navigation, message, goToConfirm, goToCancel}:
-  {message:string, goToConfirm:string, goToCancel:string}) => {
+const VendorConfirmation = ({navigation,
+  message,
+  cashInventory,
+  inventory,
+  goToConfirm,
+  goToCancel,
+  }:{
+  message:string,
+  cashInventory:ICurrency[],
+  inventory:IProductInventory[],
+  goToConfirm:string,
+  goToCancel:string}) => {
   const [checked, setChecked] = useState(false);
+
+  const handleVendorConfirmation = ():void => {
+    try {
+      /*
+        TODO:
+         Save inventory state
+         Save petty cash state
+      */
+      navigation.navigate(goToConfirm);
+    } catch (error) {
+      console.log("Something went wrong")
+    }
+  };
 
   return (
     <View
@@ -37,7 +61,9 @@ const VendorConfirmation = ({navigation, message, goToConfirm, goToCancel}:
             <Text>Cancelar</Text>
           </Pressable>
           <Pressable
-            onPress={() => navigation.navigate(goToConfirm)}
+            onPress={() => {
+              handleVendorConfirmation();
+            }}
             style={tw`bg-green-500 px-4 py-3 
             border border-black rounded flex flex-row justify-center`}>
             <Text>confirmar</Text>

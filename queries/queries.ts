@@ -14,20 +14,22 @@ export async function getAllDays ():Promise<IDay[]> {
   }
 }
 
-export async function getAllDaysByRoute (id_route:number):Promise<IRouteDays[]> {
+export async function getAllDaysByRoute (id_route:string):Promise<IRouteDay[]> {
   try {
     const { data, error } = await supabase.from(TABLES.ROUTE_DAYS).select().eq('id_route', id_route);
     if (error) {
       return [];
     }
+
     return data;
   } catch (error) {
     return [];
   }
 }
 
-export async function getAllRoutesByVendor (id_vendor:number):Promise<IRoute[]> {
+export async function getAllRoutesByVendor (id_vendor:string):Promise<IRoute[]> {
   try {
+    console.log(id_vendor)
     const { data, error } = await supabase.from(TABLES.ROUTES).select().eq('id_vendor', id_vendor);
     if (error) {
       return [];

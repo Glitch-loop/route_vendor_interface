@@ -1,11 +1,11 @@
 
 export interface IDay {
-  id_day: number;
+  id_day: string;
   day_name: string;
 }
 
 export interface IProduct {
-  id_product: number;
+  id_product: string;
   product_name: string;
   barcode?: string;
   weight?: string;
@@ -21,15 +21,15 @@ extends IProduct {
 }
 
 export interface IRoute {
-  id_route: number;
+  id_route: string;
   route_name: string;
   description?: string;
   route_status: string;
-  id_vendor: number;
+  id_vendor: string;
 }
 
 export interface IStore {
-  id_store: number;
+  id_store: string;
   street: string;
   ext_number: string;
   colony: string;
@@ -47,14 +47,14 @@ export interface IStore {
 }
 
 export interface IRouteDay {
-  id_route_number: number;
+  id_route_number: string;
   position_in_route: number;
-  id_route: number;
-  id_day: number;
+  id_route: string;
+  id_day: string;
 }
 
 export interface IUser {
-  id_vendor: number;
+  id_vendor: string;
   cellphone?: string;
   name: string;
   password?: string;
@@ -67,3 +67,8 @@ export interface ICurrency {
   amount?: number; // Field to describe the amount of that currency they currently have.
   coin?: boolean;
 }
+
+export interface IPettyCash {
+  startPettyCash: number,
+  finalPettyCash: number
+};

@@ -93,10 +93,20 @@ const InventoryOperationLayout = ({ navigation }) => {
           cashInventoryOperation={cashInventory}
           setCashInventoryOperation={setCashInventory}
         />
+        <Text style={tw`w-full text-center text-black text-xl mt-2`}>
+          Total:
+          ${
+            cashInventory.reduce((accumulator, denomination) => {
+              return accumulator + denomination.amount! * denomination.value;
+            },0)
+          }
+          </Text>
       </View>
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
           navigation={navigation}
+          cashInventory={cashInventory}
+          inventory={inventory}
           goToConfirm={''}
           goToCancel={'selectionRouteOperation'}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>

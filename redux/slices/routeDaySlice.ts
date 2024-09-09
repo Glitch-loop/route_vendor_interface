@@ -2,10 +2,10 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IRouteDay } from '../../interfaces/interfaces';
 
 const initialState: IRouteDay = {
-  id_route_number: 0,
+  id_route_number: '',
   position_in_route: 0,
-  id_route: 0,
-  id_day: 0,
+  id_route: '',
+  id_day: '',
 };
 
 const routeSlice = createSlice({

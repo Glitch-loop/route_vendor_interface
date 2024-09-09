@@ -2,6 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IProductInventory } from '../../interfaces/interfaces';
 
 
+/*
+  Comment about the state
+
+  This state stores the current inventory.
+*/
+
 const initialState: IProductInventory[] = [];
 
 const productsInventorySlice = createSlice({

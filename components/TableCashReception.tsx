@@ -1,15 +1,15 @@
-import React, {useEffect, useState } from 'react';
+import React from 'react';
 import { TextInput, Text } from 'react-native';
-import { ICurrency, IProductInventory } from '../interfaces/interfaces';
+import { ICurrency } from '../interfaces/interfaces';
 import { DataTable } from 'react-native-paper';
 import tw from 'twrnc';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import MXN_CURRENCY from '../lib/mxnCurrency';
 
 const TableCashReception = (
   {cashInventoryOperation, setCashInventoryOperation}:
   {cashInventoryOperation:ICurrency[], setCashInventoryOperation:any}) => {
+
   // Importing context
   const dispatch:AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
@@ -21,11 +21,14 @@ const TableCashReception = (
 
     const updatedCashInventory: ICurrency[] = [...cashInventoryOperation];
 
-    if ((index !== undefined || index !== -1) && input !== '') {
+    if (index !== undefined || index !== -1) {
       const updatedCash = { ...updatedCashInventory[index] };
 
-      updatedCash.amount = parseInt(input, 32) || 0;
-
+      if (input === '') {
+        updatedCash.amount = 0;
+      } else {
+        updatedCash.amount = parseInt(input, 32) || 0;
+      }
       updatedCashInventory[index] = updatedCash;
 
       setCashInventoryOperation(updatedCashInventory);

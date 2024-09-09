@@ -2,11 +2,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IRoute } from '../../interfaces/interfaces';
 
 const initialState: IRoute = {
-  id_route: 0,
+  id_route: '',
   route_name: '',
   description: '',
   route_status: '',
-  id_vendor: 0,
+  id_vendor: '',
 };
 
 const routeSlice = createSlice({

@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IUser } from '../../interfaces/interfaces';
 
 const initialState: IUser = {
-  id_vendor: 0,
+  id_vendor: '',
   cellphone: '',
   name: '',
   password: '',
