@@ -4,22 +4,14 @@ import tw from 'twrnc';
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
 import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
-import { IDay, IRoute, IRouteDay } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay } from '../interfaces/interfaces';
 import DAYS from '../lib/days';
 
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
 
-interface ICompleteRouteDay extends IRouteDay {
-  day: IDay
-}
-
-interface ICompleteRoute extends IRoute {
-  routeDays: ICompleteRouteDay[]
-}
-
-const RouteSelectionLayout = ({ navigation }) => {
+const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Use states definition
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
 
@@ -49,8 +41,6 @@ const RouteSelectionLayout = ({ navigation }) => {
 
           // Avoiding store routes without days.
           if(arrRouteDays[0] !== undefined) {
-            console.log(...routes)
-            console.log(currentRoute)
             setRoutes([...routes, currentRoute]);
           }
         });

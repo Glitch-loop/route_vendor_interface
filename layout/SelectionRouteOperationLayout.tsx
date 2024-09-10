@@ -4,14 +4,12 @@ import tw from 'twrnc';
 import RouteHeader from '../components/RouteHeader';
 
 
-const SelectionRouteOperationLayout = ({navigation}) => {
+const SelectionRouteOperationLayout = ({navigation}:{navigation:any}) => {
   return (
     <View style={tw`w-full h-full flex flex-col items-center`}>
       <View style={tw`mt-3 w-full`}>
         <RouteHeader
           navigation={navigation}
-          routeName="Route 1"
-          routeDay="Friday"
           goTo="routeSelection"
         />
       </View>

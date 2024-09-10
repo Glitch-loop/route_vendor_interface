@@ -5,15 +5,20 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { IRoute, IRouteDay } from '../interfaces/interfaces';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
-import { setRoute } from '../redux/slices/routeSlice';
-import { setRouteDay } from '../redux/slices/routeDaySlice';
 
+import { setDayInformation, setRouteInformation } from '../redux/slices/routeDaySlice';
 
 
 const Card = (
   {navigation, goTo, routeName, day, description, route, routeDay}:
-  {goTo:string, routeName:string, day:string, description:string|undefined,
-   route:IRoute, routeDay:IRouteDay}) => {
+  {
+    navigation:any,
+    goTo:string,
+    routeName:string,
+    day:string,
+    description:string|undefined,
+    route:IRoute,
+    routeDay:IRouteDay}) => {
 
   // Use AppDispatch from store.ts to type the dispatch
   const dispatch: AppDispatch = useDispatch();
@@ -32,8 +37,8 @@ const Card = (
         <Pressable
         style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
         onPress={() => {
-          dispatch(setRoute(route));
-          dispatch(setRouteDay(routeDay));
+          dispatch(setRouteInformation(route));
+          dispatch(setDayInformation(routeDay));
 
           navigation.navigate(goTo);
           }}>

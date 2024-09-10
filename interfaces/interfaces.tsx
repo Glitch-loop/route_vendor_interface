@@ -1,7 +1,7 @@
 
 export interface IDay {
   id_day: string;
-  day_name: string;
+  day_name?: string;
 }
 
 export interface IProduct {
@@ -20,14 +20,6 @@ extends IProduct {
   amount: number;
 }
 
-export interface IRoute {
-  id_route: string;
-  route_name: string;
-  description?: string;
-  route_status: string;
-  id_vendor: string;
-}
-
 export interface IStore {
   id_store: string;
   street: string;
@@ -44,6 +36,14 @@ export interface IStore {
   creation_date: string;
   creation_context: string;
   status_store: string;
+}
+
+export interface IRoute {
+  id_route: string;
+  route_name: string;
+  description?: string;
+  route_status: string;
+  id_vendor: string;
 }
 
 export interface IRouteDay {
@@ -68,7 +68,19 @@ export interface ICurrency {
   coin?: boolean;
 }
 
-export interface IPettyCash {
-  startPettyCash: number,
-  finalPettyCash: number
-};
+export interface IDayGeneralInformation {
+  id_work_day: string;
+  start_date: string;
+  finish_date: string;
+  startPettyCash: number;
+  finalPettyCash: number;
+}
+
+
+export interface ICompleteRouteDay extends IRouteDay {
+  day: IDay
+}
+
+export interface ICompleteRoute extends IRoute {
+  routeDays: ICompleteRouteDay[]
+}

@@ -8,9 +8,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 
 
-const RouteHeader = ({navigation, goTo}:{goTo:string}) => {
+const RouteHeader = ({navigation, goTo}:{navigation:any, goTo:string}) => {
   // Redux (context definitions)
-  const route = useSelector((state: RootState) => state.route);
   const routeDay = useSelector((state: RootState) => state.routeDay);
 
   return (
@@ -20,7 +19,7 @@ const RouteHeader = ({navigation, goTo}:{goTo:string}) => {
         onPress={() => navigation.navigate(goTo)}>
         <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
       </Pressable>
-      <Text style={tw`text-3xl text-black`}>{route.route_name}</Text>
+      <Text style={tw`text-3xl text-black`}>{routeDay.route_name}</Text>
       <Text style={tw`text-2xl text-black`}>|</Text>
       <View style={tw`flex flex-col`}>
         <Text style={tw`text-base text-black text-center`}>{standard_format()}</Text>
