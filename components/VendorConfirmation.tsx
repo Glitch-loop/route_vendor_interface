@@ -4,13 +4,15 @@ import { Checkbox } from 'react-native-paper';
 import tw from 'twrnc';
 import { ICurrency, IProductInventory } from '../interfaces/interfaces';
 
-const VendorConfirmation = ({navigation,
+const VendorConfirmation = ({
+  navigation,
   message,
   cashInventory,
   inventory,
   goToConfirm,
   goToCancel,
   }:{
+  navigation:any,
   message:string,
   cashInventory:ICurrency[],
   inventory:IProductInventory[],

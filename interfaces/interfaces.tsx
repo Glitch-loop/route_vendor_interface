@@ -84,3 +84,11 @@ export interface ICompleteRouteDay extends IRouteDay {
 export interface ICompleteRoute extends IRoute {
   routeDays: ICompleteRouteDay[]
 }
+
+export interface IDayOperation {
+  id_day_operation: string;
+  id_item: string;
+  id_type_operation: number;
+  operation_order: number;
+  current_opreation: number;
+}

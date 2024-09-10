@@ -48,6 +48,9 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     });
 
     // Setting the john doe user for testing
+    /*
+      TODO: This request is made at the beginning of the application (login)
+    */
     dispatch(setUser({
       id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
       cellphone: '322-897-1324',
@@ -55,6 +58,12 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       password: '',
       status: 1,
     }));
+
+    /*
+      According with the flow of the operation, after selecting the route, the vendor must made an
+      start_shift_inventory operation to have products for selling.
+
+    */
   },[]);
 
   return (

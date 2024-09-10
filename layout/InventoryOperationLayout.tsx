@@ -31,13 +31,13 @@ function initialMXNCurrencyState():ICurrency[] {
       value: MXN_CURRENCY[key].value,
       amount: 0,
       coin: MXN_CURRENCY[key].coin,
-    })
+    });
   }
 
   return arrDenomination;
 }
 
-const InventoryOperationLayout = ({ navigation }) => {
+const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Setting redux context
   const dispatch: AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
@@ -75,8 +75,6 @@ const InventoryOperationLayout = ({ navigation }) => {
       <View style={tw`mt-3 w-full flex basis-1/6`}>
         <RouteHeader
           navigation={navigation}
-          routeName="Route 1"
-          routeDay="Friday"
           goTo="selectionRouteOperation"
         />
       </View>

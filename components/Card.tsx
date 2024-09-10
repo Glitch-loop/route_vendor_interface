@@ -39,7 +39,6 @@ const Card = (
         onPress={() => {
           dispatch(setRouteInformation(route));
           dispatch(setDayInformation(routeDay));
-
           navigation.navigate(goTo);
           }}>
           <Icon name="chevron-right" style={tw`text-base text-center`} color="#fff" />
