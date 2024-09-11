@@ -8,11 +8,6 @@ import RouteHeader from '../components/RouteHeader';
 import TableInventoryOperations from '../components/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
 
-// Redux context
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
-import { setProductInventory } from '../redux/slices/productsInventorySlice';
-
 // Queries
 import { getAllProducts } from '../queries/queries';
 
@@ -20,6 +15,11 @@ import { getAllProducts } from '../queries/queries';
 import { ICurrency, IProductInventory } from '../interfaces/interfaces';
 import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
+
+// Redux context
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
 
 
 function initialMXNCurrencyState():ICurrency[] {
@@ -42,7 +42,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const dispatch: AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
 
-  // Defining states
+  // Defining redux contexts
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
 

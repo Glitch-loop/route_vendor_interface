@@ -19,7 +19,7 @@ const initialState: IRoute&IDayGeneralInformation&IDay = {
   day_name: '',
 };
 
-const routeSlice = createSlice({
+const routeDaySlice = createSlice({
   name: 'routeDay',
   initialState,
   reducers: {
@@ -45,6 +45,6 @@ const routeSlice = createSlice({
 });
 
 
-export const { setRouteInformation, setDayGeneralInformation, setDayInformation } = routeSlice.actions;
+export const { setRouteInformation, setDayGeneralInformation, setDayInformation } = routeDaySlice.actions;
 
-export default routeSlice.reducer;
+export default routeDaySlice.reducer;

@@ -1,8 +1,26 @@
+// Libraries
 import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import tw from 'twrnc';
+
+// Interfaces
 import { ICurrency, IProductInventory } from '../interfaces/interfaces';
+
+// Queries and utils
+import DAYS_OPERATIONS from '../lib/day_operations';
+
+// Redux state
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
+import { setDayInformation } from '../redux/slices/routeDaySlice';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
+
+/*
+  It is important to note that it is in this view where the user confirm the actions.
+  It doesn't matter what type of inventory operation he is doing, in all the cases he
+  is going to use this component to confirm (or sign) the operation that he is doing.
+*/
 
 const VendorConfirmation = ({
   navigation,
@@ -18,15 +36,33 @@ const VendorConfirmation = ({
   inventory:IProductInventory[],
   goToConfirm:string,
   goToCancel:string}) => {
+
+  // Creating states
   const [checked, setChecked] = useState(false);
+
+  // Defining redux contexts
+  const dispatch: AppDispatch = useDispatch();
+  const currentOperation = useSelector((state: RootState) => state.currentOperation);
+  const productsInventory = useSelector((state: RootState) => state.productsInventory);
+  const routeDay = useSelector((state: RootState) => state.routeDay);
 
   const handleVendorConfirmation = ():void => {
     try {
       /*
         TODO:
          Save inventory state
-         Save petty cash state
       */
+
+      if (DAYS_OPERATIONS.start_shift_inventory === currentOperation.id_type_operation) {
+        //Setting information related to the route that is going to be performed today.
+
+        //Setting initial inventory.
+
+        //Setting routes plannification.
+
+      }
+        
+      
       navigation.navigate(goToConfirm);
     } catch (error) {
       console.log("Something went wrong")

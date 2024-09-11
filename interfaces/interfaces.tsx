@@ -88,7 +88,14 @@ export interface ICompleteRoute extends IRoute {
 export interface IDayOperation {
   id_day_operation: string;
   id_item: string;
-  id_type_operation: number;
+  id_type_operation: string;
   operation_order: number;
-  current_opreation: number;
+  current_operation: number;
+}
+
+export interface IStoreStatusDay {
+  new_client: boolean;
+  special_sale: boolean;
+  visited: boolean;
+  petition_to_visit: boolean;
 }

@@ -13,9 +13,9 @@ import { IDayOperation } from '../../interfaces/interfaces';
 const initialState: IDayOperation = {
   id_day_operation: '',
   id_item: '',
-  id_type_operation: 0,
+  id_type_operation: '',
   operation_order: 0,
-  current_opreation: 0,
+  current_operation: 0,
 };
 
 
@@ -28,14 +28,14 @@ const currentOperationSlice = createSlice({
       state.id_item = action.payload.id_item;
       state.id_type_operation = action.payload.id_type_operation;
       state.operation_order = action.payload.operation_order;
-      state.current_opreation = action.payload.current_opreation;
+      state.current_operation = action.payload.current_operation;
     },
     clearDayOperation: (state) => {
       state.id_day_operation = '';
       state.id_item = '';
-      state.id_type_operation = 0;
+      state.id_type_operation = '';
       state.operation_order = 0;
-      state.current_opreation = 0;
+      state.current_operation = 0;
     }
   },
 });

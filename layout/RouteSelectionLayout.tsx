@@ -1,15 +1,25 @@
+//Libraries
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import tw from 'twrnc';
+import 'react-native-get-random-values'; // Necessary for uuid
+import {v4 as uuidv4 } from 'uuid';
+
+// Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
 import { ICompleteRoute, ICompleteRouteDay } from '../interfaces/interfaces';
-import DAYS from '../lib/days';
 
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../redux/store';
+// Queries and utils
+import DAYS from '../lib/days';
+import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
+import DAYS_OPERATIONS from '../lib/day_operations';
+
+// Redux States and reducers
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
+import { setDayOperation } from '../redux/slices/currentOperationSlice';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Use states definition
@@ -60,10 +70,18 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     }));
 
     /*
-      According with the flow of the operation, after selecting the route, the vendor must made an
-      start_shift_inventory operation to have products for selling.
+      According with the flow of the business operation, after selecting the route,
+      the vendor must make an "start_shift_inventory operation" to have products for selling.
 
+      So, the next operation (after selecting the route) is make the inventory.
     */
+    setDayOperation({
+      id_day_operation: uuidv4(),
+      id_item: '',
+      id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
+      operation_order: 0,
+      current_operation: 1,
+    });
   },[]);
 
   return (
