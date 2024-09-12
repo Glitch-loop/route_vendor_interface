@@ -13,6 +13,7 @@ export interface IProduct {
   comission: number;
   price: number
   product_status: number;
+  order_to_show: number;
 }
 
 export interface IProductInventory

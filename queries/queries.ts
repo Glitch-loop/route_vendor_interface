@@ -41,7 +41,7 @@ export async function getAllRoutesByVendor (id_vendor:string):Promise<IRoute[]> 
 
 export async function getAllProducts():Promise<IProduct[]> {
   try {
-    const { data, error } = await supabase.from(TABLES.PRODUCTS).select();
+    const { data, error } = await supabase.from(TABLES.PRODUCTS).select().order('order_to_show');
     if (error) {
       return [];
     } else {

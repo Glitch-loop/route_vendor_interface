@@ -7,10 +7,10 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
 
 import {
-          setDayInformation,
-          setRouteInformation,
-          setRouteDay,
-        } from '../redux/slices/routeDaySlice';
+    setDayInformation,
+    setRouteInformation,
+    setRouteDay,
+  } from '../redux/slices/routeDaySlice';
 
 
 const Card = (
@@ -29,7 +29,8 @@ const Card = (
 
     return (
       <View style={
-        tw`my-2 bg-blue-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white`
+        tw`my-2 bg-blue-500 rounded w-11/12 h-16 
+          flex flex-row justify-center items-center text-white`
         }>
         <View style={tw`flex basis-1/4 flex-col justify-center`}>
           <Text style={tw`text-white text-xl `}>{routeName}</Text>

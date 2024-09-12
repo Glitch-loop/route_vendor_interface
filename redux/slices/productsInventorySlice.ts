@@ -26,6 +26,7 @@ const productsInventorySlice = createSlice({
           price: productInventory.price,
           product_status: productInventory.product_status,
           amount: productInventory.amount,
+          order_to_show: productInventory.order_to_show,
         });
       });
     },
