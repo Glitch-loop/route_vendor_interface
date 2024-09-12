@@ -49,7 +49,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         .then(routeDaysData => {
           let currentRoute: ICompleteRoute;
           let arrRouteDays: ICompleteRouteDay[] = [];
-
+ 
           // Getting the name of the day
           routeDaysData.forEach(routeDayData => {
             let routeDay:ICompleteRouteDay = {
@@ -65,15 +65,15 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           };
 
           // Avoiding store routes without days.
-          /*
-            TODO:
-            This if avoids that a route that doesn't have a route day be stored as a possible option.
-
-            But it there is not an if that prevents that a route day that doesn't have any store
-            appears.
-          */
           if(arrRouteDays[0] !== undefined) {
-            setRoutes([...routes, currentRoute]);
+            let index = routes.findIndex(route => route.id_route === currentRoute.id_route);
+            // Avoiding duplicate records
+            if (index === -1) {
+              // The route doesn't exist
+              setRoutes([...routes, currentRoute]);
+            } else {
+              setRoutes(routes.map(route => route.id_route === currentRoute.id_route ? currentRoute : route));
+            }
           }
         });
       });
@@ -97,7 +97,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
       So, the next operation (after selecting the route) is make the inventory.
     */
-   console.log("First operation of the day: ", DAYS_OPERATIONS.start_shift_inventory)
     dispatch(setDayOperation({
       id_day_operation: uuidv4(),
       id_item: '',
