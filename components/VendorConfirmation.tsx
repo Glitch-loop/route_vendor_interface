@@ -81,6 +81,7 @@ const VendorConfirmation = ({
                                       storesInTheRoute.map(store => {return store.id_store;}));
 
         //Setting information of the stores.
+        console.log(stores)
         dispatch(setStores(stores));
 
         //Setting route operation.

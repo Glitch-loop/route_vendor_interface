@@ -69,7 +69,8 @@ export async function getAllStoresInARouteDay(id_route_day:string):Promise<IRout
 export async function getStoresByArrID(arr_id_stores: string[]):Promise<IStore[]> {
   try {
     const { data, error } = await supabase.from(TABLES.STORES)
-                                  .select().eq('id_store', arr_id_stores);
+                                  .select().in('id_store', arr_id_stores);
+
     if (error) {
       return [];
     } else {
