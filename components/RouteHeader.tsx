@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { standard_format } from '../utils/moment_format';
+import { standard_format } from '../utils/momentFormat';
 import DAYS from '../lib/days';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';

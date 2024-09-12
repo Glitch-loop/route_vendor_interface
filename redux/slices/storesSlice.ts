@@ -2,11 +2,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IStore, IStoreStatusDay } from '../../interfaces/interfaces';
 
 /*
-  The purpose of this context is to store the information of all the routes that are going to be 
+  The purpose of this context is to store the information of all the routes that are going to be
   visited during the day.
 */
 
-const initialState: (IStore &IStoreStatusDay )[] = [];
+const initialState: (IStore&IStoreStatusDay )[] = [];
 
 const storesSlice = createSlice({
   name: 'store',

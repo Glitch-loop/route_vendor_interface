@@ -3,6 +3,7 @@ import userSlice from './slices/userSlice';
 import routeDaySlice from './slices/routeDaySlice';
 import productsInventorySlice from './slices/productsInventorySlice';
 import currentOperationSlice from './slices/currentOperationSlice';
+import dayOperationsSlice from './slices/dayOperationsSlice';
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     routeDay: routeDaySlice,
     productsInventory: productsInventorySlice,
     currentOperation: currentOperationSlice,
+    dayOperations: dayOperationsSlice,
   },
 });
 

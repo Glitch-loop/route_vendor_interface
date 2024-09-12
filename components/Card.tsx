@@ -37,7 +37,9 @@ const Card = (
         <Pressable
         style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
         onPress={() => {
+          // Store route information.
           dispatch(setRouteInformation(route));
+          // Store day informaition
           dispatch(setDayInformation(routeDay));
           navigation.navigate(goTo);
           }}>

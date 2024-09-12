@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { IDayGeneralInformation, IRoute, IDay } from '../../interfaces/interfaces';
+import { IDayGeneralInformation, IRoute, IRouteDay, IDay } from '../../interfaces/interfaces';
 
-const initialState: IRoute&IDayGeneralInformation&IDay = {
+const initialState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
   /*Fields related to the general information.*/
   id_work_day: '',
   start_date: '',
   finish_date: '',
-  startPettyCash: 0,
-  finalPettyCash: 0,
+  start_petty_cash: 0,
+  final_petty_cash: 0,
   /*Fields related to IRoute interface*/
   id_route: '',
   route_name: '',
@@ -17,6 +17,8 @@ const initialState: IRoute&IDayGeneralInformation&IDay = {
   /*Fields related to IDay interface*/
   id_day: '',
   day_name: '',
+  /*Fields relate to IRouteDay*/
+  id_route_day: '',
 };
 
 const routeDaySlice = createSlice({
@@ -34,17 +36,34 @@ const routeDaySlice = createSlice({
       state.id_work_day = action.payload.id_work_day;
       state.start_date = action.payload.start_date;
       state.finish_date = action.payload.finish_date;
-      state.startPettyCash = action.payload.startPettyCash;
-      state.finalPettyCash = action.payload.finalPettyCash;
+      state.start_petty_cash = action.payload.start_petty_cash;
+      state.final_petty_cash = action.payload.final_petty_cash;
     },
     setDayInformation: (state, action: PayloadAction<IDay>) => {
       state.id_day = action.payload.id_day;
       state.day_name = action.payload.day_name;
     },
+    setStartDay: (state, action: PayloadAction<any>) => {
+      state.start_date = action.payload.start_date;
+      state.start_petty_cash = action.payload.start_petty_cash;
+    },
+    setEndDay: (state, action: PayloadAction<any>) => {
+      state.finish_date = action.payload.finish_date;
+      state.final_petty_cash = action.payload.final_petty_cash;
+    },
+    setRouteDay: (state, action: PayloadAction<any>) => {
+      state.id_route_day = action.payload.id_route_day;
+    },
   },
 });
 
 
-export const { setRouteInformation, setDayGeneralInformation, setDayInformation } = routeDaySlice.actions;
+export const {
+  setRouteInformation,
+  setDayGeneralInformation,
+  setDayInformation,
+  setStartDay,
+  setEndDay,
+ } = routeDaySlice.actions;
 
 export default routeDaySlice.reducer;

@@ -17,9 +17,9 @@ import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
 
 // Redux context
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
-import { setProductInventory } from '../redux/slices/productsInventorySlice';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { AppDispatch, RootState } from '../redux/store';
+// import { setProductInventory } from '../redux/slices/productsInventorySlice';
 
 
 function initialMXNCurrencyState():ICurrency[] {
@@ -39,7 +39,6 @@ function initialMXNCurrencyState():ICurrency[] {
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Setting redux context
-  const dispatch: AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
 
   // Defining redux contexts
@@ -62,12 +61,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         // Storing products state.
-        dispatch(setProductInventory(productInventory));
         setInventory(productInventory);
       });
     }
-
-
   }, []);
 
   return (

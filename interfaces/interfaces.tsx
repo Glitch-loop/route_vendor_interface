@@ -46,10 +46,16 @@ export interface IRoute {
   id_vendor: string;
 }
 
-export interface IRouteDay {
-  id_route_number: string;
+export interface IRouteDayStores {
+  id_route_day_store: string;
   position_in_route: number;
-  id_route: string;
+  id_route_day: string;
+  id_store: string;
+}
+
+export interface IRouteDay {
+  id_route_day: string;
+  id_route:string;
   id_day: string;
 }
 
@@ -72,17 +78,17 @@ export interface IDayGeneralInformation {
   id_work_day: string;
   start_date: string;
   finish_date: string;
-  startPettyCash: number;
-  finalPettyCash: number;
+  start_petty_cash: number;
+  final_petty_cash: number;
 }
 
 
 export interface ICompleteRouteDay extends IRouteDay {
-  day: IDay
+  day: IDay;
 }
 
 export interface ICompleteRoute extends IRoute {
-  routeDays: ICompleteRouteDay[]
+  routeDays: ICompleteRouteDay[];
 }
 
 export interface IDayOperation {

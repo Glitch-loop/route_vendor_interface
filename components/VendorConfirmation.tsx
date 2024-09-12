@@ -5,16 +5,21 @@ import { Checkbox } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
-import { ICurrency, IProductInventory } from '../interfaces/interfaces';
+import { ICurrency, IProductInventory, IRouteDayStores, IStore } from '../interfaces/interfaces';
 
 // Queries and utils
+import { getAllStoresInARouteDay, getStoresByArrID } from '../queries/queries';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import { timestamp_format } from '../utils/momentFormat';
+import { planningRouteDayOperations } from '../utils/routesFunctions';
 
 // Redux state
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { setDayInformation } from '../redux/slices/routeDaySlice';
+import { setStartDay } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setStores } from '../redux/slices/storesSlice';
+import { setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 
 /*
   It is important to note that it is in this view where the user confirm the actions.
@@ -44,25 +49,49 @@ const VendorConfirmation = ({
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
+
   const routeDay = useSelector((state: RootState) => state.routeDay);
 
-  const handleVendorConfirmation = ():void => {
+
+  const handleVendorConfirmation = async ():Promise<void> => {
     try {
       /*
         TODO:
          Save inventory state
       */
 
+     //Setting information related to the route that is going to be performed today.
       if (DAYS_OPERATIONS.start_shift_inventory === currentOperation.id_type_operation) {
-        //Setting information related to the route that is going to be performed today.
+        setStartDay({
+          start_date: timestamp_format(),
+          start_petty_cash: cashInventory.reduce((acc, currentCurrency) => {
+            if (currentCurrency.amount === undefined) {
+              return acc;
+            } else {
+              return acc + currentCurrency.amount * currentCurrency.value;
+            }
+          }, 0),
+        });
 
         //Setting initial inventory.
+        dispatch(setProductInventory(inventory));
 
-        //Setting routes plannification.
+        // Getting the stores that belongs to a particular day of the route
+        const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
+
+        // Getting the information that belongs to this work day
+        const stores:IStore[] = await getStoresByArrID(
+                                      storesInTheRoute.map(store => {return store.id_store;}));
+
+        //Setting information of the stores
+        dispatch(setStores(stores));
+
+        //Setting route operation.
+        dispatch(setArrayDayOperations(planningRouteDayOperations(storesInTheRoute)));
+
 
       }
-        
-      
+
       navigation.navigate(goToConfirm);
     } catch (error) {
       console.log("Something went wrong")

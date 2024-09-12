@@ -57,6 +57,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       });
     });
 
+    
     // Setting the john doe user for testing
     /*
       TODO: This request is made at the beginning of the application (login)
@@ -75,13 +76,15 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
       So, the next operation (after selecting the route) is make the inventory.
     */
-    setDayOperation({
+    dispatch(setDayOperation({
       id_day_operation: uuidv4(),
       id_item: '',
       id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
       operation_order: 0,
       current_operation: 1,
-    });
+    }));
+
+
   },[]);
 
   return (
