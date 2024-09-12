@@ -7,7 +7,7 @@ import tw from 'twrnc';
 const TableInventoryOperations = (
   {inventoryOperation, setInventoryOperation}:
   {inventoryOperation:IProductInventory[], setInventoryOperation:any}) => {
-  
+
   // Inventory
   const handleChangeInventory = (id_product:string, input: string) => {
     const index:number|undefined = inventoryOperation.findIndex(

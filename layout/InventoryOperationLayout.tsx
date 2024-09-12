@@ -47,23 +47,17 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   // Use effect operations
   useEffect(() => {
-    // If true, it is needed to retrieve the products from database.
-    if (productsInventory[0] === undefined) {
-      getAllProducts().then(products => {
-        // Initializing the inventory for all the products.
-        let productInventory:IProductInventory[] = [];
-        products.map(product => {
-          productInventory.push({
-            ...product,
-            amount: 0,
-          });
-
+    getAllProducts().then(products => {
+      // Creating inventory for all the products.
+      let productInventory:IProductInventory[] = [];
+      products.map(product => {
+        productInventory.push({
+          ...product,
+          amount: 0,
         });
-
-        // Storing products state.
-        setInventory(productInventory);
       });
-    }
+      setInventory(productInventory);
+    });
   }, []);
 
   return (
