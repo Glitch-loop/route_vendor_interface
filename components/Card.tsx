@@ -6,7 +6,11 @@ import { IRoute, IRouteDay } from '../interfaces/interfaces';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
 
-import { setDayInformation, setRouteInformation } from '../redux/slices/routeDaySlice';
+import {
+          setDayInformation,
+          setRouteInformation,
+          setRouteDay,
+        } from '../redux/slices/routeDaySlice';
 
 
 const Card = (
@@ -41,6 +45,8 @@ const Card = (
           dispatch(setRouteInformation(route));
           // Store day informaition
           dispatch(setDayInformation(routeDay));
+          dispatch(setRouteDay(routeDay));
+
           navigation.navigate(goTo);
           }}>
           <Icon name="chevron-right" style={tw`text-base text-center`} color="#fff" />

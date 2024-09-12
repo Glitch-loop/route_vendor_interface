@@ -1,6 +1,6 @@
 //Libraries
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
@@ -16,10 +16,10 @@ import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
 import DAYS_OPERATIONS from '../lib/day_operations';
 
 // Redux States and reducers
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
-import { setDayOperation } from '../redux/slices/currentOperationSlice';
+import { setDayOperation } from '../redux/slices/dayOperationsSlice';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Use states definition
@@ -29,7 +29,19 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   const dispatch: AppDispatch = useDispatch();
 
   useEffect(() => {
-    // Getting all routes
+    /*
+      In the system can exist different routes (route 1, route 2, route 3), each route is made
+      by "route day" this concept refers that each route will have stores to visit by each day.
+
+      Wrapping up:
+      vendor <-(has a vendor) route <-(belongs to a route) day route
+
+      So, monday of route 1 to thursday of route 1 can differ in the stores that must visit.
+
+      In addition, each route will have assigend a vendor who is in charge of maintin the route.
+    */
+
+    // Getting all the route assigned to a vendor
     getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257').then(routesData => {
       // Getting all the days in a route
       routesData.forEach(currentRouteData => {
@@ -37,10 +49,13 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         .then(routeDaysData => {
           let currentRoute: ICompleteRoute;
           let arrRouteDays: ICompleteRouteDay[] = [];
+
           // Getting the name of the day
           routeDaysData.forEach(routeDayData => {
-            let routeDay:ICompleteRouteDay = routeDayData;
-            routeDay.day = DAYS[routeDay.id_day];
+            let routeDay:ICompleteRouteDay = {
+              ...routeDayData,
+              day: DAYS[routeDayData.id_day],
+            };
             arrRouteDays.push(routeDay);
           });
 
@@ -50,6 +65,13 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           };
 
           // Avoiding store routes without days.
+          /*
+            TODO:
+            This if avoids that a route that doesn't have a route day be stored as a possible option.
+
+            But it there is not an if that prevents that a route day that doesn't have any store
+            appears.
+          */
           if(arrRouteDays[0] !== undefined) {
             setRoutes([...routes, currentRoute]);
           }
@@ -57,7 +79,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       });
     });
 
-    
     // Setting the john doe user for testing
     /*
       TODO: This request is made at the beginning of the application (login)
@@ -76,6 +97,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
       So, the next operation (after selecting the route) is make the inventory.
     */
+   console.log("First operation of the day: ", DAYS_OPERATIONS.start_shift_inventory)
     dispatch(setDayOperation({
       id_day_operation: uuidv4(),
       id_item: '',
@@ -83,8 +105,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       operation_order: 0,
       current_operation: 1,
     }));
-
-
   },[]);
 
   return (
@@ -101,7 +121,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
                 navigation={navigation}
                 goTo={'selectionRouteOperation'}
                 routeName={route.route_name}
-                day={routeDay.day.day_name}
+                day={routeDay.day.day_name!}
                 description={route.description}
                 route={route}
                 routeDay={routeDay}

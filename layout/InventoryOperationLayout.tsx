@@ -17,9 +17,9 @@ import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
 
 // Redux context
-// import { useDispatch, useSelector } from 'react-redux';
-// import { AppDispatch, RootState } from '../redux/store';
-// import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
 
 
 function initialMXNCurrencyState():ICurrency[] {
@@ -101,7 +101,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           navigation={navigation}
           cashInventory={cashInventory}
           inventory={inventory}
-          goToConfirm={''}
+          goToConfirm={'routeOperationMenu'}
           goToCancel={'selectionRouteOperation'}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>

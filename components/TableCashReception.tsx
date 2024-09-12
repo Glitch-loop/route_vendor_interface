@@ -10,10 +10,6 @@ const TableCashReception = (
   {cashInventoryOperation, setCashInventoryOperation}:
   {cashInventoryOperation:ICurrency[], setCashInventoryOperation:any}) => {
 
-  // Importing context
-  const dispatch:AppDispatch = useDispatch();
-  const productsInventory = useSelector((state: RootState) => state.productsInventory);
-
   // Inventory
   const handleChangeAmountCash = (id_denomination:number, input: string) => {
     const index:number|undefined = cashInventoryOperation.findIndex(

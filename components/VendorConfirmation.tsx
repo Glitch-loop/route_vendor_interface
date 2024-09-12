@@ -47,7 +47,7 @@ const VendorConfirmation = ({
 
   // Defining redux contexts
   const dispatch: AppDispatch = useDispatch();
-  const currentOperation = useSelector((state: RootState) => state.currentOperation);
+  const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
 
   const routeDay = useSelector((state: RootState) => state.routeDay);
@@ -55,13 +55,10 @@ const VendorConfirmation = ({
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
-      /*
-        TODO:
-         Save inventory state
-      */
-
      //Setting information related to the route that is going to be performed today.
-      if (DAYS_OPERATIONS.start_shift_inventory === currentOperation.id_type_operation) {
+
+      if (DAYS_OPERATIONS.start_shift_inventory === dayOperations[dayOperations.length - 1].id_type_operation) {
+        // Setting general information related to the route.
         setStartDay({
           start_date: timestamp_format(),
           start_petty_cash: cashInventory.reduce((acc, currentCurrency) => {
@@ -79,17 +76,15 @@ const VendorConfirmation = ({
         // Getting the stores that belongs to a particular day of the route
         const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
 
-        // Getting the information that belongs to this work day
+        // Getting the information of the stores that belongs to this work day.
         const stores:IStore[] = await getStoresByArrID(
                                       storesInTheRoute.map(store => {return store.id_store;}));
 
-        //Setting information of the stores
+        //Setting information of the stores.
         dispatch(setStores(stores));
 
         //Setting route operation.
         dispatch(setArrayDayOperations(planningRouteDayOperations(storesInTheRoute)));
-
-
       }
 
       navigation.navigate(goToConfirm);
@@ -116,7 +111,6 @@ const VendorConfirmation = ({
             style={tw`h-10 w-3/4 
               border border-black rounded-lg px-4 bg-yellow-100 
               text-base text-black text-center`}
-            // value={}
             placeholder="Numero teléfonico"
             />
         </View>

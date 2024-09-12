@@ -4,27 +4,29 @@
  *
  * @format
  */
-
+// Libraries
 import React, {} from 'react';
 import { View } from 'react-native';
-
+import tw from 'twrnc';
 import { PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+// Redux context
 import { Provider } from 'react-redux';
 import store from './redux/store';
 
+// Layouts
 import RouteSelectionLayout from './layout/RouteSelectionLayout';
 import SelectionRouteOperationLayout from './layout/SelectionRouteOperationLayout';
 import InventoryOperationLayout from './layout/InventoryOperationLayout';
-import tw from 'twrnc';
+import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 
 export type RootStackParamList = {
   routeSelection: undefined;
   selectionRouteOperation: undefined;
   inventoryOperation: undefined;
-  // counterScreen: undefined;
+  routeOperationMenu: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -47,6 +49,10 @@ function App(): React.JSX.Element {
               <Stack.Screen
                 name="inventoryOperation"
                 component={InventoryOperationLayout}
+                options={{  headerShown: false }} />
+              <Stack.Screen
+                name="routeOperationMenu"
+                component={RouteOperationMenuLayout}
                 options={{  headerShown: false }} />
             </Stack.Navigator>
           </View>

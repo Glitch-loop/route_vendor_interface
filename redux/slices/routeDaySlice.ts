@@ -52,6 +52,7 @@ const routeDaySlice = createSlice({
       state.final_petty_cash = action.payload.final_petty_cash;
     },
     setRouteDay: (state, action: PayloadAction<any>) => {
+      console.log("reducer: ", action.payload.id_route_day)
       state.id_route_day = action.payload.id_route_day;
     },
   },
@@ -64,6 +65,7 @@ export const {
   setDayInformation,
   setStartDay,
   setEndDay,
+  setRouteDay,
  } = routeDaySlice.actions;
 
 export default routeDaySlice.reducer;

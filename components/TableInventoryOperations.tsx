@@ -1,20 +1,15 @@
-import React, {useEffect, useState } from 'react';
+import React from 'react';
 import { TextInput, Text } from 'react-native';
 import { IProductInventory } from '../interfaces/interfaces';
 import { DataTable } from 'react-native-paper';
 import tw from 'twrnc';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
 
 const TableInventoryOperations = (
   {inventoryOperation, setInventoryOperation}:
   {inventoryOperation:IProductInventory[], setInventoryOperation:any}) => {
-  // Importing context
-  const dispatch:AppDispatch = useDispatch();
-  const productsInventory = useSelector((state: RootState) => state.productsInventory);
-
+  
   // Inventory
-  const handleChangeInventory = (id_product:number, input: string) => {
+  const handleChangeInventory = (id_product:string, input: string) => {
     const index:number|undefined = inventoryOperation.findIndex(
     (product:IProductInventory) => product.id_product === id_product);
 

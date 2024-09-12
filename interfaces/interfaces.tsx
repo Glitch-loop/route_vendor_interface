@@ -38,26 +38,6 @@ export interface IStore {
   status_store: string;
 }
 
-export interface IRoute {
-  id_route: string;
-  route_name: string;
-  description?: string;
-  route_status: string;
-  id_vendor: string;
-}
-
-export interface IRouteDayStores {
-  id_route_day_store: string;
-  position_in_route: number;
-  id_route_day: string;
-  id_store: string;
-}
-
-export interface IRouteDay {
-  id_route_day: string;
-  id_route:string;
-  id_day: string;
-}
 
 export interface IUser {
   id_vendor: string;
@@ -82,6 +62,26 @@ export interface IDayGeneralInformation {
   final_petty_cash: number;
 }
 
+export interface IRouteDayStores {
+  id_route_day_store: string;
+  position_in_route: number;
+  id_route_day: string;
+  id_store: string;
+}
+
+export interface IRoute {
+  id_route: string;
+  route_name: string;
+  description?: string;
+  route_status: string;
+  id_vendor: string;
+}
+
+export interface IRouteDay {
+  id_route_day: string;
+  id_route:string;
+  id_day: string;
+}
 
 export interface ICompleteRouteDay extends IRouteDay {
   day: IDay;

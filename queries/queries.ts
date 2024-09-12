@@ -55,7 +55,7 @@ export async function getAllProducts():Promise<IProduct[]> {
 export async function getAllStoresInARouteDay(id_route_day:string):Promise<IRouteDayStores[]> {
   try {
     const { data, error } = await supabase.from(TABLES.ROUTE_DAY_STORES)
-                                  .select().eq('id_route_day_store', id_route_day);
+                                  .select().eq('id_route_day', id_route_day);
     if (error) {
       return [];
     } else {
