@@ -1,91 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { View, PermissionsAndroid, Platform } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
+// Libraries
+import React from 'react';
+import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-const StoreMenuLayout = () => {
-  const [location, setLocation] = useState({
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+// Components
+import RouteMap from '../components/RouteMap';
 
-  const [permissionGranted, setPermissionGranted] = useState(false);
-
-  // Request location permission for Android (iOS handles this automatically with the plist)
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: "Location Access Permission",
-            message: "We need access to your location to show it on the map.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK"
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          setPermissionGranted(true);
-        } else {
-          console.log("Location permission denied");
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    } else {
-      setPermissionGranted(true); // Assume permission granted on iOS
-    }
-  };
-
-  // Get the current location
-  const getCurrentLocation = () => {
-    if (permissionGranted) {
-      console.log("Pemissions granted")
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation({
-            ...location,
-            latitude,
-            longitude,
-          });
-        },
-        (error) => {
-          console.log(error.code, error.message);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    } else {
-      console.log('Ask permissions');
-    }
-  };
-
-  useEffect(() => {
-    requestLocationPermission();
-    if (permissionGranted) {
-      getCurrentLocation();
-    }
-  }, [permissionGranted]);
-
+const StoreMenuLayout = ({navigation, goTo}:{navigation:any, goTo:string}) => {
   return (
-    <View style={tw`flex-1`}>
-      <MapView
-        style={tw`flex-1`}
-        region={location}
-        showsUserLocation={true}  // Show the user's current location
-        showsMyLocationButton={true}  // Button to return to user's location
-      >
-        {/* Add a marker at the user's current position */}
-        <Marker
-          coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-          title="You are here"
-          description="This is your current location"
-        />
-      </MapView>
+    <View style={tw`flex-1 justify-center items-center`}>
+      <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
+        <Pressable
+          style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
+          onPress={() => navigation.navigate(goTo)}>
+          <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
+        </Pressable>
+        <Text style={tw`text-3xl`}>Ruta 1</Text>
+        <Text style={tw`text-2xl mx-1`}>|</Text>
+        <Text style={tw`text-xl max-w-1/2`}>Deposito y Tienda de la esquina</Text>
+        <View style={tw`flex flex-row h-6 w-6 bg-indigo-500 rounded-full`} />
+      </View>
+      <View style={tw`h-1/2 w-11/12 flex-1 border-solid border-2 rounded-sm`}>
+        <RouteMap />
+      </View>
+      <View style={tw`flex-1 w-11/12 flex-col`}>
+        <View style={tw`flex flex-row basis-1/3 justify-around items-center`}>
+          <View style={tw`flex flex-col basis-1/2 justify-around`}>
+            <Text style={tw`text-black text-xl`}>Dirección</Text>
+            <Text style={tw`text-black`}>Mariano otero  #1256, Atemajac del Valle</Text>
+          </View>
+          <View style={tw`flex flex-col basis-1/2 justify-around`}>
+            <Text style={[tw`text-black text-xl`, { lineHeight: 20! }]}>Información del cliente</Text>
+            <Text style={tw`text-black`}>John Doe | 322-789-4521</Text>
+          </View>
+        </View>
+        <View style={tw`flex flex-col basis-1/3 justify-center`}>
+          <Text style={tw`text-black text-xl`}>Referencia</Text>
+          <Text style={tw`text-black`}>
+            Entre una hamburgeseria y una pizzeria, tienda que esta muy escondida.
+          </Text>
+        </View>
+        <View style={tw`h-3/5 h-1/2 flex flex-row basis-1/3 justify-around items-center`}>
+          <View style={tw`h-1/2 flex basis-1/2`}>
+            <Pressable style={tw`w-11/12 h-full border-solid border bg-blue-500 
+              rounded flex flex-row justify-center items-center`}>
+              <Text style={tw`text-center text-black`}>Transacciones de hoy</Text>
+            </Pressable>
+          </View>
+          <View style={tw`h-1/2 flex basis-1/2`}>
+            <Pressable style={tw`h-full w-11/12 bg-green-500 rounded border-solid border
+              flex flex-row justify-center  items-center`}>
+              <Text style={tw`text-center text-black`}>Iniciar venta</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
     </View>
   );
 };

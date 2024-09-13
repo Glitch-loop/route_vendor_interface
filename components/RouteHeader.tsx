@@ -15,7 +15,7 @@ const RouteHeader = ({navigation, goTo}:{navigation:any, goTo:string}) => {
   return (
     <View style={tw`w-full flex flex-row justify-around text-center items-center`}>
       <Pressable
-        style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
+        style={tw`bg-blue-700 px-3 py-2 rounded-full flex flex-row justify-center`}
         onPress={() => navigation.navigate(goTo)}>
         <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
       </Pressable>
