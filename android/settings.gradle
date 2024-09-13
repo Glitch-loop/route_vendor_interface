@@ -8,3 +8,7 @@ includeBuild('../node_modules/@react-native/gradle-plugin')
 // Icon setup
 include ':react-native-vector-icons'
 project(':react-native-vector-icons').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-vector-icons/android')
+
+// Native environment variables
+include ':react-native-config'
+project(':react-native-config').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-config/android')
