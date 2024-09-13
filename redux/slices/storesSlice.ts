@@ -9,7 +9,7 @@ import { IStore, IStoreStatusDay } from '../../interfaces/interfaces';
 const initialState: (IStore&IStoreStatusDay )[] = [];
 
 const storesSlice = createSlice({
-  name: 'store',
+  name: 'stores',
   initialState,
   reducers: {
     setStores: (state, action: PayloadAction<IStore[]>) => {
@@ -18,7 +18,7 @@ const storesSlice = createSlice({
           storedStore.id_store === store.id_store);
 
         if(index === -1) {
-          console.log("new store")
+          console.log("new stores")
           // Save store
           state.push({
             // Related to information of the stores

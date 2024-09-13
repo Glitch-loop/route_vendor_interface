@@ -41,7 +41,9 @@ export async function getAllRoutesByVendor (id_vendor:string):Promise<IRoute[]> 
 
 export async function getAllProducts():Promise<IProduct[]> {
   try {
-    const { data, error } = await supabase.from(TABLES.PRODUCTS).select().order('order_to_show');
+    const { data, error } = await supabase.from(TABLES.PRODUCTS)
+                                          .select()
+                                          .order('order_to_show');
     if (error) {
       return [];
     } else {
@@ -55,7 +57,9 @@ export async function getAllProducts():Promise<IProduct[]> {
 export async function getAllStoresInARouteDay(id_route_day:string):Promise<IRouteDayStores[]> {
   try {
     const { data, error } = await supabase.from(TABLES.ROUTE_DAY_STORES)
-                                  .select().eq('id_route_day', id_route_day);
+                                          .select()
+                                          .eq('id_route_day', id_route_day)
+                                          .order('position_in_route');
     if (error) {
       return [];
     } else {
