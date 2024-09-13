@@ -27,20 +27,22 @@ const RouteCard = (
       <View style={
         tw`${style}`}>
         <View style={tw`flex basis-1/6 flex-col`}>
-          <Text style={tw`text-white text-lg text-center`}>{itemOrder}</Text>
+          <Text style={tw`text-black text-lg text-center`}>{itemOrder}</Text>
         </View>
-        { description ? 
+        { description ?
           <View style={tw`flex basis-3/6 flex-col justify-center`}>
-            <Text style={tw`text-white text-lg`}>{itemName}</Text>
-            <Text style={tw`text-white text-xs`}>{description}</Text>
+            <Text style={tw`text-black text-lg`} numberOfLines={1} ellipsizeMode="head">
+              {itemName}
+            </Text>
+            <Text style={tw`text-black text-xs`}>{description}</Text>
           </View> :
           <View style={tw`flex basis-3/6 flex-col justify-center`}>
-            <Text style={tw`text-white text-lg`}>{itemName}</Text>
+            <Text style={tw`text-black text-lg`}>{itemName}</Text>
           </View>
         }
         <View style={tw`flex basis-1/6 flex-col justify-center`}>
           {totalValue &&
-            <Text style={tw`text-white text-lg`}>
+            <Text style={tw`text-black text-lg`}>
               ${totalValue}
             </Text>
           }
