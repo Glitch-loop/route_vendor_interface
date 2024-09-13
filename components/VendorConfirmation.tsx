@@ -48,7 +48,6 @@ const VendorConfirmation = ({
   // Defining redux contexts
   const dispatch: AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
-  const productsInventory = useSelector((state: RootState) => state.productsInventory);
 
   const routeDay = useSelector((state: RootState) => state.routeDay);
 

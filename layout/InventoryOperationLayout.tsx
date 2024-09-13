@@ -17,9 +17,8 @@ import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
 
 // Redux context
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
-import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 
 function initialMXNCurrencyState():ICurrency[] {

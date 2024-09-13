@@ -1,5 +1,5 @@
 // Libraries
-import React, { useState } from 'react';
+import React from 'react';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
@@ -66,7 +66,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               <RouteCard
               key={dayOperation.id_item}
               navigation={navigation}
-              goTo=''
+              goTo={''}
               style={style}
               itemOrder={itemOrder}
               itemName={itemName}
