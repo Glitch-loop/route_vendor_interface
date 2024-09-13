@@ -133,4 +133,7 @@ dependencies {
     // Native environment variables
     implementation project(':react-native-config')
 
+    // Enabling access to current location
+    implementation 'com.google.android.gms:play-services-location:21.0.1' 
+
 }

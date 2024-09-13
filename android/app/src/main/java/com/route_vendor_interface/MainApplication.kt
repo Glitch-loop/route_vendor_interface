@@ -14,6 +14,8 @@ import com.facebook.soloader.SoLoader
 import com.oblador.vectoricons.VectorIconsPackage
 
 // import com.lugg.RNCConfig.RNCConfigPackage
+// import com.agontuk.RNFusedLocation.RNFusedLocationPackage
+
 
 class MainApplication : Application(), ReactApplication {
 
@@ -25,6 +27,7 @@ class MainApplication : Application(), ReactApplication {
               // add(MyReactNativePackage())
 
               // add(RNCConfigPackage())
+              // add(RNFusedLocationPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"
