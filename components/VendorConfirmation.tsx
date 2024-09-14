@@ -19,7 +19,7 @@ import { AppDispatch, RootState } from '../redux/store';
 import { setStartDay } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
-import { setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
+import { setArrayDayOperations, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 /*
   It is important to note that it is in this view where the user confirm the actions.
@@ -48,7 +48,6 @@ const VendorConfirmation = ({
   // Defining redux contexts
   const dispatch: AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
-
   const routeDay = useSelector((state: RootState) => state.routeDay);
 
 
@@ -84,6 +83,9 @@ const VendorConfirmation = ({
 
         //Setting route operation.
         dispatch(setArrayDayOperations(planningRouteDayOperations(storesInTheRoute)));
+
+        //Setting to the first operation
+        dispatch(setNextOperation());
       }
 
       navigation.navigate(goToConfirm);

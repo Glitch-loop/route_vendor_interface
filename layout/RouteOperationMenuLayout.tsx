@@ -1,23 +1,37 @@
 // Libraries
 import React from 'react';
+import { ScrollView, View, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Redux context
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-import { ScrollView, View, Pressable } from 'react-native';
+import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 // Components
 import RouteCard from '../components/RouteCard';
 import TypeOperationItem from '../components/TypeOperationItem';
-
+import { IDayOperation } from '../interfaces/interfaces';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
+
+  console.log("Route operation")
+
+  // Handlers
+  const onSelectStore = (dayOperation: IDayOperation) => {
+    setCurrentOperation(dayOperation);
+    navigation.navigate('storeMenu');
+  };
+
+  const onSelectInventoryOperation = (dayOperation: IDayOperation) => {
+    setCurrentOperation(dayOperation);
+    navigation.navigate('inventoryOperation');
+  };
 
   return (
     <View style={tw`flex-1`}>
@@ -38,13 +52,20 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             let description = '';
             let totalValue = '';
             let style = '';
+            let typeOperation = true; /*true = client, false = inventory operation*/
             const index = stores.findIndex(store => store.id_store === dayOperation.id_item);
 
             if (index === -1) {
-              // It means the day operation is not a client of the route.
+              /*
+                If an index was not found, it means that the operation is not related to a client 
+              */
+
+              // Style for inventory operation card
+              style = 'my-2 bg-red-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+
+              // Determining the type of inventory operation
               if (dayOperation.id_type_operation === '5361d05b-e291-4fce-aa70-9452d7cfcadd'){
                 itemName = 'Inventario de inicio de ruta';
-                style = 'my-2 bg-red-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
                 // It is a "start shift inventory"
               } else if (dayOperation.id_type_operation === '37bb2bb6-f8a1-4df9-8318-6fb9831aae49') {
                 // It is a "restock inventory"
@@ -53,26 +74,51 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
                 // It is a "end shift inventory"
                 itemName = 'Inventario de fin de ruta';
               }
+              typeOperation = false;
             } else {
-              // It means it is a client is not a client of the route.
+              // It means that the operation is related with a client
               itemOrder = dayOperation.operation_order.toString();
               itemName = stores[index].store_name!;
               description = stores[index].street + ' #' + stores[index].ext_number + ', ' + stores[index].colony;
               totalValue = '10';
               style = 'my-2 bg-amber-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+
+              /* Determining the context of the client*/
+              if (dayOperation.current_operation === 1) {
+                  style = 'my-2 bg-indigo-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+              } else {
+                if (stores[index].new_client === true) {
+                  // New client
+                  style = 'my-2 bg-green-400 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+                } else if (stores[index].special_sale === true) {
+                  // Sale to a client outside of the route.
+                  style = 'my-2 bg-orange-600 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+                } else if (stores[index].petition_to_visit === true) {
+                  // It is a petition for visiting a route.
+                  style = 'my-2 bg-amber-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+                } else if (stores[index].visited === true) {
+                  // It is a client that has already visited.
+                  style = 'my-2 bg-amber-200/75 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+                } else {
+                  // It is a client of the route pending to visit.
+                  style = 'my-2 bg-amber-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
+                }
+              }
+              typeOperation = true;
             }
 
             return (
               <RouteCard
-              key={dayOperation.id_item}
-              navigation={navigation}
-              goTo={''}
-              style={style}
-              itemOrder={itemOrder}
-              itemName={itemName}
-              description={description}
-              totalValue={totalValue}
-              />);
+                key={dayOperation.id_item}
+                itemOrder={itemOrder}
+                itemName={itemName}
+                description={description}
+                totalValue={totalValue}
+                style={style}
+                onSelectItem={ typeOperation ?
+                  () => {onSelectStore(dayOperation)}:
+                  () => {onSelectInventoryOperation(dayOperation)}}/>
+              );
           })}
         </View>
         <View style={tw`h-32`}/>

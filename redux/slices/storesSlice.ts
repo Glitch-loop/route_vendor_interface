@@ -18,7 +18,6 @@ const storesSlice = createSlice({
           storedStore.id_store === store.id_store);
 
         if(index === -1) {
-          console.log("new stores")
           // Save store
           state.push({
             // Related to information of the stores
@@ -49,7 +48,6 @@ const storesSlice = createSlice({
           });
         } else {
           // The store already exists. Update the information.
-          console.log("update store")
           state[index] = {
             ...store,
             new_client: false,

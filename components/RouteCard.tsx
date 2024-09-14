@@ -5,24 +5,21 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 const RouteCard = (
   {
-    navigation,
-    goTo,
     itemOrder,
     itemName,
     description,
     totalValue,
     style,
+    onSelectItem,
   }:
   {
-    navigation:any,
-    goTo:string,
     itemOrder:string,
     itemName:string,
     description:string,
     totalValue:string,
     style:string,
+    onSelectItem:any
   }) => {
-
     return (
       <View style={
         tw`${style}`}>
@@ -50,12 +47,10 @@ const RouteCard = (
         <View style={tw`w-full flex basis-1/6 flex-row justify-center`}>
           {/* <View style={tw`flex flex-row justify-center w-full`}> */}
             <Pressable
-            style={tw`
+              style={tw`
               bg-blue-700 py-4 rounded-full 
               flex basis-4/5 flex-row justify-center items-center`}
-            onPress={() => {
-              navigation.navigate(goTo);
-              }}>
+              onPress={() => {onSelectItem()}}>
               <Icon name="chevron-right" style={tw`text-base text-center`} color="#fff" />
             </Pressable>
           {/* </View> */}

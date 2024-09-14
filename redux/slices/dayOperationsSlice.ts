@@ -38,7 +38,6 @@ const dayOperationsSlice = createSlice({
     },
     setDayOperation: (state, action: PayloadAction<IDayOperation>) => {
       /* This function to store a particular day operation */
-      console.log("Adding operation")
       try {
         state.push({
           id_day_operation: action.payload.id_day_operation,
@@ -47,9 +46,42 @@ const dayOperationsSlice = createSlice({
           operation_order: action.payload.operation_order,
           current_operation: action.payload.current_operation,
         });
-        
       } catch (error) {
         console.log(error)
+      }
+    },
+    setNextOperation: (state, action: PayloadAction<void>) => {
+      try {
+        const index = state.findIndex(operationDay =>
+                        operationDay.current_operation === 1);
+
+        if (index === -1) {
+          /* Do nothing */
+        } else {
+          if (state.length - 1 === index) {
+            /*
+              The current operation is the last one of the day
+            */
+          } else {
+            // Switching to the next operation.
+            /*
+              The current opeartion is not the current one any more.
+            */
+            state[index] = {
+              ...state[index],
+              current_operation: 0,
+            };
+            /*
+              Setting the new curret operation
+            */
+            state[index + 1] = {
+              ...state[index + 1],
+              current_operation: 1,
+            };
+          }
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
   },
@@ -58,6 +90,7 @@ const dayOperationsSlice = createSlice({
 export const {
   setArrayDayOperations,
   setDayOperation,
+  setNextOperation,
 } = dayOperationsSlice.actions;
 
 export default dayOperationsSlice.reducer;

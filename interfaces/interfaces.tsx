@@ -28,7 +28,7 @@ export interface IStore {
   colony: string;
   postal_code: string;
   address_reference?: string;
-  store_name?: string;
+  store_name: string;
   owner_name?: string;
   cellphone?: string;
   latitude: string;
