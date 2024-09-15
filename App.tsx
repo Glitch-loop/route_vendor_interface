@@ -22,6 +22,7 @@ import SelectionRouteOperationLayout from './layout/SelectionRouteOperationLayou
 import InventoryOperationLayout from './layout/InventoryOperationLayout';
 import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 import StoreMenuLayout from './layout/StoreMenuLayout';
+import SalesLayout from './layout/SalesLayout';
 
 export type RootStackParamList = {
   routeSelection: undefined;
@@ -29,6 +30,7 @@ export type RootStackParamList = {
   inventoryOperation: undefined;
   routeOperationMenu: undefined;
   storeMenu: undefined;
+  sales: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,7 +41,7 @@ function App(): React.JSX.Element {
       <NavigationContainer>
         <PaperProvider>
           <View style={tw`w-full h-full`}>
-            <Stack.Navigator initialRouteName="routeSelection">
+            <Stack.Navigator initialRouteName="sales">
               <Stack.Screen
                 name="routeSelection"
                 component={RouteSelectionLayout}
@@ -59,6 +61,10 @@ function App(): React.JSX.Element {
               <Stack.Screen
                 name="storeMenu"
                 component={StoreMenuLayout}
+                options={{  headerShown: false }} />
+              <Stack.Screen
+                name="sales"
+                component={SalesLayout}
                 options={{  headerShown: false }} />
             </Stack.Navigator>
           </View>
