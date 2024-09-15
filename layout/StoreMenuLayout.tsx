@@ -1,5 +1,5 @@
 // Libraries
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -11,7 +11,7 @@ import RouteMap from '../components/RouteMap';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
-import { IStore, IStoreStatusDay } from '../interfaces/interfaces';
+import { IDayOperation, IStore, IStoreStatusDay } from '../interfaces/interfaces';
 
 const defaultStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -33,11 +33,11 @@ const defaultStore:IStore&IStoreStatusDay = {
   special_sale: false,
   visited: false,
   petition_to_visit: false,
-}
+};
 
 function getStoreFromContext(idStore:string, stores:(IStore&IStoreStatusDay)[]) {
   const foundStore:IStore&IStoreStatusDay|undefined = stores
-  .find(store => { store.id_store === idStore; });
+  .find((store) => { return store.id_store === idStore; });
 
   if (foundStore === undefined) {
     return defaultStore;
@@ -54,14 +54,62 @@ function buildAddress(store:IStore) {
   }
 
   if (store.ext_number !== ''){
-    address = address + '#' + store.ext_number + ' ';
+    address = address + '#' + store.ext_number + '';
   }
 
   if (store.colony !== ''){
-    address = address + ',' + store.colony;
+    address = address + ', ' + store.colony;
   }
 
   return address;
+}
+
+function displayingClientInformation(store:IStore) {
+  let ownerStoreInformation = '';
+  if ((store.owner_name !== '' && store.owner_name !== null)  && (store.cellphone !== '' && store.cellphone !== null)) {
+    ownerStoreInformation = store.owner_name + ' | ' + store.cellphone;
+  } else if ((store.owner_name !== ''
+            && store.owner_name !== null
+            && store.owner_name !== undefined) &&
+            (store.cellphone === ''
+            || store.owner_name === null
+            || store.owner_name === undefined)) {
+    ownerStoreInformation = store.owner_name;
+  } else if ((store.owner_name === ''
+            || store.owner_name === null
+            || store.owner_name === undefined) &&
+            (store.cellphone !== ''
+            && store.cellphone !== null
+            && store.cellphone !== undefined)){
+    ownerStoreInformation = store.cellphone;
+  } else {
+    ownerStoreInformation = 'No disponible';
+  }
+
+  return ownerStoreInformation;
+}
+
+function contextOfStore(store:IStore&IStoreStatusDay, currentOperation:IDayOperation) {
+  let style = '';
+
+
+  if (currentOperation.current_operation === 1) {
+    style = 'flex flex-row h-6 w-6 bg-indigo-500 rounded-full';
+  } else {
+    if (store.new_client === true) {
+      style = 'flex flex-row h-6 w-6 bg-green-400 rounded-full';
+    } else if (store.special_sale === true) {
+      style = 'flex flex-row h-6 w-6 bg-green-600 rounded-full';
+    } else if (store.petition_to_visit === true) {
+      style = 'flex flex-row h-6 w-6 bg-amber-500 rounded-full';
+    } else if (store.visited === true) {
+      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
+    } else {
+      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
+    }
+  }
+
+  return style;
 }
 
 const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
@@ -70,16 +118,22 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const stores = useSelector((state: RootState) => state.stores);
-
+  
   // Defining state
   const [store, setStore] =
     useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation.id_item, stores));
+
+  useEffect(() => {
+    setStore(getStoreFromContext(currentOperation.id_item, stores));
+    console.log(store.latitude)
+    console.log(store.longuitude)
+    console.log(buildAddress(store))
+  },[currentOperation]);
 
   // handlres
   const onGoBackToMainOperationMenu = () => {
     clearCurrentOperation();
     navigation.navigate('routeOperationMenu');
-
   }
 
   return (
@@ -90,13 +144,16 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           onPress={onGoBackToMainOperationMenu}>
           <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
         </Pressable>
-        <Text style={tw`text-3xl`}>Ruta 1</Text>
-        <Text style={tw`text-2xl mx-1`}>|</Text>
-        <Text style={tw`text-xl max-w-1/2`}>{store.store_name}</Text>
-        <View style={tw`flex flex-row h-6 w-6 bg-indigo-500 rounded-full`} />
+        <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
+        <Text style={tw`text-2xl text-black mx-1`}>|</Text>
+        <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
+        <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
       <View style={tw`h-1/2 w-11/12 flex-1 border-solid border-2 rounded-sm`}>
-        <RouteMap />
+        <RouteMap
+          latitude={parseFloat(store.latitude)}
+          longitude={parseFloat(store.longuitude)}
+        />
       </View>
       <View style={tw`flex-1 w-11/12 flex-col`}>
         <View style={tw`flex flex-row basis-1/3 justify-around items-center`}>
@@ -106,12 +163,17 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           </View>
           <View style={tw`flex flex-col basis-1/2 justify-around`}>
             <Text style={[tw`text-black text-xl`, { lineHeight: 20! }]}>Información del cliente</Text>
-            <Text style={tw`text-black`}>{store.owner_name} | {store.cellphone}</Text>
+            <Text style={tw`text-black`}> {displayingClientInformation(store)} </Text>
           </View>
         </View>
         <View style={tw`flex flex-col basis-1/3 justify-center`}>
           <Text style={tw`text-black text-xl`}>Referencia</Text>
-          <Text style={tw`text-black`}>{store.address_reference}</Text>
+          <Text style={tw`text-black`}>
+            { store.address_reference === '' || store.address_reference === null ?
+              'No Disponible' :
+              store.address_reference
+            }
+          </Text>
         </View>
         <View style={tw`h-3/5 h-1/2 flex flex-row basis-1/3 justify-around items-center`}>
           <View style={tw`h-1/2 flex basis-1/2 justify-center items-center`}>

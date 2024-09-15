@@ -4,10 +4,10 @@ import MapView, { Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import tw from 'twrnc';
 
-const RouteMap = () => {
+const RouteMap = ({latitude, longitude}:{latitude:number, longitude:number}) => {
   const [location, setLocation] = useState({
-    latitude: 37.78825,
-    longitude: -122.4324,
+    latitude: latitude,
+    longitude: longitude,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
@@ -44,15 +44,14 @@ const RouteMap = () => {
   // Get the current location
   const getCurrentLocation = () => {
     if (permissionGranted) {
-      console.log("Pemissions granted")
       Geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setLocation({
-            ...location,
-            latitude,
-            longitude,
-          });
+          // setLocation({
+          //   ...location,
+          //   latitude,
+          //   longitude,
+          // });
         },
         (error) => {
           console.log(error.code, error.message);

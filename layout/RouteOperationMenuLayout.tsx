@@ -5,8 +5,8 @@ import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Redux context
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
 import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 // Components
@@ -16,20 +16,19 @@ import { IDayOperation } from '../interfaces/interfaces';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
+  const dispatch:AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
-
-  console.log("Route operation")
-
+  
   // Handlers
   const onSelectStore = (dayOperation: IDayOperation) => {
-    setCurrentOperation(dayOperation);
+    dispatch(setCurrentOperation(dayOperation));
     navigation.navigate('storeMenu');
   };
 
   const onSelectInventoryOperation = (dayOperation: IDayOperation) => {
-    setCurrentOperation(dayOperation);
+    dispatch(setCurrentOperation(dayOperation));
     navigation.navigate('inventoryOperation');
   };
 
@@ -116,8 +115,8 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
                 totalValue={totalValue}
                 style={style}
                 onSelectItem={ typeOperation ?
-                  () => {onSelectStore(dayOperation)}:
-                  () => {onSelectInventoryOperation(dayOperation)}}/>
+                  () => { onSelectStore(dayOperation); } :
+                  () => { onSelectInventoryOperation(dayOperation); }}/>
               );
           })}
         </View>
