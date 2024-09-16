@@ -134,7 +134,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   const onGoBackToMainOperationMenu = () => {
     clearCurrentOperation();
     navigation.navigate('routeOperationMenu');
-  }
+  };
 
   return (
     <View style={tw`flex-1 justify-center items-center`}>

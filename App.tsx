@@ -42,6 +42,7 @@ function App(): React.JSX.Element {
         <PaperProvider>
           <View style={tw`w-full h-full`}>
             <Stack.Navigator initialRouteName="sales">
+            {/* <Stack.Navigator initialRouteName="routeSelection"> */}
               <Stack.Screen
                 name="routeSelection"
                 component={RouteSelectionLayout}

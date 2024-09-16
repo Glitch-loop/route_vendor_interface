@@ -11,9 +11,13 @@ import tw from 'twrnc';
 const SearchBarWithSuggestions = ({
     catalog,
     fieldToSearch,
+    keyField,
+    onSelectHandler,
   }:{
     catalog:any[],
     fieldToSearch:string,
+    keyField:string|number,
+    onSelectHandler:any,
   }) => {
   // Importing redux state
 
@@ -28,10 +32,9 @@ const SearchBarWithSuggestions = ({
 
     // Filter data based on search query
     if (query) {
-      console.log(catalog)
       const filtered = catalog.filter((item) =>
         item[fieldToSearch].toLowerCase().includes(query.toLowerCase())
-      );
+    );
       setFilteredData(filtered);
     } else {
       setFilteredData([]);
@@ -40,7 +43,8 @@ const SearchBarWithSuggestions = ({
 
   // Handler for when a suggestion is selected
   const onSelectItem = (item:any) => {
-    setSearchQuery(item);
+    onSelectHandler(item);
+    setSearchQuery('');
     setFilteredData([]);
   };
 
@@ -55,11 +59,11 @@ const SearchBarWithSuggestions = ({
       {filteredData.length > 0 && (
         <FlatList
           data={filteredData}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => item[keyField]}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => onSelectItem(item)}>
               <Text style={{ padding: 10, borderBottomWidth: 1, borderColor: '#ccc' }}>
-                {item}
+                {item[fieldToSearch]}
               </Text>
             </TouchableOpacity>
           )}
