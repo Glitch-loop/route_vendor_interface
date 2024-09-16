@@ -16,10 +16,16 @@ const TableProduct = ({
     catalog,
     commitedProducts,
     setCommitedProduct,
+    sectionTitle,
+    sectionCaption,
+    totalMessage,
   }:{
     catalog:IProductInventory[],
     commitedProducts:IProductInventory[],
-    setCommitedProduct:any
+    setCommitedProduct:any,
+    sectionTitle:string,
+    sectionCaption: string,
+    totalMessage: string,
   }) => {
 
     // Handlers
@@ -50,16 +56,18 @@ const TableProduct = ({
 
   return (
     <View style={tw`w-full flex-1 items-center`}>
-      <SearchBarWithSuggestions
-        catalog={catalog}
-        fieldToSearch={'product_name'}
-        keyField={'id_product'}
-        onSelectHandler={onSelectAnItem}
-        />
+      <View style={tw`w-full mt-3 flex flex-row justify-center`}>
+        <SearchBarWithSuggestions
+          catalog={catalog}
+          fieldToSearch={'product_name'}
+          keyField={'id_product'}
+          onSelectHandler={onSelectAnItem}
+          />
+      </View>
       <SectionTitle
-        title={'Productos para vender'}
-        caption={'(Venta sugerida: Última venta)'}
-        titlePositionStyle={'justify-center items-center'}/>
+        title={sectionTitle}
+        caption={sectionCaption}
+        titlePositionStyle={'justify-center items-center my-2'}/>
       <HeaderProduct />
       { commitedProducts.length > 0 &&
         commitedProducts.map(product =>
@@ -78,7 +86,7 @@ const TableProduct = ({
         )
       }
       <SubtotalLine
-        description={'Total de la venta:'}
+        description={totalMessage}
         total={
           commitedProducts.reduce((accumulator, currentValue) => {
             return accumulator + currentValue.amount * currentValue.price;
@@ -86,7 +94,7 @@ const TableProduct = ({
         }
         fontStyle={'font-bold text-lg'}
       />
-      <View style={tw`w-11/12 border border-solid`} />
+      <View style={tw`w-11/12 border border-solid mt-2`} />
     </View>
   )
 };

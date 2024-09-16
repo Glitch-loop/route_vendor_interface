@@ -49,8 +49,9 @@ const SearchBarWithSuggestions = ({
   };
 
   return (
-    <View style={tw`w-full`}>
+    <View style={tw`w-11/12`}>
       <Searchbar
+        style={tw`border border-solid`}
         placeholder="Search"
         onChangeText={onChangeSearch}
         value={searchQuery}
