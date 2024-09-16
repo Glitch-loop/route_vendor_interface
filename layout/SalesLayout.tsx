@@ -1,46 +1,31 @@
 // Libraries
 import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Text } from 'react-native';
 import tw from 'twrnc';
-import TableProduct from '../components/SalesLayout/TableProduct';
 
 // Redux context.
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 
-// Moocks for testign
-import productInventory from '../moocks/productInventory';
+// Interfaces and utils
 import { IProductInventory } from '../interfaces/interfaces';
+import {
+  getMessageForProductDevolutionOperation,
+  getProductDevolutionBalanceWithoutNegativeNumber,
+} from '../utils/saleFunction';
+
+// Components
+import productInventory from '../moocks/productInventory';
+import TableProduct from '../components/SalesLayout/TableProduct';
+import SaleSummarize from '../components/SalesLayout/SaleSummarize';
+import ConfirmationBand from '../components/ConfirmationBand';
+import ActiononDialog from '../components/ActionDialog';
+import PaymentMethod from '../components/SalesLayout/PaymentMethod';
+
+// Moocks for testign
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 
-// Auxiliar functuion
-function getProductDevolutionBalance(productDevolution:IProductInventory[], productReposition:IProductInventory[]):number {
-  const totalProductDevolution = productDevolution.reduce((acc,item) =>
-    {return acc + item.price * item.amount;}, 0);
 
-  const totalProductReposition = productReposition.reduce((acc, item) =>
-    {return acc + item.price * item.amount;}, 0);
-
-  return totalProductDevolution - totalProductReposition;
-}
-
-function getProductDevolutionBalanceWithoutNegativeNumber(productDevolution:IProductInventory[], productReposition:IProductInventory[]) {
-  let total = getProductDevolutionBalance(productDevolution, productReposition);
-  if (total < 0) {
-    return total * -1;
-  } else {
-    return total;
-  }
-}
-
-function getMessageForProductDevolutionOperation(productDevolution:IProductInventory[], productReposition:IProductInventory[]) {
-  let total = getProductDevolutionBalance(productDevolution, productReposition);
-  if (total < 0) {
-    return 'Balance de la devolución de producto (por cobrar): ';
-  } else {
-    return 'Balance de la devolución de producto (a pagar): ';
-  }
-}
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
@@ -54,6 +39,14 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
+      <ActiononDialog
+        visible={true}
+        setVisible={() => {}}
+        message={""}
+        confirmation={()=>{}}
+      >
+        <PaymentMethod />
+      </ActiononDialog>
       <View style={tw`w-full flex flex-1 flex-col items-center`}>
         <View style={tw`w-full flex flex-row`}>
           <TableProduct
@@ -93,8 +86,20 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
             totalMessage={'Total de la venta:'}
             />
         </View>
-        <View style={tw`flex flex-row mt-10`} />
+        <View style={tw`w-full flex flex-row justify-center my-5`}>
+          <SaleSummarize
+            productsDevolution={productDevolution}
+            productsReposition={productReposition}
+            productsSale={productSale}/>
+        </View>
       </View>
+      <ConfirmationBand
+        textOnAccept={'Continuar'}
+        textOnCancel={'Cancelar operación'}
+        handleOnAccept={()=>{}}
+        handleOnCancel={()=>{}}
+      />
+    <View style={tw`flex flex-row mt-10`} />
     </ScrollView>
   );
 };
