@@ -45,29 +45,16 @@ const CardProduct = ({
   };
 
   const handleOnMinusOne = () => {
-    onChangeAmount(item, item.amount - 1);
-    setInputValue((item.amount - 1).toString());
+    let newValue = item.amount - 1;
+    if  (newValue >= 0) {
+      onChangeAmount(item, item.amount - 1);
+      setInputValue((item.amount - 1).toString());
+    }
   };
 
   const handleOnPlusOne = () => {
     onChangeAmount(item, item.amount + 1);
     setInputValue((item.amount + 1).toString());
-  };
-
-
-  const handleOnChangeAmount = (changedItem:IProductInventory, newAmount:number) => {
-    const updatedCommitedProducts = commitedProducts.map(product => {
-      if (product.id_product === changedItem.id_product) {
-        console.log("New amount: ", newAmount)
-        return {
-          ...changedItem,
-          amount: newAmount,
-        };
-      } else {
-        return product;
-      }
-    });
-    setCommitedProduct(updatedCommitedProducts);
   };
 
   return (
