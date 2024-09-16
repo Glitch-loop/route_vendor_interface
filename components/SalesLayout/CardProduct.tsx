@@ -23,20 +23,20 @@ const CardProduct = ({
 
     const [inputValue, setInputValue] = useState('');
 
-    useEffect(() => {
-      // Add an event listener for when the keyboard hides
-      const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        handleTextChange(inputValue);
-      });
-      // Clean up the event listener when the component unmounts
-      return () => {
-        keyboardHideListener.remove();
-      };
-    }, [inputValue]);
-
+    // useEffect(() => {
+    //   // Add an event listener for when the keyboard hides
+    //   const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
+    //     handleTextChange(inputValue);
+    //   });
+    //   // Clean up the event listener when the component unmounts
+    //   return () => {
+    //     keyboardHideListener.remove();
+    //   };
+    // }, [inputValue]);
+    
   // Handlers
   const handleTextChange = (input:string) => {
-    let parsedInput = parseInt(input, 32);
+    let parsedInput = parseInt(input, 10);
     if (isNaN(parsedInput)) {
       onChangeAmount(item, 0);
     } else {
@@ -78,7 +78,11 @@ const CardProduct = ({
         <TextInput
           style={tw`mx-1 border border-solid bg-white rounded-md h-10 text-center`}
           value={inputValue}
-          onChangeText={setInputValue}/>
+          onChangeText={(text) => {
+            setInputValue(text);
+            handleTextChange(text);
+            // debouncedHandleTextChange(text,300);
+          }}/>
         <ActionButton
           style={'bg-blue-700'}
           onClick={handleOnPlusOne}>

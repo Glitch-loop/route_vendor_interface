@@ -37,7 +37,6 @@ const TableProduct = ({
     const handleOnChangeAmount = (changedItem:IProductInventory, newAmount:number) => {
       const updatedCommitedProducts = commitedProducts.map(product => {
         if (product.id_product === changedItem.id_product) {
-          console.log('Updating: ', changedItem.product_name)
           return {
             ...changedItem,
             amount: newAmount,

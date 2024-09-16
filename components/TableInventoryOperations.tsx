@@ -21,7 +21,7 @@ const TableInventoryOperations = (
       if (input === '') {
         updatedProduct.amount = 0;
       } else {
-        updatedProduct.amount = parseInt(input, 32) || 0;
+        updatedProduct.amount = parseInt(input, 10) || 0;
       }
 
       updatedInventory[index] = updatedProduct;
