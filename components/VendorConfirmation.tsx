@@ -36,8 +36,10 @@ const VendorConfirmation = ({
           <Checkbox
             status={checked ? 'checked' : 'unchecked'}
             onPress={() => {
-              setChecked(!checked);
-            }}
+              console.log("Accepting")
+              console.log(!checked)
+
+              setChecked(!checked);}}
             color="#6200ee"
             uncheckedColor="#666"/>
           <TextInput

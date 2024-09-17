@@ -107,12 +107,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Getting the stores that belongs to a particular day of the route
         const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
 
-        console.log("Routes")
-        console.log(storesInTheRoute)
-
         // Getting the information of the stores that belongs to this work day.
-        const stores:IStore[] = await getStoresByArrID(
-                                      storesInTheRoute.map(store => {return store.id_store;}));
+        const stores:IStore[] =
+          await getStoresByArrID(storesInTheRoute.map(store => {return store.id_store;}));
 
         //Setting information of the stores.
         dispatch(setStores(stores));

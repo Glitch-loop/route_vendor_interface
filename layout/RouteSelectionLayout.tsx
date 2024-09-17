@@ -26,7 +26,7 @@ import {
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IDay, IRoute } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay, IDay, IRoute, IRouteDay } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
@@ -37,7 +37,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [pendingToAcceptRoute, setPendingToAcceptRoute] = useState<IRoute|undefined>(undefined);
-  const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<IDay|undefined>(undefined);
+  const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<ICompleteRouteDay|undefined>(undefined);
 
 
   useEffect(() => {
@@ -136,7 +136,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   };
 
   //Handlers
-  const handlerOnSelectARoute = (route:IRoute, routeDay:IDay) => {
+  const handlerOnSelectARoute = (route:IRoute, routeDay:ICompleteRouteDay) => {
     // Verifying that the selected route actually corresponds to make today.
     if (current_day_name().toLocaleLowerCase() === DAYS[routeDay.id_day].day_name.toLocaleLowerCase()){
       // The route selected is the route that corresponds to make today.
@@ -181,7 +181,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
                 Ruta a hacer: {pendingToAcceptRoute?.route_name}
               </Text>
               <Text style={tw`my-2 text-center text-black text-xl font-bold`}>
-                Dia: {pendingToAcceptRouteDay?.day_name}
+                Dia: {pendingToAcceptRouteDay?.day.day_name}
               </Text>
             </View>
         </ActionDialog>
