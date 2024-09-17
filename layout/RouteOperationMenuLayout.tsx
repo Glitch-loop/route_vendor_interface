@@ -20,7 +20,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
-  
+
   // Handlers
   const onSelectStore = (dayOperation: IDayOperation) => {
     dispatch(setCurrentOperation(dayOperation));

@@ -1,7 +1,7 @@
 import React from 'react';
-import { TextInput, Text } from 'react-native';
+import { TextInput, Text, View } from 'react-native';
 import { IProductInventory } from '../interfaces/interfaces';
-import { DataTable } from 'react-native-paper';
+import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 const TableInventoryOperations = (
@@ -41,24 +41,31 @@ const TableInventoryOperations = (
           <Text style={tw`text-black`}>Inventario real</Text>
         </DataTable.Title>
       </DataTable.Header>
-      {inventoryOperation.map((product) => (
-        <DataTable.Row
-        key={product.id_product}>
-          <DataTable.Cell style={tw`flex flex-row justify-center`}>
-            <Text style={tw`text-black`}>{product.product_name}</Text>
-          </DataTable.Cell>
-          <DataTable.Cell style={tw`flex flex-row justify-center`}>
-            <TextInput
-              style={tw`h-10 w-full 
-                border border-black rounded-lg px-4 bg-slate-100 
-                text-xs text-black text-center`}
-              onChangeText={(amount:string) => handleChangeInventory(product.id_product, amount)}
-              placeholder={'Cantidad'}
-              keyboardType={'numeric'}
-              />
-          </DataTable.Cell>
+      { inventoryOperation.length > 0 ?
+        inventoryOperation.map((product) => (
+          <DataTable.Row
+          key={product.id_product}>
+            <DataTable.Cell style={tw`flex flex-row justify-center`}>
+              <Text style={tw`text-black`}>{product.product_name}</Text>
+            </DataTable.Cell>
+            <DataTable.Cell style={tw`flex flex-row justify-center`}>
+              <TextInput
+                style={tw`h-10 w-full 
+                  border border-black rounded-lg px-4 bg-slate-100 
+                  text-xs text-black text-center`}
+                onChangeText={(amount:string) => handleChangeInventory(product.id_product, amount)}
+                placeholder={'Cantidad'}
+                keyboardType={'numeric'}
+                />
+            </DataTable.Cell>
+          </DataTable.Row>
+        )) :
+        <DataTable.Row>
+          <View style={tw`w-full h-full flex flex-col justify-center`}>
+            <ActivityIndicator size={'large'} />
+          </View>
         </DataTable.Row>
-      ))}
+      }
     </DataTable>
   );
 };

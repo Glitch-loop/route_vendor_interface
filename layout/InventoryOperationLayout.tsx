@@ -59,13 +59,18 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     });
   }, []);
 
+  // Handlers
+  const handlerGoBack = () => {
+    navigation.navigate('selectionRouteOperation');
+  };
+
+
+
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
         <RouteHeader
-          navigation={navigation}
-          goTo="selectionRouteOperation"
-        />
+          onGoBack={handlerGoBack}/>
       </View>
       <View style={tw`flex basis-3/6 w-full mt-3`}>
         <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
@@ -82,11 +87,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         />
         <Text style={tw`w-full text-center text-black text-xl mt-2`}>
           Total:
-          ${
-            cashInventory.reduce((accumulator, denomination) => {
-              return accumulator + denomination.amount! * denomination.value;
-            },0)
-          }
+          ${cashInventory.reduce((accumulator, denomination) => {
+              return accumulator + denomination.amount! * denomination.value;},0)}
           </Text>
       </View>
       <View style={tw`flex basis-1/6 mt-3`}>

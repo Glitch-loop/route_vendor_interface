@@ -1,9 +1,10 @@
 //Libraries
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
+import { ActivityIndicator } from 'react-native-paper';
 
 // Components
 import Card from '../components/Card';
@@ -49,7 +50,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         .then(routeDaysData => {
           let currentRoute: ICompleteRoute;
           let arrRouteDays: ICompleteRouteDay[] = [];
- 
+
           // Getting the name of the day
           routeDaysData.forEach(routeDayData => {
             let routeDay:ICompleteRouteDay = {
@@ -109,26 +110,32 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   return (
     <View style={tw`w-full h-full`}>
       <MainMenuHeader/>
-      {routes.map((route:ICompleteRoute) => {
-        return <View
-          style={tw`w-full h-full flex flex-col items-center`}
-          key={route.id_route}>
-          { route.routeDays.map((routeDay:ICompleteRouteDay) => {
-            return (
-              <Card
-                key={routeDay.id_day}
-                navigation={navigation}
-                goTo={'selectionRouteOperation'}
-                routeName={route.route_name}
-                day={routeDay.day.day_name!}
-                description={route.description}
-                route={route}
-                routeDay={routeDay}
-                />
-            );
-          })}
-        </View>;
-      })}
+
+      { routes.length > 0 ?
+        routes.map((route:ICompleteRoute) => {
+          return <View
+            style={tw`w-full h-full flex flex-col items-center`}
+            key={route.id_route}>
+            { route.routeDays.map((routeDay:ICompleteRouteDay) => {
+              return (
+                <Card
+                  key={routeDay.id_day}
+                  navigation={navigation}
+                  goTo={'selectionRouteOperation'}
+                  routeName={route.route_name}
+                  day={routeDay.day.day_name!}
+                  description={route.description}
+                  route={route}
+                  routeDay={routeDay}
+                  />
+              );
+            })}
+          </View>;
+        }) :
+        <View style={tw`h-full flex flex-col justify-center`}>
+          <ActivityIndicator size={'large'} />
+        </View>
+      }
     </View>
   );
 };
