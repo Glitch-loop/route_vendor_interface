@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome6';
-import { Dialog, Portal } from 'react-native-paper';
+import { Dialog, Portal, Provider } from 'react-native-paper';
 import ConfirmationBand from './ConfirmationBand';
 
 
@@ -25,12 +25,13 @@ const ActiononDialog = (
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <Portal>
         <Dialog
         visible={visible}
         onDismiss={hideModal}
-        style={tw`h-1/2 flex flex-col items-center justify-center`}>
+        style={tw`flex flex-col items-center justify-center`}>
         <View style={tw`flex flex-row basis-3/4 justify-center items-center`}>
           {children}
         </View>

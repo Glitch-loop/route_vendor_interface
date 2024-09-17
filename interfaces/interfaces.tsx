@@ -106,3 +106,9 @@ export interface IStoreStatusDay {
   visited: boolean;
   petition_to_visit: boolean;
 }
+
+
+export interface IPaymentMethod {
+  id_payment_method: string;
+  payment_method_name: string;
+}

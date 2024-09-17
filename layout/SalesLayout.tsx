@@ -24,6 +24,7 @@ import PaymentMethod from '../components/SalesLayout/PaymentMethod';
 
 // Moocks for testign
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
+import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 
 
 
@@ -39,14 +40,23 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
-      <ActiononDialog
-        visible={true}
-        setVisible={() => {}}
-        message={""}
-        confirmation={()=>{}}
-      >
-        <PaymentMethod />
-      </ActiononDialog>
+        <ActiononDialog
+          visible={true}
+          setVisible={() => {}}
+          message={""}
+          confirmation={()=>{}}
+        >
+          {/* <PaymentMethod /> */}
+          <PaymentMenu
+            total={170}
+            paymentMethod={
+              {
+                id_payment_method: '52757755-1471-44c3-b6d5-07f7f83a0f6f',
+                payment_method_name: 'Efectivo',
+              }
+            }
+            />
+        </ActiononDialog>
       <View style={tw`w-full flex flex-1 flex-col items-center`}>
         <View style={tw`w-full flex flex-row`}>
           <TableProduct

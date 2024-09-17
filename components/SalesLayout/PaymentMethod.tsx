@@ -3,43 +3,29 @@ import { View, Text } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import tw from 'twrnc';
 
+import PAYMENT_METHODS from '../../utils/paymentMethod';
+import { IPaymentMethod } from '../../interfaces/interfaces';
+
 const PaymentMethod = () => {
-  const [checked, setChecked] = useState('first');
+  /*By default, cash method is selected*/
+  const [selectedMethod, setSelectedMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
+  
+  const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>(PAYMENT_METHODS);
 
   return (
     <View>
-      <View style={tw`flex flex-row items-center`}>
-        <RadioButton
-          value="first"
-          status={ checked === 'first' ? 'checked' : 'unchecked' }
-          onPress={() => setChecked('first')}
-        />
-        <Text style={tw`ml-2 text-lg text-black`}>Dinero</Text>
-      </View>
-      <View style={tw`flex flex-row items-center`}>
-        <RadioButton
-          value="first"
-          status={ checked === 'first' ? 'checked' : 'unchecked' }
-          onPress={() => setChecked('first')}
-        />
-        <Text style={tw`ml-2 text-lg text-black`}>Transferencia</Text>
-      </View>
-      <View style={tw`flex flex-row items-center`}>
-        <RadioButton
-          value="first"
-          status={ checked === 'first' ? 'checked' : 'unchecked' }
-          onPress={() => setChecked('first')}
-        />
-        <Text style={tw`ml-2 text-lg text-black`}>Tarjeta de debito</Text>
-      </View>
-      <View style={tw`flex flex-row items-center`}>
-        <RadioButton
-          value="first"
-          status={ checked === 'first' ? 'checked' : 'unchecked' }
-          onPress={() => setChecked('first')}
-        />
-        <Text style={tw`ml-2 text-lg text-black`}>Tarjeta de credito</Text>
-      </View>
+      <Text style={tw`text-lg text-black text-center mb-2`}>Selecciona una opción</Text>
+      { paymentMethods.map(paymentMethod => {
+        return (
+          <View style={tw`flex flex-row items-center`}>
+            <RadioButton
+              value="first"
+              status={ paymentMethod.id_payment_method === selectedMethod.id_payment_method ? 'checked' : 'unchecked' }
+              onPress={() => setSelectedMethod(paymentMethod)}
+            />
+            <Text style={tw`ml-2 text-lg text-black`}>{paymentMethod.payment_method_name}</Text>
+          </View>
+      );})}
     </View>
   );
 };
