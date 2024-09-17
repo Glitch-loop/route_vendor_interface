@@ -6,9 +6,15 @@ import tw from 'twrnc';
 import PAYMENT_METHODS from '../../utils/paymentMethod';
 import { IPaymentMethod } from '../../interfaces/interfaces';
 
-const PaymentMethod = () => {
+const PaymentMethod = ({
+    currentPaymentMethod,
+    onSelectPaymentMethod,
+  }:{
+    currentPaymentMethod:IPaymentMethod,
+    onSelectPaymentMethod:any,
+  }) => {
   /*By default, cash method is selected*/
-  const [selectedMethod, setSelectedMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
+  const [selectedMethod, setSelectedMethod] = useState<IPaymentMethod>(currentPaymentMethod);
   
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>(PAYMENT_METHODS);
 
@@ -21,7 +27,10 @@ const PaymentMethod = () => {
             <RadioButton
               value="first"
               status={ paymentMethod.id_payment_method === selectedMethod.id_payment_method ? 'checked' : 'unchecked' }
-              onPress={() => setSelectedMethod(paymentMethod)}
+              onPress={() => {
+                setSelectedMethod(paymentMethod);
+                onSelectPaymentMethod(paymentMethod);
+              }}
             />
             <Text style={tw`ml-2 text-lg text-black`}>{paymentMethod.payment_method_name}</Text>
           </View>

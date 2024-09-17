@@ -8,23 +8,24 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 
 // Interfaces and utils
-import { IProductInventory } from '../interfaces/interfaces';
+import { IPaymentMethod, IProductInventory } from '../interfaces/interfaces';
 import {
   getMessageForProductDevolutionOperation,
   getProductDevolutionBalanceWithoutNegativeNumber,
 } from '../utils/saleFunction';
+import PAYMENT_METHODS from '../utils/paymentMethod';
 
 // Components
 import productInventory from '../moocks/productInventory';
 import TableProduct from '../components/SalesLayout/TableProduct';
 import SaleSummarize from '../components/SalesLayout/SaleSummarize';
 import ConfirmationBand from '../components/ConfirmationBand';
-import ActiononDialog from '../components/ActionDialog';
+import ActionDialog from '../components/ActionDialog';
 import PaymentMethod from '../components/SalesLayout/PaymentMethod';
+import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 
 // Moocks for testign
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
-import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 
 
 
@@ -36,27 +37,53 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   const [productDevolution, setProductDevolution] = useState<IProductInventory[]>([]);
   const [productReposition, setProductReposition] = useState<IProductInventory[]>([]);
   const [productSale, setProductSale] = useState<IProductInventory[]>([]);
+  const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
+  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
+  const [showDialog, setShowDialog] = useState<boolean>(false);
+
+  // Handlers
+  const handleStartSalePayment = () => {
+    setShowDialog(true);
+  }
+
+  const handleConfirmPaymentMethod = () => {
+    setConfirmedPaymentMethod(true);
+  };
+
+  const handlePaySale = () => {
+
+  };
+
+  const handlerDeclineDialog = () => {
+    setShowDialog(false);
+    setPaymentMethod(PAYMENT_METHODS[0]);
+    setConfirmedPaymentMethod(false);
+  };
 
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
-        <ActiononDialog
-          visible={true}
-          setVisible={() => {}}
-          message={""}
-          confirmation={()=>{}}
+        {/*
+          This dialog contais the process for finishing a sale.
+          Steps:
+            1- Choose a payment method.
+            2- Client pays according to its selection.
+        */}
+        <ActionDialog
+          visible={showDialog}
+          onAcceptDialog={confirmedPaymentMethod === true ? handlePaySale : handleConfirmPaymentMethod}
+          onDeclinedialog={handlerDeclineDialog}
         >
-          {/* <PaymentMethod /> */}
-          <PaymentMenu
-            total={170}
-            paymentMethod={
-              {
-                id_payment_method: '52757755-1471-44c3-b6d5-07f7f83a0f6f',
-                payment_method_name: 'Efectivo',
-              }
-            }
-            />
-        </ActiononDialog>
+          { confirmedPaymentMethod === true ?
+            <PaymentMenu
+              total={170}
+              paymentMethod={paymnetMethod}/>
+              :
+            <PaymentMethod
+              currentPaymentMethod={paymnetMethod}
+              onSelectPaymentMethod={setPaymentMethod}/>
+          }
+        </ActionDialog>
       <View style={tw`w-full flex flex-1 flex-col items-center`}>
         <View style={tw`w-full flex flex-row`}>
           <TableProduct
@@ -106,7 +133,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       <ConfirmationBand
         textOnAccept={'Continuar'}
         textOnCancel={'Cancelar operación'}
-        handleOnAccept={()=>{}}
+        handleOnAccept={handleStartSalePayment}
         handleOnCancel={()=>{}}
       />
     <View style={tw`flex flex-row mt-10`} />

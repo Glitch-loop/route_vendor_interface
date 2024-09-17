@@ -6,22 +6,19 @@ import { Dialog, Portal, Provider } from 'react-native-paper';
 import ConfirmationBand from './ConfirmationBand';
 
 
-const ActiononDialog = (
+const ActionDialog = (
   {
     children,
     visible,
-    setVisible,
-    message,
-    confirmation,
+    onAcceptDialog,
+    onDeclinedialog,
   }:{
     children:any,
     visible:boolean,
-    setVisible:any,
-    message:string,
-    confirmation:boolean,
+    onAcceptDialog:any,
+    onDeclinedialog:any,
   }) => {
-  const showModal = () => setVisible(true);
-  const hideModal = () => setVisible(false);
+
 
   return (
     <KeyboardAvoidingView
@@ -29,21 +26,20 @@ const ActiononDialog = (
       >
       <Portal>
         <Dialog
-        visible={visible}
-        onDismiss={hideModal}
-        style={tw`flex flex-col items-center justify-center`}>
-        <View style={tw`flex flex-row basis-3/4 justify-center items-center`}>
-          {children}
-        </View>
-        <View
-          style={tw`w-full flex flex-row basis-1/4 justify-center`}>
-          <ConfirmationBand
-              textOnAccept={'Continuar'}
-              textOnCancel={'Cancelar operación'}
-              handleOnAccept={()=>{}}
-              handleOnCancel={()=>{}}
-          />
-        </View>
+          visible={visible}
+          onDismiss={onDeclinedialog}
+          >
+            <View style={tw`flex flex-row justify-center`}>
+              {children}
+            </View>
+            <View
+              style={tw`flex flex-row justify-center my-5`}>
+              <ConfirmationBand
+                  textOnAccept={'Aceptar'}
+                  textOnCancel={'Cancelar operación'}
+                  handleOnAccept={onAcceptDialog}
+                  handleOnCancel={onDeclinedialog}/>
+            </View>
         </Dialog>
       </Portal>
     </KeyboardAvoidingView>
@@ -51,4 +47,4 @@ const ActiononDialog = (
 };
 
 
-export default ActiononDialog;
+export default ActionDialog;
