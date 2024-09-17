@@ -5,7 +5,7 @@ import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Utils
-import { IRoute, IDay } from '../interfaces/interfaces';
+import { IRoute, ICompleteRouteDay } from '../interfaces/interfaces';
 
 const Card = ({
     routeName,
@@ -20,7 +20,7 @@ const Card = ({
     description:string|undefined,
     onSelectCard:any,
     route:IRoute,
-    routeDay:IDay,
+    routeDay:ICompleteRouteDay,
   }) => {
     return (
       <View style={

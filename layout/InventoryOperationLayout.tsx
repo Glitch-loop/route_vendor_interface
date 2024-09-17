@@ -9,17 +9,34 @@ import TableInventoryOperations from '../components/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
 
 // Queries
-import { getAllProducts } from '../queries/queries';
+import { 
+  getAllProducts,
+  getAllStoresInARouteDay,
+  getStoresByArrID,
+} from '../queries/queries';
 
 // Interfaces
-import { ICurrency, IProductInventory } from '../interfaces/interfaces';
+import {
+  ICurrency,
+  IProductInventory,
+  IRouteDayStores,
+  IStore,
+ } from '../interfaces/interfaces';
+
+// Utils
+import DAYS_OPERATIONS from '../lib/day_operations';
 import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
+import { timestamp_format } from '../utils/momentFormat';
+import { planningRouteDayOperations } from '../utils/routesFunctions';
 
 // Redux context
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../redux/store';
+import { setStartDay } from '../redux/slices/routeDaySlice';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setStores } from '../redux/slices/storesSlice';
+import { setArrayDayOperations, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -37,8 +54,11 @@ function initialMXNCurrencyState():ICurrency[] {
 }
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
-  // Setting redux context
+  // Defining redux context
+  const dispatch: AppDispatch = useDispatch();
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
+  const dayOperations = useSelector((state: RootState) => state.dayOperations);
+  const routeDay = useSelector((state: RootState) => state.routeDay);
 
   // Defining redux contexts
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
@@ -64,6 +84,55 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     navigation.navigate('selectionRouteOperation');
   };
 
+  const handleVendorConfirmation = async ():Promise<void> => {
+    try {
+     //Setting information related to the route that is going to be performed today.
+      if (DAYS_OPERATIONS.start_shift_inventory === dayOperations[dayOperations.length - 1].id_type_operation) {
+
+        // Setting general information related to the route.
+        setStartDay({
+          start_date: timestamp_format(),
+          start_petty_cash: cashInventory.reduce((acc, currentCurrency) => {
+            if (currentCurrency.amount === undefined) {
+              return acc;
+            } else {
+              return acc + currentCurrency.amount * currentCurrency.value;
+            }
+          }, 0),
+        });
+
+        //Setting initial inventory.
+        dispatch(setProductInventory(inventory));
+
+        // Getting the stores that belongs to a particular day of the route
+        const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
+
+        console.log("Routes")
+        console.log(storesInTheRoute)
+
+        // Getting the information of the stores that belongs to this work day.
+        const stores:IStore[] = await getStoresByArrID(
+                                      storesInTheRoute.map(store => {return store.id_store;}));
+
+        //Setting information of the stores.
+        dispatch(setStores(stores));
+
+        //Setting route operation.
+        dispatch(setArrayDayOperations(planningRouteDayOperations(storesInTheRoute)));
+
+        //Setting to the first operation
+        dispatch(setNextOperation());
+      }
+
+      navigation.navigate('routeOperationMenu');
+    } catch (error) {
+      console.log('Something went wrong');
+    }
+  };
+
+  const handlerOnVendorCancelation = () => {
+    navigation.navigate('selectionRouteOperation');
+  };
 
 
   return (
@@ -93,11 +162,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       </View>
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
-          navigation={navigation}
-          cashInventory={cashInventory}
-          inventory={inventory}
-          goToConfirm={'routeOperationMenu'}
-          goToCancel={'selectionRouteOperation'}
+          onConfirm={handleVendorConfirmation}
+          onCancel={handlerOnVendorCancelation}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>
       <View style={tw`flex basis-1/6`}><Text> </Text></View>

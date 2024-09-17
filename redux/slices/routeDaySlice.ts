@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { IDayGeneralInformation, IRoute, IRouteDay, IDay } from '../../interfaces/interfaces';
+import { IDayGeneralInformation, IRoute, IRouteDay, IDay, ICompleteRouteDay } from '../../interfaces/interfaces';
 
 const initialState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
   /*Fields related to the general information.*/
@@ -53,7 +53,7 @@ const routeDaySlice = createSlice({
       state.finish_date = action.payload.finish_date;
       state.final_petty_cash = action.payload.final_petty_cash;
     },
-    setRouteDay: (state, action: PayloadAction<any>) => {
+    setRouteDay: (state, action: PayloadAction<ICompleteRouteDay>) => {
       state.id_route_day = action.payload.id_route_day;
     },
   },

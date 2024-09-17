@@ -122,12 +122,14 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   },[]);
 
   // Auxiliar functions
-  const storeRouteSelected = (route:IRoute, routeDay:IDay) => {
-    // Store route information.
+  const storeRouteSelected = (route:IRoute, routeDay:ICompleteRouteDay) => {
+    // Storing information realted to the route.
     dispatch(setRouteInformation(route));
 
-    // Store day informaition
-    dispatch(setDayInformation(routeDay));
+    // Storing information related to the day
+    dispatch(setDayInformation(routeDay.day));
+
+    //Storing information related to the relation between the route and the day.
     dispatch(setRouteDay(routeDay));
 
     navigation.navigate('selectionRouteOperation');
@@ -197,7 +199,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
                   day={routeDay.day.day_name!}
                   description={route.description}
                   route={route}
-                  routeDay={routeDay.day}
+                  routeDay={routeDay}
                   onSelectCard={handlerOnSelectARoute}
                   />
               );
