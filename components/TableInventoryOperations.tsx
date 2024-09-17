@@ -5,8 +5,13 @@ import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 const TableInventoryOperations = (
-  {inventoryOperation, setInventoryOperation}:
-  {inventoryOperation:IProductInventory[], setInventoryOperation:any}) => {
+  {
+    inventoryOperation,
+    setInventoryOperation,
+  }:{
+    inventoryOperation:IProductInventory[],
+    setInventoryOperation:any,
+  }) => {
 
   // Inventory
   const handleChangeInventory = (id_product:string, input: string) => {
@@ -33,14 +38,20 @@ const TableInventoryOperations = (
 
   return (
     <DataTable style={tw`w-full`}>
+      {/* Header section */}
       <DataTable.Header>
         <DataTable.Title style={tw`flex flex-row justify-center text-center`}>
           <Text style={tw`text-black`}>Producto</Text>
         </DataTable.Title>
         <DataTable.Title style={tw`flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Inventario real</Text>
+          <Text style={tw`text-black`}>Producto recibido</Text>
         </DataTable.Title>
+        <DataTable.Title style={tw`flex flex-row justify-center text-center`}>
+          <Text style={tw`text-black`}>Inventario final</Text>
+        </DataTable.Title>
+
       </DataTable.Header>
+      {/* Body section */}
       { inventoryOperation.length > 0 ?
         inventoryOperation.map((product) => (
           <DataTable.Row
@@ -57,6 +68,9 @@ const TableInventoryOperations = (
                 placeholder={'Cantidad'}
                 keyboardType={'numeric'}
                 />
+            </DataTable.Cell>
+            <DataTable.Cell style={tw`flex flex-row justify-center`}>
+              <Text style={tw`text-black`}>{product.amount}</Text>
             </DataTable.Cell>
           </DataTable.Row>
         )) :

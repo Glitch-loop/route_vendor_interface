@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
-import { ActivityIndicator, TextInput } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 
 // Queries and utils
 import DAYS from '../lib/days';
@@ -26,7 +26,7 @@ import {
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IDay, IRoute, IRouteDay } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay, IRoute } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {

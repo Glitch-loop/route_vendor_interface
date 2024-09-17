@@ -138,6 +138,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         <RouteHeader
           onGoBack={handlerGoBack}/>
       </View>
+      {/* Product inventory section. */}
       <View style={tw`flex basis-3/6 w-full mt-3`}>
         <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
         <TableInventoryOperations
@@ -145,6 +146,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           setInventoryOperation={setInventory}
         />
       </View>
+      {/* Cash reception section. */}
       <View style={tw`flex basis-1/6 w-full mt-3`}>
         <Text style={tw`w-full text-center text-black text-2xl`}>Dinero</Text>
         <TableCashReception
