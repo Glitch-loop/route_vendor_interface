@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, Text, TouchableOpacity } from 'react-native';
+import { View, FlatList, VirtualizedList, Text, TouchableOpacity } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import tw from 'twrnc';
 import { Provider } from 'react-native-paper';
