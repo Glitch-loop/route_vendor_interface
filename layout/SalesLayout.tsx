@@ -10,6 +10,7 @@ import { AppDispatch, RootState } from '../redux/store';
 // Interfaces and utils
 import { IPaymentMethod, IProductInventory } from '../interfaces/interfaces';
 import {
+  getGreatTotal,
   getMessageForProductDevolutionOperation,
   getProductDevolutionBalanceWithoutNegativeNumber,
 } from '../utils/saleFunction';
@@ -44,14 +45,14 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   // Handlers
   const handleStartSalePayment = () => {
     setShowDialog(true);
-  }
+  };
 
   const handleConfirmPaymentMethod = () => {
     setConfirmedPaymentMethod(true);
   };
 
   const handlePaySale = () => {
-
+    /*In this handlers is where the sale is inserted in the database*/
   };
 
   const handlerDeclineDialog = () => {
@@ -60,9 +61,15 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     setConfirmedPaymentMethod(false);
   };
 
+  const handleCancelSale = () => {
+    navigation.navigate('storeMenu');
+  };
+
 
   return (
-    <ScrollView style={tw`w-full flex flex-col`}>
+    <ScrollView
+      nestedScrollEnabled={true}
+      style={tw`w-full flex flex-col`}>
         {/*
           This dialog contais the process for finishing a sale.
           Steps:
@@ -76,7 +83,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         >
           { confirmedPaymentMethod === true ?
             <PaymentMenu
-              total={170}
+              total={getGreatTotal(productDevolution, productReposition, productSale)}
               paymentMethod={paymnetMethod}/>
               :
             <PaymentMethod
@@ -134,7 +141,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         textOnAccept={'Continuar'}
         textOnCancel={'Cancelar operación'}
         handleOnAccept={handleStartSalePayment}
-        handleOnCancel={()=>{}}
+        handleOnCancel={handleCancelSale}
       />
     <View style={tw`flex flex-row mt-10`} />
     </ScrollView>

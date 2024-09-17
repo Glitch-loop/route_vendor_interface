@@ -29,4 +29,24 @@ export function getMessageForProductDevolutionOperation(productDevolution:IProdu
   } else {
     return 'Balance de la devolución de producto (a pagar): ';
   }
-}
+};
+
+export function getGreatTotal(
+  productsDevolution:IProductInventory[],
+  productsReposition:IProductInventory[],
+  salesProduct:IProductInventory[],
+):number {
+  let subtotalProductDevolution = getProductDevolutionBalance(productsDevolution,[]);
+  let subtotalProductReposition = getProductDevolutionBalance(productsReposition,[]);
+  let subtotalSaleProduct = getProductDevolutionBalance(salesProduct,[]);
+  let greatTotal = 0;
+
+
+  if (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution < 0) {
+    greatTotal = ((subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution) * -1);
+  } else {
+    greatTotal = subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution;
+  }
+
+  return greatTotal;
+};

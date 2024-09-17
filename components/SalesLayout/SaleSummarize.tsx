@@ -254,7 +254,6 @@ const SaleSummarize = ({
             greatTotal = '-$' + ((subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution) * -1).toString();
           } else {
             greatTotal = '$' + (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution).toString();
-
           }
 
           return (

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import tw from 'twrnc';
+import { Provider } from 'react-native-paper';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 /*
   To make this module reusable, it was decided to pass as props an array of "any"
@@ -50,12 +52,16 @@ const SearchBarWithSuggestions = ({
 
   return (
     <View style={tw`w-11/12`}>
-      <Searchbar
-        style={tw`border border-solid`}
-        placeholder="Search"
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-      />
+      <Provider>
+        <Searchbar
+          clearIcon={() => {return '';}}
+          icon={() => <MaterialIcons name="search" size={24} color="gray" />}
+          style={tw`border border-solid`}
+          placeholder="Search"
+          onChangeText={onChangeSearch}
+          value={searchQuery}
+        />
+      </Provider>
       {/* Display suggestions */}
       {filteredData.length > 0 && (
         <FlatList

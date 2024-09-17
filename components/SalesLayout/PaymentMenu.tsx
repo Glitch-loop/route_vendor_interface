@@ -35,7 +35,7 @@ const PaymentMenu = ({
 
   return (
     <View style={tw`w-full flex flex-col justify-center items-center`}>
-      <Text style={tw`text-center text-black text-2xl my-2`}>Venta</Text>
+      <Text style={tw`text-center text-black text-2xl my-2`}>Total a pagar</Text>
       <View style={tw`flex flex-row justify-end my-1`}>
         <Text
           style={tw`mr-3 text-xl text-black text-right flex flex-row basis-1/2 justify-end`}>
