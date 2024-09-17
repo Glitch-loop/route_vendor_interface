@@ -17,6 +17,7 @@ const initialState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
   /*Fields related to IDay interface*/
   id_day: '',
   day_name: '',
+  order_to_show: 0,
   /*Fields relate to IRouteDay*/
   id_route_day: '',
 };
@@ -42,6 +43,7 @@ const routeDaySlice = createSlice({
     setDayInformation: (state, action: PayloadAction<IDay>) => {
       state.id_day = action.payload.id_day;
       state.day_name = action.payload.day_name;
+      state.order_to_show = action.payload.order_to_show;
     },
     setStartDay: (state, action: PayloadAction<any>) => {
       state.start_date = action.payload.start_date;

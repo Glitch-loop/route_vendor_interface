@@ -1,33 +1,43 @@
 //Libraries
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 import { ActivityIndicator } from 'react-native-paper';
 
-// Components
-import Card from '../components/Card';
-import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay } from '../interfaces/interfaces';
-
 // Queries and utils
 import DAYS from '../lib/days';
 import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import { current_day_name } from '../utils/momentFormat';
 
 // Redux States and reducers
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
 import { setDayOperation } from '../redux/slices/dayOperationsSlice';
+import {
+  setDayInformation,
+  setRouteInformation,
+  setRouteDay,
+} from '../redux/slices/routeDaySlice';
+
+// Components
+import Card from '../components/Card';
+import MainMenuHeader from '../components/MainMenuHeader';
+import { ICompleteRoute, ICompleteRouteDay, IDay, IRoute } from '../interfaces/interfaces';
+import ActionDialog from '../components/ActionDialog';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
-  // Use states definition
-  const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
-
   // Redux (context definitions)
   const dispatch: AppDispatch = useDispatch();
+
+  // Use states definition
+  const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
+  const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [pendingToAcceptRoute, setPendingToAcceptRoute] = useState<IRoute|undefined>(undefined);
+  const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<IDay|undefined>(undefined);
 
   useEffect(() => {
     /*
@@ -59,6 +69,9 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
             };
             arrRouteDays.push(routeDay);
           });
+
+          // Ordering the days
+          arrRouteDays.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
 
           currentRoute = {
             ...currentRouteData,
@@ -107,10 +120,61 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     }));
   },[]);
 
+  // Auxiliar functions
+  const storeRouteSelected = (route:IRoute, routeDay:IDay) => {
+    // Store route information.
+    dispatch(setRouteInformation(route));
+
+    // Store day informaition
+    dispatch(setDayInformation(routeDay));
+    dispatch(setRouteDay(routeDay));
+
+    navigation.navigate('selectionRouteOperation');
+  };
+
+  //Handlers
+  const handlerOnSelectARoute = (route:IRoute, routeDay:IDay) => {
+    // Verifying that the selected route actually corresponds to make today.
+    if (current_day_name().toLocaleLowerCase() === DAYS[routeDay.id_day].day_name.toLocaleLowerCase()){
+      // The route selected is the route that corresponds to make today.
+      storeRouteSelected(route, routeDay);
+      setShowDialog(false);
+      setPendingToAcceptRoute(undefined);
+      setPendingToAcceptRouteDay(undefined);
+    } else {
+      // The route selectes doesn't correspond to make today.
+      setShowDialog(true);
+      setPendingToAcceptRoute(route);
+      setPendingToAcceptRouteDay(routeDay);
+    }
+  };
+
+  const handlerOnCancelMakeRoute = () => {
+    setShowDialog(false);
+    setPendingToAcceptRoute(undefined);
+    setPendingToAcceptRouteDay(undefined);
+  };
+
+  const handlerOnAcceptMakeRoute = () => {
+    if(pendingToAcceptRoute !== undefined && pendingToAcceptRouteDay !== undefined) {
+      storeRouteSelected(pendingToAcceptRoute, pendingToAcceptRouteDay);
+    }
+      setShowDialog(false);
+      setPendingToAcceptRoute(undefined);
+      setPendingToAcceptRouteDay(undefined);
+  };
+
   return (
     <View style={tw`w-full h-full`}>
+        <ActionDialog
+          visible={showDialog}
+          onAcceptDialog={handlerOnAcceptMakeRoute}
+          onDeclinedialog={handlerOnCancelMakeRoute}>
+            <Text style={tw`w-11/12 text-center text-black text-xl`}>
+              Este dia de la ruta no corresponde hacerla hoy. ¿Estas seguro seguir adelante?
+            </Text>
+        </ActionDialog>
       <MainMenuHeader/>
-
       { routes.length > 0 ?
         routes.map((route:ICompleteRoute) => {
           return <View
@@ -120,13 +184,12 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
               return (
                 <Card
                   key={routeDay.id_day}
-                  navigation={navigation}
-                  goTo={'selectionRouteOperation'}
                   routeName={route.route_name}
                   day={routeDay.day.day_name!}
                   description={route.description}
                   route={route}
-                  routeDay={routeDay}
+                  routeDay={routeDay.day}
+                  onSelectCard={handlerOnSelectARoute}
                   />
               );
             })}
