@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
-import { ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator, TextInput } from 'react-native-paper';
 
 // Queries and utils
 import DAYS from '../lib/days';
@@ -38,6 +38,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [pendingToAcceptRoute, setPendingToAcceptRoute] = useState<IRoute|undefined>(undefined);
   const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<IDay|undefined>(undefined);
+
 
   useEffect(() => {
     /*
@@ -170,9 +171,17 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           visible={showDialog}
           onAcceptDialog={handlerOnAcceptMakeRoute}
           onDeclinedialog={handlerOnCancelMakeRoute}>
-            <Text style={tw`w-11/12 text-center text-black text-xl`}>
-              Este dia de la ruta no corresponde hacerla hoy. ¿Estas seguro seguir adelante?
-            </Text>
+            <View style={tw`w-11/12 flex flex-col`}>
+              <Text style={tw`text-center text-black text-xl`}>
+                Este dia de la ruta no corresponde hacerla hoy. ¿Estas seguro seguir adelante?
+              </Text>
+              <Text style={tw`my-2 text-center text-black text-xl font-bold`}>
+                Ruta a hacer: {pendingToAcceptRoute?.route_name}
+              </Text>
+              <Text style={tw`my-2 text-center text-black text-xl font-bold`}>
+                Dia: {pendingToAcceptRouteDay?.day_name}
+              </Text>
+            </View>
         </ActionDialog>
       <MainMenuHeader/>
       { routes.length > 0 ?
