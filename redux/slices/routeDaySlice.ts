@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IDayGeneralInformation, IRoute, IRouteDay, IDay, ICompleteRouteDay } from '../../interfaces/interfaces';
+import { capitalizeFirstLetter } from '../../utils/generalFunctions';
 
 const initialState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
   /*Fields related to the general information.*/
@@ -28,7 +29,7 @@ const routeDaySlice = createSlice({
   reducers: {
     setRouteInformation: (state, action: PayloadAction<IRoute>) => {
       state.id_route = action.payload.id_route;
-      state.route_name = action.payload.route_name;
+      state.route_name = capitalizeFirstLetter(action.payload.route_name);
       state.description = action.payload.description;
       state.route_status = action.payload.route_status;
       state.id_vendor = action.payload.id_vendor;
@@ -42,7 +43,7 @@ const routeDaySlice = createSlice({
     },
     setDayInformation: (state, action: PayloadAction<IDay>) => {
       state.id_day = action.payload.id_day;
-      state.day_name = action.payload.day_name;
+      state.day_name = capitalizeFirstLetter(action.payload.day_name);
       state.order_to_show = action.payload.order_to_show;
     },
     setStartDay: (state, action: PayloadAction<any>) => {

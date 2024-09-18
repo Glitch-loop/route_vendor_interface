@@ -9,8 +9,7 @@ import { AppDispatch, RootState } from '../redux/store';
 import { setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 // Interfaces and enums
-import { 
-  IDayOperation,
+import {
   IPaymentMethod,
   IProductInventory,
   IStore,
@@ -114,8 +113,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         }]));
       } else {
         /* This store belongs to the today route */
-        console.log("SERVED")
-        console.log(determineRouteDayState(foundStore.routeDaystate, 2))
         dispatch(updateStores([{
           ...foundStore,
           routeDaystate: determineRouteDayState(foundStore.routeDaystate, 2),

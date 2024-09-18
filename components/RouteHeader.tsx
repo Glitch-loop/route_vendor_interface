@@ -6,6 +6,7 @@ import { timesamp_standard_format } from '../utils/momentFormat';
 import DAYS from '../lib/days';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
+import { capitalizeFirstLetter } from '../utils/generalFunctions';
 
 
 const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
@@ -22,7 +23,9 @@ const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
       <Text style={tw`text-3xl text-black`}>{routeDay.route_name}</Text>
       <Text style={tw`text-2xl text-black`}>|</Text>
       <View style={tw`flex flex-col`}>
-        <Text style={tw`text-base text-black text-center`}>{timesamp_standard_format()}</Text>
+        <Text style={tw`text-base text-black text-center`}>
+          {capitalizeFirstLetter(timesamp_standard_format())}
+        </Text>
         <Text style={tw`text-base text-black text-center`}>{DAYS[routeDay.id_day].day_name}</Text>
       </View>
     </View>

@@ -28,6 +28,7 @@ import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
 import { ICompleteRoute, ICompleteRouteDay, IRoute } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
+import { capitalizeFirstLetter } from '../utils/generalFunctions';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
@@ -76,6 +77,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
           currentRoute = {
             ...currentRouteData,
+            route_name: capitalizeFirstLetter(currentRouteData.route_name),
             routeDays: arrRouteDays,
           };
 

@@ -21,7 +21,7 @@ const currentOperationSlice = createSlice({
       state.operation_order   = action.payload.operation_order;
       state.current_operation = action.payload.current_operation;
     },
-    clearCurrentOperation: (state, action: PayloadAction<void>) => {
+    clearCurrentOperation: (state) => {
       state.id_day_operation  = '';
       state.id_item           = '';
       state.id_type_operation = '';
