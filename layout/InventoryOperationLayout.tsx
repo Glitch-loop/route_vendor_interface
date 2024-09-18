@@ -9,7 +9,7 @@ import TableInventoryOperations from '../components/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
 
 // Queries
-import { 
+import {
   getAllProducts,
   getAllStoresInARouteDay,
   getStoresByArrID,
@@ -37,6 +37,13 @@ import { setStartDay } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 import { setArrayDayOperations, setNextOperation } from '../redux/slices/dayOperationsSlice';
+
+// Moocks
+import {
+  productInventoryMoock,
+  suggestedProductMoock,
+  currentProductMoock,
+} from '../moocks/productInventory';
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -136,16 +143,20 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
-        <RouteHeader
-          onGoBack={handlerGoBack}/>
+        {/* <RouteHeader
+          onGoBack={handlerGoBack}/> */}
       </View>
       {/* Product inventory section. */}
       <View style={tw`flex basis-3/6 w-full mt-3`}>
         <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
-        <TableInventoryOperations
-          inventoryOperation={inventory}
-          setInventoryOperation={setInventory}
-        />
+        <ScrollView horizontal={true}>
+          <TableInventoryOperations
+            suggestedInventory={suggestedProductMoock}
+            currentInventory={currentProductMoock}
+            operationInventory={inventory}
+            enablingFinalInventory={true}
+            setInventoryOperation={setInventory}/>
+        </ScrollView>
       </View>
       {/* Cash reception section. */}
       <View style={tw`flex basis-1/6 w-full mt-3`}>

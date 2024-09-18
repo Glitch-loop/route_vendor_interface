@@ -1,5 +1,5 @@
 
-export function capitalizeFirstLetter(input: string): string {
+export function capitalizeFirstLetter(input: string|undefined|null): string {
   if (!input || input === undefined || input === null) {
     return '';
   } else {

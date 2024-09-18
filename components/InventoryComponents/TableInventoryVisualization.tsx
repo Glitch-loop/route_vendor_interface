@@ -5,64 +5,34 @@ import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
-import { IProductInventory } from '../interfaces/interfaces';
-
-/*
-  An attempt was made to generelize as much as possible.
-  At the moment of write this documentation there are 4 possible operations:
-  - Start inventory
-  - Restock inventory
-  - Product inventory
-  - Final inventory
-
-  Although each one impacts to the inventory in some way, all of them shares the same interface,
-  so it was decided that the component will work as follows.
-
-  The component recieves the following parameters:
-    - suggestedInventory
-    - currentInventory
-    - operationInventory
-    - enablingFinalInventory
-    - setInventoryOperation
-
-  With the combination of all of them is that we can make all the possible inventory operations.
-
-  It is important to know that the pivotal prop is "operationInventory" that is the "state" that will
-  store the input of the user, in this way "suggestedInventory", "currentInventoy" and
-  "enablingFinalInventory" are auxiliar props that complements the information for the user.
-
-  Another thing to take account is that to indicate that some prop is not needed (at least for
-  "suggestedInventory" and "currentInventoy") for the inventory operations, the prop has to recieve
-  an empty array, so in this way the component will know that that information is not needed.
-
-  For example if I want to make an "start inventory", I'm going to pass a prop the state on which I will
-  store the input of the user (in addition of its handler to manage the events) and in the other props
-  I will pass an empty array "[]" and in the case of enablingFinalInventory I will pass "false".
-
-  In the case of a "restock operation" on which I need all auxiliar oepration I will pass the array
-  with the information according to the prop.
-
-  Important note: Since productIventory is taken as the main array to display the table the other array
-  may not be completed with all the products and it will work without problems.
-
-
-
-*/
-
+import {
+  IProductInventory,
+  ITransactionDescriptions
+ } from '../../interfaces/interfaces';
 
 const TableInventoryOperations = (
   {
-    suggestedInventory,
-    currentInventory,
-    operationInventory,
-    enablingFinalInventory = false,
-    setInventoryOperation,
+    productList,
+    initialOperation,
+    restockOperations,
+    soldOperations,
+    repositionsOperations,
+    finalOperation,
+    inventoryWithdrawal = false,
+    inventoryOutflow = false,
+    returnedInventory = false,
+    issueInventory = false,
   }:{
-    suggestedInventory:IProductInventory[],
-    currentInventory:IProductInventory[],
-    operationInventory:IProductInventory[],
-    enablingFinalInventory:boolean,
-    setInventoryOperation:any,
+    productList:IProductInventory[],
+    initialOperation:IProductInventory[],
+    restockOperations:IProductInventory[][],
+    soldOperations: ITransactionDescriptions[],
+    repositionsOperations: ITransactionDescriptions[],
+    finalOperation:IProductInventory[],
+    inventoryWithdrawal:boolean,
+    inventoryOutflow:boolean,
+    returnedInventory:boolean,
+    issueInventory:boolean,
   }) => {
 
   // Inventory

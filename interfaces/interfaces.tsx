@@ -110,3 +110,11 @@ export interface IPaymentMethod {
   id_payment_method: string;
   payment_method_name: string;
 }
+
+export interface ITransactionDescriptions {
+  id_transaction_description: string;
+  price_at_moment: string;
+  amount: number;
+  id_route_transaction: string;
+  id_product: string;
+}

@@ -1,5 +1,5 @@
 // Libraries
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
@@ -24,6 +24,13 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
 
+  useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false, // Disable back gesture on iOS
+      headerBackVisible: false, // Disable back button in the header
+    });
+  }, []);
+
   // Handlers
   const onSelectStore = (dayOperation: IDayOperation) => {
     dispatch(setCurrentOperation(dayOperation));
@@ -40,7 +47,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       <ScrollView
       style={tw`w-full h-full flex flex-col`}
       scrollEventThrottle={16}>
-        <Text style={tw`w-full ml-3 text-4xl`}>{routeDay.route_name}</Text>
+        <Text style={tw`w-full ml-3 my-3 text-4xl`}>{routeDay.route_name}</Text>
         <View style={tw`w-full flex flex-row justify-center`}>
           <View style={tw`w-11/12 flex flex-row justify-start`}>
             <TypeOperationItem />

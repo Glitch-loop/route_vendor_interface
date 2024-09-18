@@ -1,14 +1,23 @@
+// Librarries
 import React from 'react';
 import { TextInput, Text } from 'react-native';
-import { ICurrency } from '../interfaces/interfaces';
-import { DataTable } from 'react-native-paper';
 import tw from 'twrnc';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
+import { DataTable } from 'react-native-paper';
+
+// Interfaces
+import { ICurrency } from '../interfaces/interfaces';
+
+
 
 const TableCashReception = (
-  {cashInventoryOperation, setCashInventoryOperation}:
-  {cashInventoryOperation:ICurrency[], setCashInventoryOperation:any}) => {
+  {
+    cashInventoryOperation,
+    setCashInventoryOperation,
+  }:
+  {
+    cashInventoryOperation:ICurrency[],
+    setCashInventoryOperation:any
+  }) => {
 
   // Inventory
   const handleChangeAmountCash = (id_denomination:number, input: string) => {

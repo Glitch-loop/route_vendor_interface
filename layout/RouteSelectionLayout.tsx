@@ -77,6 +77,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
           currentRoute = {
             ...currentRouteData,
+            description: capitalizeFirstLetter(currentRouteData.description),
             route_name: capitalizeFirstLetter(currentRouteData.route_name),
             routeDays: arrRouteDays,
           };
