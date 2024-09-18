@@ -82,7 +82,8 @@ const CardProduct = ({
             setInputValue(text);
             handleTextChange(text);
             // debouncedHandleTextChange(text,300);
-          }}/>
+          }}
+          keyboardType={'numeric'}/>
         <ActionButton
           style={'bg-blue-700'}
           onClick={handleOnPlusOne}>

@@ -102,10 +102,7 @@ export interface IDayOperation {
 }
 
 export interface IStoreStatusDay {
-  new_client: boolean;
-  special_sale: boolean;
-  visited: boolean;
-  petition_to_visit: boolean;
+  routeDaystate: number;
 }
 
 

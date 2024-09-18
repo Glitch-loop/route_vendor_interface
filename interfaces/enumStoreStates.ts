@@ -1,0 +1,8 @@
+export enum enumStoreStates {
+  NUETRAL_STATE,
+  NEW_CLIENT,
+  REQUEST_FOR_SELLING,
+  PENDING_TO_VISIT,
+  SERVED,
+  SPECIAL_SALE,
+}

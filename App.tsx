@@ -23,7 +23,6 @@ import InventoryOperationLayout from './layout/InventoryOperationLayout';
 import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 import StoreMenuLayout from './layout/StoreMenuLayout';
 import SalesLayout from './layout/SalesLayout';
-import ResultSaleLayout from './layout/ResultSaleLayout';
 
 export type RootStackParamList = {
   routeSelection: undefined;
@@ -32,7 +31,6 @@ export type RootStackParamList = {
   routeOperationMenu: undefined;
   storeMenu: undefined;
   sales: undefined;
-  resultSales: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -68,10 +66,6 @@ function App(): React.JSX.Element {
               <Stack.Screen
                 name="sales"
                 component={SalesLayout}
-                options={{  headerShown: false }} />
-              <Stack.Screen
-                name="resultSales"
-                component={ResultSaleLayout}
                 options={{  headerShown: false }} />
             </Stack.Navigator>
           </View>

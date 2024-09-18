@@ -4,6 +4,9 @@ import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+// Interface and enums
+import { enumStoreStates } from '../interfaces/enumStoreStates';
+
 // Components
 import RouteMap from '../components/RouteMap';
 
@@ -96,13 +99,13 @@ function contextOfStore(store:IStore&IStoreStatusDay, currentOperation:IDayOpera
   if (currentOperation.current_operation === 1) {
     style = 'flex flex-row h-6 w-6 bg-indigo-500 rounded-full';
   } else {
-    if (store.new_client === true) {
+    if (store.routeDaystate === enumStoreStates.NEW_CLIENT) {
       style = 'flex flex-row h-6 w-6 bg-green-400 rounded-full';
-    } else if (store.special_sale === true) {
+    } else if (store.routeDaystate === enumStoreStates.SPECIAL_SALE) {
       style = 'flex flex-row h-6 w-6 bg-green-600 rounded-full';
-    } else if (store.petition_to_visit === true) {
+    } else if (store.routeDaystate === enumStoreStates.REQUEST_FOR_SELLING) {
       style = 'flex flex-row h-6 w-6 bg-amber-500 rounded-full';
-    } else if (store.visited === true) {
+    } else if (store.routeDaystate === enumStoreStates.SERVED) {
       style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
     } else {
       style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
@@ -118,30 +121,33 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const stores = useSelector((state: RootState) => state.stores);
-  
+
   // Defining state
   const [store, setStore] =
     useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation.id_item, stores));
 
   useEffect(() => {
     setStore(getStoreFromContext(currentOperation.id_item, stores));
-    console.log(store.latitude)
-    console.log(store.longuitude)
-    console.log(buildAddress(store))
   },[currentOperation]);
 
   // handlres
-  const onGoBackToMainOperationMenu = () => {
-    clearCurrentOperation();
+  const handlerGoBackToMainOperationMenu = () => {
+    dispatch(clearCurrentOperation());
     navigation.navigate('routeOperationMenu');
   };
 
+  const handlerOnStartSale = () => {
+    navigation.navigate('sales');
+  };
+
+
+
   return (
-    <View style={tw`flex-1 justify-center items-center`}>
+    <View style={tw`w-full flex-1 justify-center items-center`}>
       <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
         <Pressable
           style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
-          onPress={onGoBackToMainOperationMenu}>
+          onPress={handlerGoBackToMainOperationMenu}>
           <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
         </Pressable>
         <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
@@ -183,8 +189,10 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
             </Pressable>
           </View>
           <View style={tw`h-1/2 flex basis-1/2 justify-center items-center`}>
-            <Pressable style={tw`h-full w-11/12 bg-green-500 rounded border-solid border
-              flex flex-row justify-center  items-center`}>
+            <Pressable
+              style={tw`h-full w-11/12 bg-green-500 rounded border-solid border
+                        flex flex-row justify-center items-center`}
+              onPress={() => {handlerOnStartSale();}}>
               <Text style={tw`text-center text-black`}>Iniciar venta</Text>
             </Pressable>
           </View>

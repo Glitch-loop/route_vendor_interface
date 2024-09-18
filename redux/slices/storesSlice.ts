@@ -1,18 +1,21 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IStore, IStoreStatusDay } from '../../interfaces/interfaces';
+import { enumStoreStates } from '../../interfaces/enumStoreStates';
+import { determineRouteDayState } from '../../utils/routeDayStoreStatesAutomata';
 
 /*
   The purpose of this context is to store the information of all the routes that are going to be
   visited during the day.
 */
 
-const initialState: (IStore&IStoreStatusDay )[] = [];
+const initialState: (IStore&IStoreStatusDay)[] = [];
 
 const storesSlice = createSlice({
   name: 'stores',
   initialState,
   reducers: {
     setStores: (state, action: PayloadAction<IStore[]>) => {
+      // This function is used for initialize a route.
       action.payload.forEach(store => {
         let index = state.findIndex(storedStore =>
           storedStore.id_store === store.id_store);
@@ -41,19 +44,38 @@ const storesSlice = createSlice({
             Related to the information of the stores in the context of the route.
             This configuration indicates that the store is one of the route itself.
             */
-            new_client: false,
-            special_sale: false,
-            visited: false,
-            petition_to_visit: false,
+            routeDaystate: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
           });
         } else {
           // The store already exists. Update the information.
           state[index] = {
             ...store,
-            new_client: false,
-            special_sale: false,
-            visited: false,
-            petition_to_visit: false,
+            routeDaystate: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+          };
+        }
+      });
+    },
+    updateStores: (state, action: PayloadAction<(IStore&IStoreStatusDay)[]>) => {
+      action.payload.forEach(store => {
+        let index = state.findIndex(storedStore => storedStore.id_store === store.id_store);
+        if(index === -1) {
+          // Save store
+          state.push({
+            // Related to information of the stores
+            ...store,
+
+            /*
+            Related to the information of the stores in the context of the route.
+            This configuration indicates that the store is one of the route itself.
+            */
+            routeDaystate: store.routeDaystate,
+          });
+        } else {
+          // The store already exists. Update the information.
+          state[index] = {
+            ...state[index],
+            ...store,
+            routeDaystate: store.routeDaystate,
           };
         }
       });
@@ -62,6 +84,6 @@ const storesSlice = createSlice({
 });
 
 
-export const { setStores } = storesSlice.actions;
+export const { setStores, updateStores } = storesSlice.actions;
 
 export default storesSlice.reducer;
