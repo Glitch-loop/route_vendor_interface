@@ -6,7 +6,7 @@ import tw from 'twrnc';
 const SubtotalLine = ({
     description,
     total,
-    fontStyle
+    fontStyle,
   }:{
     description:string,
     total:string,

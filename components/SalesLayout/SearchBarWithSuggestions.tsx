@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, VirtualizedList, Text, TouchableOpacity } from 'react-native';
+import { View, FlatList, Pressable, Text, TouchableOpacity } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import tw from 'twrnc';
 import { Provider } from 'react-native-paper';
@@ -64,18 +64,16 @@ const SearchBarWithSuggestions = ({
       </Provider>
       {/* Display suggestions */}
       {filteredData.length > 0 && (
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item[keyField]}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => onSelectItem(item)}>
-              <Text style={{ padding: 10, borderBottomWidth: 1, borderColor: '#ccc' }}>
-                {item[fieldToSearch]}
-              </Text>
-            </TouchableOpacity>
-          )}
-          style={{ maxHeight: 200, backgroundColor: '#fff', marginTop: 10 }}
-        />
+        filteredData.map(item => (
+          <Pressable
+            key={item[keyField]}
+            style={tw`p-3 border border-0 border-b-2 border-sold`}
+            onPress={() => onSelectItem(item)}>
+            <Text>
+              {item[fieldToSearch]}
+            </Text>
+          </Pressable>
+        ))
       )}
     </View>
   );
