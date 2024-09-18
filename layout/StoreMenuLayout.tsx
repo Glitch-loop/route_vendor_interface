@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Interface and enums
 import { enumStoreStates } from '../interfaces/enumStoreStates';
@@ -15,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
 import { IDayOperation, IStore, IStoreStatusDay } from '../interfaces/interfaces';
+import GoButton from '../components/generalComponents/GoButton';
 
 const defaultStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -145,11 +145,9 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   return (
     <View style={tw`w-full flex-1 justify-center items-center`}>
       <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
-        <Pressable
-          style={tw`bg-blue-700 px-4 py-3 rounded-full flex flex-row justify-center`}
-          onPress={handlerGoBackToMainOperationMenu}>
-          <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
-        </Pressable>
+      <GoButton
+        iconName={'chevron-left'}
+        onPressButton={handlerGoBackToMainOperationMenu}/>
         <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
         <Text style={tw`text-2xl text-black mx-1`}>|</Text>
         <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>

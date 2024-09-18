@@ -39,8 +39,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     <View style={tw`flex-1`}>
       <ScrollView
       style={tw`w-full h-full flex flex-col`}
-      scrollEventThrottle={16}
-      >
+      scrollEventThrottle={16}>
         <Text style={tw`w-full ml-3 text-4xl`}>{routeDay.route_name}</Text>
         <View style={tw`w-full flex flex-row justify-center`}>
           <View style={tw`w-11/12 flex flex-row justify-start`}>

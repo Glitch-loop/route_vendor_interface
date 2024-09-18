@@ -11,6 +11,8 @@ import { IDayOperation, IStore } from '../../interfaces/interfaces';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
+// Components
+import GoButton from '../generalComponents/GoButton';
 
 // Auxiliar function
 function getNameOfTheStore(currentOperation:IDayOperation, stores:IStore[]):string {
@@ -32,12 +34,10 @@ const StoreHeader = ({onGoBack}:{onGoBack:any}) => {
 
   return (
     <View style={tw`w-full text-center flex flex-row justify-start items-center`}>
-      <Pressable
-        style={tw`bg-blue-700 px-3 py-2 rounded-full flex flex-row justify-center items-center`}
-        onPress={() => onGoBack()}>
-        <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
-      </Pressable>
-      <Text style={tw`text-3xl text-black`}> { getNameOfTheStore(currentOperation, stores) } </Text>
+      <GoButton
+        iconName={'chevron-left'}
+        onPressButton={onGoBack}/>
+      <Text style={tw`ml-3 text-3xl text-black`}> { getNameOfTheStore(currentOperation, stores) } </Text>
     </View>
   );
 };

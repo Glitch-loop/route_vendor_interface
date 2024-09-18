@@ -1,12 +1,19 @@
+// Libraries
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import tw from 'twrnc';
-import Icon from 'react-native-vector-icons/FontAwesome';
+
+// Utils
 import { timesamp_standard_format } from '../utils/momentFormat';
 import DAYS from '../lib/days';
+import { capitalizeFirstLetter } from '../utils/generalFunctions';
+
+// Redux context
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-import { capitalizeFirstLetter } from '../utils/generalFunctions';
+
+// Components
+import GoButton from './generalComponents/GoButton';
 
 
 const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
@@ -15,11 +22,9 @@ const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
 
   return (
     <View style={tw`w-full flex flex-row justify-around text-center items-center`}>
-      <Pressable
-        style={tw`bg-blue-700 px-3 py-2 rounded-full flex flex-row justify-center`}
-        onPress={() => onGoBack()}>
-        <Icon name="chevron-left" style={tw`text-base text-center`} color="#fff" />
-      </Pressable>
+      <GoButton
+        iconName={'chevron-left'}
+        onPressButton={onGoBack}/>
       <Text style={tw`text-3xl text-black`}>{routeDay.route_name}</Text>
       <Text style={tw`text-2xl text-black`}>|</Text>
       <View style={tw`flex flex-col`}>
