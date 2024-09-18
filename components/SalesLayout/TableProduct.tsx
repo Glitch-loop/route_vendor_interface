@@ -36,6 +36,7 @@ const TableProduct = ({
       });
 
       if (foundItem === undefined) {
+        selectedItem.amount = 1;
         setCommitedProduct([...commitedProducts, selectedItem]);
       }
     };
@@ -54,10 +55,17 @@ const TableProduct = ({
       setCommitedProduct(updatedCommitedProducts);
     };
 
+    const handleOnDelteItem = (deleteItem:IProductInventory) => {
+      const updatedCommitedProducts = commitedProducts.filter(product =>
+        product.id_product !== deleteItem.id_product);
+      setCommitedProduct(updatedCommitedProducts);
+    };
+
   return (
     <View style={tw`w-full flex-1 items-center`}>
       <View style={tw`w-full mt-3 flex flex-row justify-center`}>
         <SearchBarWithSuggestions
+          selectedCatalog={commitedProducts}
           catalog={catalog}
           fieldToSearch={'product_name'}
           keyField={'id_product'}
@@ -81,6 +89,7 @@ const TableProduct = ({
               subtotal={product.price * product.amount}
               item={product}
               onChangeAmount={handleOnChangeAmount}
+              onDeleteItem={handleOnDelteItem}
             />
           </View>
         )

@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import { View, Text, TextInput, Keyboard } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Pressable } from 'react-native';
 import tw from 'twrnc';
 import ActionButton from './ActionButton';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -12,6 +12,7 @@ const CardProduct = ({
     subtotal,
     item,
     onChangeAmount,
+    onDeleteItem,
   }:{
     productName:string,
     price:number,
@@ -19,9 +20,10 @@ const CardProduct = ({
     subtotal:number,
     item:IProductInventory,
     onChangeAmount:any,
+    onDeleteItem: any,
   }) => {
 
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState(amount.toString());
 
     // useEffect(() => {
     //   // Add an event listener for when the keyboard hides
@@ -55,6 +57,10 @@ const CardProduct = ({
   const handleOnPlusOne = () => {
     onChangeAmount(item, item.amount + 1);
     setInputValue((item.amount + 1).toString());
+  };
+
+  const handleOnDeleteItem = () => {
+    onDeleteItem(item);
   };
 
   return (
@@ -92,6 +98,15 @@ const CardProduct = ({
       </View>
       <View style={tw`flex flex-row basis-1/6 justify-center`}>
         <Text style={tw`text-black`}>${subtotal}</Text>
+      </View>
+      <View style={tw`w-full h-full absolute bottom-2 left-2 flex flex-row justify-end items-start`}>
+        <View>
+          <Pressable
+            onPress={() => {handleOnDeleteItem()}}
+            style={tw`bg-red-400 p-2 rounded-full`}>
+            <Icon name={'remove'} style={tw`text-white`}/>
+          </Pressable>
+        </View>
       </View>
     </View>
   )
