@@ -6,11 +6,15 @@ import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 import { ActivityIndicator } from 'react-native-paper';
 
-// Queries and utils
-import DAYS from '../lib/days';
+// Queries
 import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
+import SqlLiteQueries from '../queries/SQLite/SqlLiteQueries';
+
+// Utils
+import DAYS from '../lib/days';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import { current_day_name } from '../utils/momentFormat';
+
 
 // Redux States and reducers
 import { useDispatch } from 'react-redux';
@@ -189,6 +193,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
             </View>
         </ActionDialog>
       <MainMenuHeader/>
+      <SqlLiteQueries />
       { routes.length > 0 ?
         routes.map((route:ICompleteRoute) => {
           return <View
