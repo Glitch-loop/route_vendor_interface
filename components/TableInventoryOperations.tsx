@@ -170,7 +170,7 @@ const TableInventoryOperations = (
                   style={tw`h-10 w-full 
                     border border-black rounded-lg px-4 bg-slate-100 
                     text-xs text-black text-center`}
-                  onChangeText={(amount:string) => handleChangeInventory(id_product, amount)}
+                  onChangeText={(input:string) => handleChangeInventory(id_product, input)}
                   placeholder={'Cantidad'}
                   keyboardType={'numeric'}
                   />

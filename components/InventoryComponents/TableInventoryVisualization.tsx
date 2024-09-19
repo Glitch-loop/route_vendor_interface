@@ -17,10 +17,10 @@ const TableInventoryOperations = (
     restockOperations,
     soldOperations,
     repositionsOperations,
-    finalOperation,
+    returnedInventory,
     inventoryWithdrawal = false,
     inventoryOutflow = false,
-    returnedInventory = false,
+    finalOperation = false,
     issueInventory = false,
   }:{
     productList:IProductInventory[],
@@ -28,36 +28,12 @@ const TableInventoryOperations = (
     restockOperations:IProductInventory[][],
     soldOperations: ITransactionDescriptions[],
     repositionsOperations: ITransactionDescriptions[],
-    finalOperation:IProductInventory[],
+    returnedInventory:IProductInventory[],
     inventoryWithdrawal:boolean,
     inventoryOutflow:boolean,
-    returnedInventory:boolean,
+    finalOperation:boolean,
     issueInventory:boolean,
   }) => {
-
-  // Inventory
-  const handleChangeInventory = (id_product:string, input: string) => {
-    const index:number|undefined = operationInventory.findIndex(
-    (product:IProductInventory) => product.id_product === id_product);
-
-    const updatedInventory: IProductInventory[] = [...operationInventory];
-
-    if (index !== undefined || index !== -1) {
-      const updatedProduct = { ...updatedInventory[index] };
-
-      if (input === '') {
-        updatedProduct.amount = 0;
-      } else {
-        updatedProduct.amount = parseInt(input, 10) || 0;
-      }
-
-      updatedInventory[index] = updatedProduct;
-
-      setInventoryOperation(updatedInventory);
-    }
-  };
-
-
 
   return (
     <DataTable style={tw`w-full`}>
@@ -67,25 +43,52 @@ const TableInventoryOperations = (
         <DataTable.Title style={tw`w-32 flex flex-row justify-center text-center`}>
           <Text style={tw`text-black`}>Producto</Text>
         </DataTable.Title>
-        { suggestedInventory.length > 0 &&
+        { initialOperation.length > 0 &&
           <DataTable.Title style={tw`w-20 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Sugerido</Text>
+            <Text style={tw`text-black`}>Inventario inicial</Text>
           </DataTable.Title>
         }
         { currentInventory.length > 0 &&
           <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Inventario Actual</Text>
+            <Text style={tw`text-black`}>Re-stock</Text>
           </DataTable.Title>
         }
         {/*
           This field is never empty since it is the reason of this component (inventory operation)
         */}
-        <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Producto recibido</Text>
-        </DataTable.Title>
-        { enablingFinalInventory &&
+        { inventoryWithdrawal &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Total producto llevado</Text>
+          </DataTable.Title>
+        }
+        { soldOperations.length > 0 &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Venta</Text>
+          </DataTable.Title>
+        }
+        { repositionsOperations.length > 0 &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Reposición</Text>
+          </DataTable.Title>
+        }
+        { inventoryOutflow &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Total salidas de inventario</Text>
+          </DataTable.Title>
+        }
+        { finalOperation &&
           <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
             <Text style={tw`text-black`}>Inventario final</Text>
+          </DataTable.Title>
+        }
+        { returnedInventory.length > 0 &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Inventario regresado</Text>
+          </DataTable.Title>
+        }
+        { issueInventory &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Problema con inventario</Text>
           </DataTable.Title>
         }
       </DataTable.Header>
