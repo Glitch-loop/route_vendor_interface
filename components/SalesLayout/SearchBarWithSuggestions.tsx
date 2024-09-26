@@ -36,25 +36,27 @@ const SearchBarWithSuggestions = ({
 
     // Filter data based on search query
     if (query) {
+      
       const filtered = catalog.filter((item) => {
         let validQuery = item[fieldToSearch].toLowerCase().includes(query.toLowerCase());
-        let result = false;
-        if (validQuery) {
-          const selectedItem = selectedCatalog.find(verifySelectedItem => {
-            return verifySelectedItem[fieldToSearch] === item[fieldToSearch];
-          });
+        // let result = false;
+        let result = true;
+        // if (validQuery) {
+        //   const selectedItem = selectedCatalog.find(verifySelectedItem => {
+        //     return verifySelectedItem[fieldToSearch] === item[fieldToSearch];
+        //   });
 
-          if (selectedItem === undefined) {
-            // Valid product to show.
-            result = true;
-          } else {
-            // Product that was already choosen.
-            result = false;
-          }
-        } else {
-          // Product that doesn't accomplish the query.
-          result = false;
-        }
+        //   if (selectedItem === undefined) {
+        //     // Valid product to show.
+        //     result = true;
+        //   } else {
+        //     // Product that was already choosen.
+        //     result = false;
+        //   }
+        // } else {
+        //   // Product that doesn't accomplish the query.
+        //   result = false;
+        // }
 
         return result;
       }

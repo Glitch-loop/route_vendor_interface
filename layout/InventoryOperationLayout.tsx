@@ -109,6 +109,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         //Setting initial inventory.
+        console.log(inventory)
         dispatch(setProductInventory(inventory));
 
         // Getting the stores that belongs to a particular day of the route

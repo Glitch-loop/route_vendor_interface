@@ -26,7 +26,7 @@ import {
 import PAYMENT_METHODS from '../utils/paymentMethod';
 
 // Components
-import productInventory from '../moocks/productInventory';
+// import productInventory from '../moocks/productInventory';
 import TableProduct from '../components/SalesLayout/TableProduct';
 import SaleSummarize from '../components/SalesLayout/SaleSummarize';
 import ConfirmationBand from '../components/ConfirmationBand';
@@ -50,6 +50,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const stores = useSelector((state: RootState) => state.stores);
+  const productInventory = useSelector((state: RootState) => state.productsInventory);
 
   // Use states
   const [productDevolution, setProductDevolution] = useState<IProductInventory[]>([]);

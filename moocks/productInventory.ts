@@ -221,7 +221,7 @@ export const productInventoryMoock:IProductInventory[] = [
 
 export const currentProductMoock:IProductInventory[] = [
   {
-    amount: 100,
+    amount: 0,
     barcode: '',
     comission: 0.7,
     id_product: '0a9d414e-a0be-4dcb-a3dd-5e055628a0a4',
@@ -233,7 +233,7 @@ export const currentProductMoock:IProductInventory[] = [
     weight: '',
   },
   {
-    amount: 50,
+    amount: 0,
     barcode: '',
     comission: 0.7,
     id_product: '4e81691e-4f74-4bfd-af85-13cdeb58b806',
@@ -245,7 +245,7 @@ export const currentProductMoock:IProductInventory[] = [
     weight: '',
   },
   {
-    amount: 20,
+    amount: 0,
     barcode: '',
     comission: 0.7,
     id_product: '289ac1b6-d5bc-4df6-a649-bf6b150b4782',
