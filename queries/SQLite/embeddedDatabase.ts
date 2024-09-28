@@ -1,3 +1,5 @@
+import EMBEDDED_TABLES from "../../utils/embeddedTables";
+
 /*
   This document contains the database that the system uses to
   store temporarily the information before of storing in the
@@ -14,17 +16,16 @@
 */
 
 export const userEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS user (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.USER} (
     id_vendor TEXT NOT NULL UNIQUE, 
     cellphone TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL UNIQUE,
-    status TEXT NOT NULL UNIQUE
-  );
+    status INT NOT NULL);
 `;
 
 export const routeDayEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS route_day (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.ROUTE_DAY} (
     id_work_day TEXT NOT NULL UNIQUE, 
     start_date TEXT UNIQUE NOT NULL,
     end_date TEXT UNIQUE,
@@ -40,7 +41,7 @@ export const routeDayEmbeddedTable = `
 `;
 
 export const storesEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS stores (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.STORES} (
     id_store TEXT NOT NULL UNIQUE,
     street TEXT NOT NULL,
     ext_number TEXT NOT NULL,
@@ -61,7 +62,7 @@ export const storesEmbeddedTable = `
 `;
 
 export const productsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS products (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.PRODUCTS} (
     id_product      TEXT NOT NULL UNIQUE,
     product_name    TEXT NOT NULL,
     weight          TEXT,
@@ -75,7 +76,7 @@ export const productsEmbeddedTable = `
 `;
 
 export const dayOperationsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS day_operations (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.DAY_OPERATIONS} (
     id_day_operation  TEXT NOT NULL UNIQUE,
     id_item           TEXT NOT NULL,
     id_type_operation TEXT NOT NULL,
@@ -85,7 +86,7 @@ export const dayOperationsEmbeddedTable = `
 `;
 
 export const routeTransactionsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS route_transactions (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (
     id_transaction TEXT NOT NULL UNIQUE,
     date           DATETIME NOT NULL,
     state INT NOT NULL,
@@ -96,7 +97,7 @@ export const routeTransactionsEmbeddedTable = `
 `;
 
 export const transactionDescriptionsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS transaction_descriptions (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (
     id_transaction_description TEXT NOT NULL,
     price_at_moment NUMERIC(6,3) NOT NULL,
     amount INT NOT NULL,
@@ -106,7 +107,7 @@ export const transactionDescriptionsEmbeddedTable = `
 `;
 
 export const inventoryOperationsEmbeddedTable = `
-CREATE TABLE IF NOT EXISTS inventory_operations (
+CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (
   id_inventory_operation TEXT NOT NULL UNIQUE, 
   sign_confirmation TEXT NOT NULL,
   date DATETIME NOT NULL,
@@ -117,7 +118,7 @@ CREATE TABLE IF NOT EXISTS inventory_operations (
 `;
 
 export const productOperationDescriptionsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS produc_operation_descriptions (
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (
     id_product_operation_description TEXT NOT NULL,
     price_at_moment NUMERIC(6,3) NOT NULL,
     amount INT NOT NULL

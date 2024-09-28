@@ -7,8 +7,17 @@ import {v4 as uuidv4 } from 'uuid';
 import { ActivityIndicator } from 'react-native-paper';
 
 // Queries
-import { getAllRoutesByVendor, getAllDaysByRoute } from '../queries/queries';
-import SqlLiteQueries from '../queries/SQLite/SqlLiteQueries';
+// Main database
+import {
+  getAllRoutesByVendor,
+  getAllDaysByRoute } from '../queries/queries';
+
+// Embedded database
+import {
+  createEmbeddedDatabase,
+  insertUser,
+  getUser,
+ } from '../queries/SQLite/sqlLiteQueries';
 
 // Utils
 import DAYS from '../lib/days';
@@ -46,6 +55,11 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
 
   useEffect(() => {
+    /*
+      TODO: If there is new component that starts the application, then it will be needed to move to that component
+      the creation of the databse.
+    */
+    createEmbeddedDatabase();
     /*
       In the system can exist different routes (route 1, route 2, route 3), each route is made
       by "route day" this concept refers that each route will have stores to visit by each day.
@@ -113,6 +127,15 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       status: 1,
     }));
 
+    insertUser({
+      id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
+      cellphone: '322-897-1324',
+      name: 'Renet',
+      password: '',
+      status: 1,
+    });
+
+    getUser();
     /*
       According with the flow of the business operation, after selecting the route,
       the vendor must make an "start_shift_inventory operation" to have products for selling.
@@ -193,7 +216,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
             </View>
         </ActionDialog>
       <MainMenuHeader/>
-      <SqlLiteQueries />
       { routes.length > 0 ?
         routes.map((route:ICompleteRoute) => {
           return <View
