@@ -1,6 +1,8 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Text } from 'react-native';
+import 'react-native-get-random-values'; // Necessary for uuid
+import {v4 as uuidv4 } from 'uuid';
 import tw from 'twrnc';
 
 // Components
@@ -15,25 +17,30 @@ import {
   getStoresByArrID,
 } from '../queries/queries';
 
+
 // Interfaces
 import {
   ICurrency,
   IProductInventory,
   IRouteDayStores,
   IStore,
+  IDayGeneralInformation,
+  IDay,
+  IRouteDay,
+  IRoute,
  } from '../interfaces/interfaces';
 
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
 import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
-import { timestamp_format } from '../utils/momentFormat';
+import { timesamp_standard_format } from '../utils/momentFormat';
 import { planningRouteDayOperations } from '../utils/routesFunctions';
 
 // Redux context
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
-import { setStartDay } from '../redux/slices/routeDaySlice';
+import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 import { setArrayDayOperations, setNextOperation } from '../redux/slices/dayOperationsSlice';
@@ -44,6 +51,7 @@ import {
   suggestedProductMoock,
   currentProductMoock,
 } from '../moocks/productInventory';
+import { insertProducts, insertWorkDay } from '../queries/SQLite/sqlLiteQueries';
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -93,24 +101,73 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
-     //Setting information related to the route that is going to be performed today.
+      const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
+        /*Fields related to the general information.*/
+        id_work_day: '',
+        start_date: '',
+        finish_date: '',
+        start_petty_cash: 0,
+        final_petty_cash: 0,
+        /*Fields related to IRoute interface*/
+        id_route: '',
+        route_name: '',
+        description: '',
+        route_status: '',
+        id_vendor: '',
+        /*Fields related to IDay interface*/
+        id_day: '',
+        day_name: '',
+        order_to_show: 0,
+        /*Fields relate to IRouteDay*/
+        id_route_day: '',
+      };
+
+      const dayGeneralInformation:IDayGeneralInformation = {
+        id_work_day: "",
+        start_date : timesamp_standard_format(),
+        finish_date: timesamp_standard_format(),
+        start_petty_cash: 0,
+        final_petty_cash: 0,
+      }
+
+      //Setting information related to the route that is going to be performed today.
       if (DAYS_OPERATIONS.start_shift_inventory === dayOperations[dayOperations.length - 1].id_type_operation) {
+        /*
+          At this point:
+            - route
+            - day
+            - routeDay
+          information is already covered, this information was provided at the moment of
+          selecting a route
+
+          So, it is just needed to complete the remainded information.
+
+          At this moment, the vendor defined the route that is going to make today.
+        */
+
+       // It is assigned an ID because the vendor already defined the route to make today.
+        dayGeneralInformation.id_work_day = uuidv4();
+        dayGeneralInformation.start_date = timesamp_standard_format();
+        dayGeneralInformation.finish_date = timesamp_standard_format();
+        dayGeneralInformation.start_petty_cash = cashInventory.reduce((acc, currentCurrency) => {
+          if (currentCurrency.amount === undefined) {return acc;}
+          else {return acc + currentCurrency.amount * currentCurrency.value;}
+        }, 0);
+        dayGeneralInformation.final_petty_cash = 0;
 
         // Setting general information related to the route.
-        setStartDay({
-          start_date: timestamp_format(),
-          start_petty_cash: cashInventory.reduce((acc, currentCurrency) => {
-            if (currentCurrency.amount === undefined) {
-              return acc;
-            } else {
-              return acc + currentCurrency.amount * currentCurrency.value;
-            }
-          }, 0),
-        });
+        // Storing information in redux context.
+        dispatch(setDayGeneralInformation(dayGeneralInformation));
+
+        // Storing information in embedded database.
+        insertWorkDay({...dayGeneralInformation, ...routeDay});
 
         //Setting initial inventory.
-        console.log(inventory)
+        // Storgin information in redux context.
         dispatch(setProductInventory(inventory));
+
+        // Storing information in embedded database.
+        insertProducts(inventory);
 
         // Getting the stores that belongs to a particular day of the route
         const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
@@ -144,8 +201,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
-        {/* <RouteHeader
-          onGoBack={handlerGoBack}/> */}
+        <RouteHeader
+          onGoBack={handlerGoBack}/>
       </View>
       {/* Product inventory section. */}
       <View style={tw`flex basis-3/6 w-full mt-3`}>

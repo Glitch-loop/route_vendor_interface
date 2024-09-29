@@ -16,7 +16,6 @@ import {
   IStoreStatusDay,
 } from '../interfaces/interfaces';
 
-
 // Utils
 import {
   getGreatTotal,
@@ -41,8 +40,6 @@ import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
-
-
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions

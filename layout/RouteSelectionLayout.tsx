@@ -10,13 +10,15 @@ import { ActivityIndicator } from 'react-native-paper';
 // Main database
 import {
   getAllRoutesByVendor,
-  getAllDaysByRoute } from '../queries/queries';
+  getAllDaysByRoute,
+} from '../queries/queries';
 
 // Embedded database
 import {
   createEmbeddedDatabase,
   insertUser,
-  getUser,
+  getUsers,
+  insertDayOperation,
  } from '../queries/SQLite/sqlLiteQueries';
 
 // Utils
@@ -39,7 +41,7 @@ import {
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IRoute } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay, IDayOperation, IRoute, IUser } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
 
@@ -60,6 +62,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       the creation of the databse.
     */
     createEmbeddedDatabase();
+
     /*
       In the system can exist different routes (route 1, route 2, route 3), each route is made
       by "route day" this concept refers that each route will have stores to visit by each day.
@@ -119,40 +122,65 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     /*
       TODO: This request is made at the beginning of the application (login)
     */
-    dispatch(setUser({
+    const testingUser:IUser = {
       id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
       cellphone: '322-897-1324',
       name: 'Renet',
       password: '',
       status: 1,
-    }));
+    };
 
-    insertUser({
-      id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
-      cellphone: '322-897-1324',
-      name: 'Renet',
-      password: '',
-      status: 1,
+    // Store information in state.
+    dispatch(setUser(testingUser));
+
+    // Verifying there is not a registerd user.
+    getUsers().then(async (responseUsers:IUser[]) => {
+      const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
+        return responseUser.id_vendor === testingUser.id_vendor;
+      });
+      if (userFound === undefined) {
+        // Store information in embeddded database.
+        await insertUser(testingUser);
+      } else {
+        /*
+          It means the user already exists, so it is not necessary to save the user or vendor.
+        */
+      }
     });
 
-    getUser();
+
     /*
       According with the flow of the business operation, after selecting the route,
       the vendor must make an "start_shift_inventory operation" to have products for selling.
 
       So, the next operation (after selecting the route) is make the inventory.
     */
-    dispatch(setDayOperation({
+    const initialDayOperation:IDayOperation = {
       id_day_operation: uuidv4(),
-      id_item: '',
+      id_item: '', //At this point the inventory hasn't been created.
       id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
       operation_order: 0,
       current_operation: 1,
-    }));
+    };
+
+    // Store information in state
+    dispatch(setDayOperation(initialDayOperation));
+
+    // Store information in embedded database
+    insertDayOperation(initialDayOperation);
+
   },[]);
 
   // Auxiliar functions
   const storeRouteSelected = (route:IRoute, routeDay:ICompleteRouteDay) => {
+    /*
+      In this function, it is only stored information in the redux state and not in the
+      embedded database, because it is not know if the vendor is going to change from one route
+      to another route.
+      In this way, when the vendor finishes the initial inventory process is when the route information is
+      actually stored in the embedded database.
+    */
+
     // Storing information realted to the route.
     dispatch(setRouteInformation(route));
 
