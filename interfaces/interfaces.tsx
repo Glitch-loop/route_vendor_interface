@@ -118,3 +118,39 @@ export interface ITransactionDescriptions {
   id_route_transaction: string;
   id_product: string;
 }
+
+
+export interface IInventoryOperation {
+  id_inventory_operation: string;
+  sign_confirmation: string;
+  date: string;
+  audit: number;
+  id_type_of_operation: string;
+  id_work_day: string;
+}
+
+export interface IInventoryOperationDescription {
+  id_product_operation_description: string;
+  price_at_moment: number;
+  amount: number;
+  id_inventory_operation: string;
+  id_product: string;
+}
+
+export interface ITransactionOperation {
+  id_transaction: string,
+  date: string,
+  state: number,
+  id_work_day: string,
+  id_store: string,
+  id_type_operation: string,
+}
+
+export interface ITransactionOperationDescription {
+  id_transaction: string,
+  date: string,
+  state: number,
+  id_work_day: string,
+  id_store: string,
+  id_type_operation: string,
+}

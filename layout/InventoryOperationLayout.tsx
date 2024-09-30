@@ -11,11 +11,23 @@ import TableInventoryOperations from '../components/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
 
 // Queries
+// Central database
 import {
   getAllProducts,
   getAllStoresInARouteDay,
   getStoresByArrID,
 } from '../queries/queries';
+
+// Embedded database
+import {
+  insertDayOperations,
+  insertProducts,
+  insertStores,
+  insertWorkDay,
+  insertDayOperation,
+  insertInventoryOperation,
+  insertInventoryOperationDescription,
+} from '../queries/SQLite/sqlLiteQueries';
 
 
 // Interfaces
@@ -28,6 +40,9 @@ import {
   IDay,
   IRouteDay,
   IRoute,
+  IDayOperation,
+  IInventoryOperation,
+  IInventoryOperationDescription,
  } from '../interfaces/interfaces';
 
 // Utils
@@ -43,7 +58,7 @@ import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
-import { setArrayDayOperations, setNextOperation } from '../redux/slices/dayOperationsSlice';
+import { setArrayDayOperations, setDayOperation, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 // Moocks
 import {
@@ -51,7 +66,6 @@ import {
   suggestedProductMoock,
   currentProductMoock,
 } from '../moocks/productInventory';
-import { insertProducts, insertWorkDay } from '../queries/SQLite/sqlLiteQueries';
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -101,6 +115,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
+      // Variables for different processes.
       const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
         /*Fields related to the general information.*/
         id_work_day: '',
@@ -123,66 +138,191 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       };
 
       const dayGeneralInformation:IDayGeneralInformation = {
-        id_work_day: "",
+        id_work_day: '',
         start_date : timesamp_standard_format(),
         finish_date: timesamp_standard_format(),
         start_petty_cash: 0,
         final_petty_cash: 0,
-      }
+      };
 
-      //Setting information related to the route that is going to be performed today.
-      if (DAYS_OPERATIONS.start_shift_inventory === dayOperations[dayOperations.length - 1].id_type_operation) {
+      const inventoryDayOperation:IDayOperation = {
+        id_day_operation: '',
+        id_item: '', //At this point the inventory hasn't been created.
+        id_type_operation: '',
+        operation_order: 0,
+        current_operation: 0,
+      };
+
+      const dayOperationPlanification:IDayOperation[] = [];
+
+      const startShiftInventory = dayOperations.findIndex(dayOperation => {
+        return dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory;
+      });
+
+      const storesInTheRoute:IRouteDayStores[] = [];
+      const stores:IStore[] = [];
+
+      const inventoryOperation:IInventoryOperation = {
+        id_inventory_operation: '',
+        sign_confirmation: '',
+        date: '',
+        audit: 0,
+        id_type_of_operation: '',
+        id_work_day: '',
+      };
+
+      const inventoryOperationDescription:IInventoryOperationDescription[] = [];
+
+      /*
+        There are 3 types of inventory operations:
+        - Start shift inventory: Unique in the day.
+        - Re-stock inventory: It might be several ones.
+        - End shift inventory: Unique in the day.
+          - This inventory operation is subdivided into 2 inventory type
+            - Devolutions
+            - Remainded products
+      */
+     // Determining the type of inventory operation.
+     console.log(startShiftInventory);
+     if (startShiftInventory === -1) {
         /*
-          At this point:
+          When the vendor selected the route that is going to perform today, all of these
+          were recorded:
             - route
             - day
             - routeDay
-          information is already covered, this information was provided at the moment of
-          selecting a route
 
           So, it is just needed to complete the remainded information.
+            - General information related to the route.
 
-          At this moment, the vendor defined the route that is going to make today.
+          Conceptually, after aceppting the initial inventory, he accepts to make the route with
+          certain amount of product.
         */
 
-       // It is assigned an ID because the vendor already defined the route to make today.
+        // General information about the route.
+        // Setting general information related to the route.
         dayGeneralInformation.id_work_day = uuidv4();
         dayGeneralInformation.start_date = timesamp_standard_format();
         dayGeneralInformation.finish_date = timesamp_standard_format();
-        dayGeneralInformation.start_petty_cash = cashInventory.reduce((acc, currentCurrency) => {
-          if (currentCurrency.amount === undefined) {return acc;}
-          else {return acc + currentCurrency.amount * currentCurrency.value;}
-        }, 0);
+        // Getting the total of money that he is carrying.
+        dayGeneralInformation.start_petty_cash = cashInventory
+        .reduce((acc, currentCurrency) => { if (currentCurrency.amount === undefined) {return acc;}
+          else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
         dayGeneralInformation.final_petty_cash = 0;
 
-        // Setting general information related to the route.
+        /*
+          According with the flow of the business operation, after selecting the route,
+          the vendor must make an "start_shift_inventory operation" to have products for selling.
+          So, the next operation (after selecting the route) is make the inventory.
+        */
+
+        // Creating the inventory operation (this inventory operation is tied to the "work day").
+        inventoryOperation.id_inventory_operation = uuidv4();
+        inventoryOperation.sign_confirmation = '1';
+        inventoryOperation.date = timesamp_standard_format();
+        inventoryOperation.audit = 0;
+        inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.start_shift_inventory;
+        inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
+
+        // Creating a day operation (day operation resulted from the ivnentory operation).
+        inventoryDayOperation.id_day_operation = uuidv4();
+        inventoryDayOperation.id_item = inventoryOperation.id_inventory_operation;
+        inventoryDayOperation.id_type_operation = DAYS_OPERATIONS.start_shift_inventory;
+        inventoryDayOperation.operation_order = 0;
+        inventoryDayOperation.current_operation = 1;
+
+        // General information about the route
         // Storing information in redux context.
         dispatch(setDayGeneralInformation(dayGeneralInformation));
 
         // Storing information in embedded database.
         insertWorkDay({...dayGeneralInformation, ...routeDay});
 
-        //Setting initial inventory.
-        // Storgin information in redux context.
+        // Inventory operation.
+        /*
+          In theory, this information should be stored in both redux state and embedded database
+          but since it is information with low read operations, to prevent making the application
+          heavy the information is only stored in the embedded database.
+        */
+        // Storing information in embedded database.
+        insertInventoryOperation(inventoryOperation);
+
+        //Inventory operation description.
+        /*
+          This is a sub-record of the inventory description. This table contains the "movements"
+          or actions that were made in the inventiry operation... Essentially: product, amount of
+          product.
+        */
+        // Extracting information from the inventory operation.
+        inventory.forEach(product => {
+          inventoryOperationDescription.push({
+            id_product_operation_description: uuidv4(),
+            price_at_moment: product.price,
+            amount: product.amount,
+            id_inventory_operation: inventoryOperation.id_inventory_operation,
+            id_product: product.id_product,
+          });
+        });
+
+        // Storing information in embedded database.
+        insertInventoryOperationDescription(inventoryOperationDescription);
+
+
+        // Inventory
+        /*
+          Since this is the first inventory operation, the product that is going to be stored
+          will be the inventory.
+        */
+        // Storing information in redux context.
         dispatch(setProductInventory(inventory));
 
         // Storing information in embedded database.
         insertProducts(inventory);
 
+        // Day operation.
+        /*
+          Once all the process have been stored, the day operation itself is created.
+        */
+        // Store information in redux context.
+        dispatch(setDayOperation(inventoryDayOperation));
+
+        // Store information in embedded database.
+        insertDayOperation(inventoryDayOperation);
+
+        // Stores.
+        //Setting information of the stores.
         // Getting the stores that belongs to a particular day of the route
-        const storesInTheRoute:IRouteDayStores[] = await getAllStoresInARouteDay(routeDay.id_route_day);
+        (await getAllStoresInARouteDay(routeDay.id_route_day))
+        .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});
 
         // Getting the information of the stores that belongs to this work day.
-        const stores:IStore[] =
-          await getStoresByArrID(storesInTheRoute.map(store => {return store.id_store;}));
+        (await getStoresByArrID(storesInTheRoute
+          .map(storeInRoute => {return storeInRoute.id_store;})))
+          .map((storeInformation) => stores.push(storeInformation));
 
-        //Setting information of the stores.
+        // Storing in redux context.
         dispatch(setStores(stores));
 
-        //Setting route operation.
-        dispatch(setArrayDayOperations(planningRouteDayOperations(storesInTheRoute)));
+        // Storing in embedded database
+        insertStores(stores);
 
-        //Setting to the first operation
+        //Setting route operations (the stores that are going to be visited during the day).
+        planningRouteDayOperations(storesInTheRoute)
+          .forEach((dayOperation:IDayOperation) =>
+            { dayOperationPlanification.push(dayOperation); });
+
+        // Storing in redux state.
+        dispatch(setArrayDayOperations(dayOperationPlanification));
+
+        // Storing in embedded database
+        insertDayOperations(dayOperationPlanification);
+
+        /*
+          At this point the records needed to start a database have been created.
+          In the workflow of the application, the first operation has been completed (starting
+          shift inventory), so it is needed to advance to the next operation (first store of 
+          the route).
+        */
         dispatch(setNextOperation());
       }
 

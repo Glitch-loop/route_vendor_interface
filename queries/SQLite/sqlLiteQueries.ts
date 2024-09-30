@@ -24,6 +24,11 @@ import {
   IDay,
   IRouteDay,
   IDayOperation,
+  IStore,
+  IInventoryOperation,
+  IInventoryOperationDescription,
+  ITransactionOperationDescription,
+  ITransactionOperation,
 } from '../../interfaces/interfaces';
 
 // Function to create database
@@ -42,6 +47,24 @@ export async function createEmbeddedDatabase() {
       await tx.executeSql(transactionDescriptionsEmbeddedTable);
       await tx.executeSql(inventoryOperationsEmbeddedTable);
       await tx.executeSql(productOperationDescriptionsEmbeddedTable);
+    });
+    sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Failed to create table:', error);
+  }
+}
+export async function dropDatabase() {
+  try {
+    const sqlite = await createSQLiteConnection();
+    console.log("Droping database")
+
+    await sqlite.transaction(async (tx) => {
+      for (let key in EMBEDDED_TABLES) {
+        await tx.executeSql(`DROP TABLE IF EXISTS ${EMBEDDED_TABLES[key]}`);
+      }
     });
     sqlite.close();
   } catch(error) {
@@ -104,7 +127,7 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
 
     sqlite.close();
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    console.error('Failed to insert work day:', error);
   }
 }
 
@@ -206,7 +229,7 @@ export async function insertProducts(products: IProductInventory[]) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to instert user:', error);
+    console.error('Failed to instert products:', error);
   }
 }
 
@@ -257,7 +280,55 @@ export async function updateProducts(products: IProductInventory[]) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to instert user:', error);
+    console.error('Failed to update products:', error);
+  }
+}
+
+// Related to stores
+export async function insertStores(stores: IStore[]) {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      stores.forEach(async (store:IStore) => {
+        const {
+          id_store,
+          street,
+          ext_number,
+          colony,
+          postal_code,
+          address_reference,
+          store_name,
+          owner_name,
+          cellphone,
+          latitude,
+          longuitude,
+          id_creator,
+          creation_date,
+          creation_context,
+          status_store,
+        } = store;
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.STORES} (id_store, street, ext_number, colony, postal_code, address_reference, store_name, owner_name, cellphone, latitude, longuitude, id_creator, creation_date, creation_context, status_store, route_day_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          id_store,
+          street,
+          ext_number,
+          colony,
+          postal_code,
+          address_reference,
+          store_name,
+          owner_name,
+          cellphone,
+          latitude,
+          longuitude,
+          id_creator,
+          creation_date,
+          creation_context,
+          status_store,
+        ]);
+      });
+    });
+  } catch (error) {
+    console.log('Failed to instert stores: ', error);
   }
 }
 
@@ -286,7 +357,7 @@ export async function insertDayOperation(dayOperation: IDayOperation) {
 
     sqlite.close();
   } catch (error) {
-    console.log("The day operation hasn't been inserted: ", error);
+    console.log("Failed to insert day operation: ", error);
   }
 }
 
@@ -316,7 +387,7 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
 
     sqlite.close();
   } catch (error) {
-    console.log("The day operation hasn't been inserted: ", error);
+    console.log("Failed to instert day operations: ", error);
   }
 }
 
@@ -343,8 +414,147 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 
     sqlite.close();
   } catch (error) {
-    console.log("The day operation hasn't been inserted: ", error);
+    console.log("Fauled to update day operation: ", error);
   }
 }
 
 // Related to inventory operations
+export async function insertInventoryOperation(inventoryOperation: IInventoryOperation) {
+  try {
+    const {
+      id_inventory_operation,
+      sign_confirmation,
+      date,
+      audit,
+      id_type_of_operation,
+      id_work_day,
+    } = inventoryOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`
+        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?)
+      `, [
+          id_inventory_operation,
+          sign_confirmation,
+          date,
+          audit,
+          id_type_of_operation,
+          id_work_day,
+        ]);
+    });
+    sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Failed to instert inventory operation:', error);
+  }
+}
+
+export async function insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]) {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    inventoryOperationDescription
+    .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
+      const {
+        id_product_operation_description,
+        price_at_moment,
+        amount,
+        id_inventory_operation,
+        id_product,
+      } = inventoryOperationItem;
+
+      await sqlite.transaction(async (tx) => {
+        await tx.executeSql(`
+          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?)
+        `, [
+            id_product_operation_description,
+            price_at_moment,
+            amount,
+            id_inventory_operation,
+            id_product,
+          ]);
+      });
+    });
+    sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Failed to instert inventory operation:', error);
+  }
+}
+
+
+// Related to transcations
+export async function insertTransaction(transactionOperation: ITransactionOperation) {
+  try {
+    const {
+      id_transaction,
+      date,
+      state,
+      id_work_day,
+      id_store,
+      id_type_operation,
+    } = transactionOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`
+        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation) VALUES (?, ?, ?, ?, ?, ?)
+      `, [
+          id_transaction,
+          date,
+          state,
+          id_work_day,
+          id_store,
+          id_type_operation,
+      ]);
+    });
+    sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Failed to instert inventory operation:', error);
+  }
+}
+
+export async function insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]) {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    inventoryOperationDescription
+    .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
+      const {
+        id_product_operation_description,
+        price_at_moment,
+        amount,
+        id_inventory_operation,
+        id_product,
+      } = inventoryOperationItem;
+
+      await sqlite.transaction(async (tx) => {
+        await tx.executeSql(`
+          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?)
+        `, [
+            id_product_operation_description,
+            price_at_moment,
+            amount,
+            id_inventory_operation,
+            id_product,
+          ]);
+      });
+    });
+    sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Failed to instert inventory operation:', error);
+  }
+}

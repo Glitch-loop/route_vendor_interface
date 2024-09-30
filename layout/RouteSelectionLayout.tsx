@@ -15,15 +15,12 @@ import {
 
 // Embedded database
 import {
-  createEmbeddedDatabase,
   insertUser,
   getUsers,
-  insertDayOperation,
- } from '../queries/SQLite/sqlLiteQueries';
+} from '../queries/SQLite/sqlLiteQueries';
 
 // Utils
 import DAYS from '../lib/days';
-import DAYS_OPERATIONS from '../lib/day_operations';
 import { current_day_name } from '../utils/momentFormat';
 
 
@@ -41,9 +38,13 @@ import {
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IDayOperation, IRoute, IUser } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay, IRoute, IUser } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
+
+// Testing
+import { testingUser } from '../moocks/user';
+
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
@@ -57,12 +58,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
 
   useEffect(() => {
-    /*
-      TODO: If there is new component that starts the application, then it will be needed to move to that component
-      the creation of the databse.
-    */
-    createEmbeddedDatabase();
-
     /*
       In the system can exist different routes (route 1, route 2, route 3), each route is made
       by "route day" this concept refers that each route will have stores to visit by each day.
@@ -122,53 +117,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     /*
       TODO: This request is made at the beginning of the application (login)
     */
-    const testingUser:IUser = {
-      id_vendor: '58eb6f1c-29fc-46dd-bf19-caece0950257',
-      cellphone: '322-897-1324',
-      name: 'Renet',
-      password: '',
-      status: 1,
-    };
-
     // Store information in state.
     dispatch(setUser(testingUser));
-
-    // Verifying there is not a registerd user.
-    getUsers().then(async (responseUsers:IUser[]) => {
-      const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
-        return responseUser.id_vendor === testingUser.id_vendor;
-      });
-      if (userFound === undefined) {
-        // Store information in embeddded database.
-        await insertUser(testingUser);
-      } else {
-        /*
-          It means the user already exists, so it is not necessary to save the user or vendor.
-        */
-      }
-    });
-
-
-    /*
-      According with the flow of the business operation, after selecting the route,
-      the vendor must make an "start_shift_inventory operation" to have products for selling.
-
-      So, the next operation (after selecting the route) is make the inventory.
-    */
-    const initialDayOperation:IDayOperation = {
-      id_day_operation: uuidv4(),
-      id_item: '', //At this point the inventory hasn't been created.
-      id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
-      operation_order: 0,
-      current_operation: 1,
-    };
-
-    // Store information in state
-    dispatch(setDayOperation(initialDayOperation));
-
-    // Store information in embedded database
-    insertDayOperation(initialDayOperation);
-
   },[]);
 
   // Auxiliar functions
@@ -189,6 +139,26 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
     //Storing information related to the relation between the route and the day.
     dispatch(setRouteDay(routeDay));
+
+    /*
+      As part of the configuration for the initial day, it is necessary to store information related
+      to the work day operation
+    */
+
+    // Verifying there is not a registerd user.
+    getUsers().then(async (responseUsers:IUser[]) => {
+      const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
+        return responseUser.id_vendor === testingUser.id_vendor;
+      });
+      if (userFound === undefined) {
+        // Store information in embeddded database.
+        await insertUser(testingUser);
+      } else {
+        /*
+          It means the user already exists, so it is not necessary to save the user or vendor.
+        */
+      }
+    });
 
     navigation.navigate('selectionRouteOperation');
   };

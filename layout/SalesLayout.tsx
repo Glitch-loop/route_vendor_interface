@@ -93,6 +93,10 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     }
   };
 
+  /*
+    This function is in charge of updating the redux states and embedded database.
+    This database is in the case on which the sale was completed successfully.
+  */
   const handlerOnSuccessfullCompletionSale = () => {
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)

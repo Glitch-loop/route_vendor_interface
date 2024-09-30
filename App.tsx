@@ -5,7 +5,7 @@
  * @format
  */
 // Libraries
-import React, {} from 'react';
+import React, {useEffect} from 'react';
 import { View } from 'react-native';
 import tw from 'twrnc';
 import { PaperProvider } from 'react-native-paper';
@@ -24,6 +24,13 @@ import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 import StoreMenuLayout from './layout/StoreMenuLayout';
 import SalesLayout from './layout/SalesLayout';
 
+// Embedded database
+import {
+  createEmbeddedDatabase,
+  dropDatabase,
+ } from './queries/SQLite/sqlLiteQueries';
+
+
 export type RootStackParamList = {
   routeSelection: undefined;
   selectionRouteOperation: undefined;
@@ -33,9 +40,24 @@ export type RootStackParamList = {
   sales: undefined;
 };
 
+/*
+  TODO: Place the database initilization at the beginning of the program
+*/
+
+async function databaseInitialization() {
+  await dropDatabase();
+  await createEmbeddedDatabase();
+}
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App(): React.JSX.Element {
+  useEffect(() => {
+    // Initializing database
+    databaseInitialization();
+  });
+
+
   return (
     <Provider store={store}>
       <NavigationContainer>
