@@ -499,13 +499,14 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
       id_work_day,
       id_store,
       id_type_operation,
+      id_payment_method,
     } = transactionOperation;
 
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation) VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
       `, [
           id_transaction,
           date,
@@ -513,6 +514,7 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
           id_work_day,
           id_store,
           id_type_operation,
+          id_payment_method,
       ]);
     });
     sqlite.close();

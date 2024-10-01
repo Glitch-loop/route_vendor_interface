@@ -17,6 +17,7 @@ import {
   IStore,
   IStoreStatusDay,
   ITransactionOperation,
+  ITransactionOperationDescription,
 } from '../interfaces/interfaces';
 
 // Utils
@@ -45,6 +46,7 @@ import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
 import { timesamp_standard_format } from '../utils/momentFormat';
+import { insertTransaction, insertTransactionOperationDescription } from '../queries/SQLite/sqlLiteQueries';
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
@@ -115,7 +117,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       So, if one of the possible operations don't have any product description, it is not necessary to
       declare or store the transaction because there were not movement for that transaction.
     */
-   
+
     // Creating transaction operations
     const saleOperation:ITransactionOperation = {
       id_transaction: uuidv4(),
@@ -147,6 +149,63 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       id_payment_method: paymnetMethod.id_payment_method,
     };
 
+    // Creating description for each type of transaction.
+    const saleOperationDescription:ITransactionOperationDescription[] = [];
+    const productDevolutionDescription:ITransactionOperationDescription[] = [];
+    const productRepositionDescription:ITransactionOperationDescription[] = [];
+
+    //Extracting information from the selling process.
+    // Sale
+    productSale.forEach((product) => {
+      saleOperationDescription.push({
+        id_transaction_description: uuidv4(),
+        price_at_moment: product.price,
+        amount: product.amount,
+        id_route_transaction: saleOperation.id_transaction,
+        id_product: product.id_product,
+      });
+    });
+
+    // Product devolution
+    productDevolution.forEach((product) => {
+      productDevolutionDescription.push({
+        id_transaction_description: uuidv4(),
+        price_at_moment: product.price,
+        amount: product.amount,
+        id_route_transaction: productDevolutionOperation.id_transaction,
+        id_product: product.id_product,
+      });
+    });
+
+    // Product reposition
+    productReposition.forEach((product) => {
+      productRepositionDescription.push({
+        id_transaction_description: uuidv4(),
+        price_at_moment: product.price,
+        amount: product.amount,
+        id_route_transaction: productRepositionOperation.id_transaction,
+        id_product: product.id_product,
+      });
+    });
+
+    if (saleOperationDescription[0] !== undefined) {
+      /* There was a movement in concept of sale. */
+      insertTransaction(saleOperation);
+      insertTransactionOperationDescription(saleOperationDescription);
+    }
+
+    if (productDevolutionDescription[0] !== undefined) {
+      /* There was a movement in concept of devolution. */
+      insertTransaction(productDevolutionOperation);
+      insertTransactionOperationDescription(productDevolutionDescription);
+    }
+
+    if (productRepositionDescription[0] !== undefined) {
+      /* There was a movement in concept of reposition. */
+      insertTransaction(productRepositionOperation);
+      insertTransactionOperationDescription(productRepositionDescription);
+    }
+
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
@@ -162,6 +221,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
           ...foundStore,
           routeDaystate: determineRouteDayState(foundStore.routeDaystate, 4),
         }]));
+        
       } else {
         /* This store belongs to the today route */
         dispatch(updateStores([{

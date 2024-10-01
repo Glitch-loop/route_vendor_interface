@@ -92,7 +92,8 @@ export const routeTransactionsEmbeddedTable = `
     state             INT NOT NULL,
     id_work_day       TEXT NOT NULL,
     id_store          TEXT NOT NULL,
-    id_type_operation TEXT NOT NULL
+    id_type_operation TEXT NOT NULL,
+    id_payment_method TEXT NOT NULL,
   );
 `;
 
@@ -102,7 +103,7 @@ export const transactionDescriptionsEmbeddedTable = `
     price_at_moment             NUMERIC(6,3) NOT NULL,
     amount                      INT NOT NULL,
     id_route_transaction        TEXT NOT NULL UNIQUE,
-    id_product                  TEXT NOT NULL UNIQUE
+    id_product                  TEXT NOT NULL UNIQUE,
   )
 `;
 
