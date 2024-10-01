@@ -208,7 +208,7 @@ export async function insertProducts(products: IProductInventory[]) {
         } = product;
 
         await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.PRODUCTS} (id_product, product_name, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO ${EMBEDDED_TABLES.PRODUCTS} (id_product, product_name, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         `, [
           id_product,
           product_name,
@@ -434,7 +434,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?)
+        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?);
       `, [
           id_inventory_operation,
           sign_confirmation,
@@ -469,7 +469,7 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
 
       await sqlite.transaction(async (tx) => {
         await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?)
+          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?);
         `, [
             id_product_operation_description,
             price_at_moment,
@@ -505,7 +505,7 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation) VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation) VALUES (?, ?, ?, ?, ?, ?);
       `, [
           id_transaction,
           date,
@@ -524,28 +524,28 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
   }
 }
 
-export async function insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]) {
+export async function insertTransactionOperationDescription(transactionOperationDescription: ITransactionOperationDescription[]) {
   try {
     const sqlite = await createSQLiteConnection();
 
-    inventoryOperationDescription
-    .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
+    transactionOperationDescription
+    .forEach(async (transactionDescription:ITransactionOperationDescription)=> {
       const {
-        id_product_operation_description,
+        id_transaction_description,
         price_at_moment,
         amount,
-        id_inventory_operation,
+        id_route_transaction,
         id_product,
-      } = inventoryOperationItem;
+      } = transactionDescription;
 
       await sqlite.transaction(async (tx) => {
         await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?)
-        `, [
-            id_product_operation_description,
+          INSERT INTO ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (id_transaction_description, price_at_moment, amount, id_route_transaction, id_product) VALUES (?, ?, ?, ?, ?);
+          `, [
+            id_transaction_description,
             price_at_moment,
             amount,
-            id_inventory_operation,
+            id_route_transaction,
             id_product,
           ]);
       });

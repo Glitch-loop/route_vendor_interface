@@ -138,19 +138,19 @@ export interface IInventoryOperationDescription {
 }
 
 export interface ITransactionOperation {
-  id_transaction: string,
-  date: string,
-  state: number,
-  id_work_day: string,
-  id_store: string,
-  id_type_operation: string,
+  id_transaction: string;
+  date: string;
+  state: number;
+  id_work_day: string;
+  id_store: string;
+  id_type_operation: string;
+  id_payment_method: string;
 }
 
 export interface ITransactionOperationDescription {
-  id_transaction: string,
-  date: string,
-  state: number,
-  id_work_day: string,
-  id_store: string,
-  id_type_operation: string,
+  id_transaction_description: string;
+  price_at_moment: number;
+  amount: number;
+  id_route_transaction: string;
+  id_product: string;
 }

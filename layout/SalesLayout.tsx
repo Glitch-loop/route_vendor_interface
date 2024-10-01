@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import tw from 'twrnc';
+import 'react-native-get-random-values'; // Necessary for uuid
+import {v4 as uuidv4 } from 'uuid';
 
 // Redux context.
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +16,7 @@ import {
   IProductInventory,
   IStore,
   IStoreStatusDay,
+  ITransactionOperation,
 } from '../interfaces/interfaces';
 
 // Utils
@@ -23,6 +26,7 @@ import {
   getProductDevolutionBalanceWithoutNegativeNumber,
 } from '../utils/saleFunction';
 import PAYMENT_METHODS from '../utils/paymentMethod';
+import DAYS_OPERATIONS from '../lib/day_operations';
 
 // Components
 // import productInventory from '../moocks/productInventory';
@@ -40,12 +44,15 @@ import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
+import { timesamp_standard_format } from '../utils/momentFormat';
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
+  const routeDay = useSelector((state: RootState) => state.routeDay);
+
   const stores = useSelector((state: RootState) => state.stores);
   const productInventory = useSelector((state: RootState) => state.productsInventory);
 
@@ -54,6 +61,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   const [productReposition, setProductReposition] = useState<IProductInventory[]>([]);
   const [productSale, setProductSale] = useState<IProductInventory[]>([]);
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
+
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
@@ -98,6 +106,47 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     This database is in the case on which the sale was completed successfully.
   */
   const handlerOnSuccessfullCompletionSale = () => {
+    /*
+      At the moment of completing a transaction there will be 3 possible operations:
+        - Sale
+        - Product devolution
+        - Product Reposition
+
+      So, if one of the possible operations don't have any product description, it is not necessary to
+      declare or store the transaction because there were not movement for that transaction.
+    */
+   
+    // Creating transaction operations
+    const saleOperation:ITransactionOperation = {
+      id_transaction: uuidv4(),
+      date: timesamp_standard_format(),
+      state: 1, // Indicating "active transaction"
+      id_work_day: routeDay.id_work_day,
+      id_store: currentOperation.id_item, // Item will be the id of the store in question.
+      id_type_operation: DAYS_OPERATIONS.sales,
+      id_payment_method: paymnetMethod.id_payment_method,
+    };
+
+    const productDevolutionOperation:ITransactionOperation = {
+      id_transaction: uuidv4(),
+      date: timesamp_standard_format(),
+      state: 1, // Indicating "active transaction"
+      id_work_day: routeDay.id_work_day,
+      id_store: currentOperation.id_item, // Item will be the id of the store in question.
+      id_type_operation: DAYS_OPERATIONS.product_devolution,
+      id_payment_method: paymnetMethod.id_payment_method,
+    };
+
+    const productRepositionOperation:ITransactionOperation = {
+      id_transaction: uuidv4(),
+      date: timesamp_standard_format(),
+      state: 1, // Indicating "active transaction"
+      id_work_day: routeDay.id_work_day,
+      id_store: currentOperation.id_item, // Item will be the id of the store in question.
+      id_type_operation: DAYS_OPERATIONS.productRepositionOperation,
+      id_payment_method: paymnetMethod.id_payment_method,
+    };
+
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
@@ -108,7 +157,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         So, it is needed to determine on which state the client is in.
       */
       if(foundStore.routeDaystate === enumStoreStates.REQUEST_FOR_SELLING) {
-        /* This store doesn't belong to this day, but it was requested to visit it. */
+        /* This store doesn't belong to this day, but it was requested to be visited. */
         dispatch(updateStores([{
           ...foundStore,
           routeDaystate: determineRouteDayState(foundStore.routeDaystate, 4),
