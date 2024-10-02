@@ -71,19 +71,29 @@ export async function createEmbeddedDatabase() {
 
 export async function dropEmbeddedDatabase() {
   try {
+    const tablesToDelete:string[] = [
+      EMBEDDED_TABLES.DAY_OPERATIONS,
+      EMBEDDED_TABLES.INVENTORY_OPERATIONS,
+      EMBEDDED_TABLES.PRODUCTS,
+      EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS,
+      EMBEDDED_TABLES.ROUTE_DAY,
+      EMBEDDED_TABLES.ROUTE_TRANSACTIONS,
+      EMBEDDED_TABLES.STORES,
+      EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS,
+      EMBEDDED_TABLES.USER,
+    ];
+
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      for (let key in EMBEDDED_TABLES) {
+      tablesToDelete.forEach(async (table) => {
         try {
-          console.log(`DROP TABLE IF EXISTS ${[EMBEDDED_TABLES[key]]};`);
-          // await tx.executeSql('DROP TABLE IF EXISTS $;', [EMBEDDED_TABLES[key]]);
-          await tx.executeSql(`DROP TABLE IF EXISTS ${[EMBEDDED_TABLES[key]]};`);
+          await tx.executeSql(`DROP TABLE IF EXISTS ${table};`);
           console.log('Table dropped successfully.');
         } catch (error) {
           console.log('Failed dropping the table: ', error);
         }
-      }
+      });
     });
     await sqlite.close();
   } catch(error) {
