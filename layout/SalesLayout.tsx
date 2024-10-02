@@ -46,7 +46,11 @@ import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
 import { timesamp_standard_format } from '../utils/momentFormat';
-import { insertTransaction, insertTransactionOperationDescription } from '../queries/SQLite/sqlLiteQueries';
+import {
+  insertTransaction,
+  insertTransactionOperationDescription,
+  updateStore,
+} from '../queries/SQLite/sqlLiteQueries';
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
@@ -107,7 +111,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     This function is in charge of updating the redux states and embedded database.
     This database is in the case on which the sale was completed successfully.
   */
-  const handlerOnSuccessfullCompletionSale = () => {
+  const handlerOnSuccessfullCompletionSale = async () => {
     /*
       At the moment of completing a transaction there will be 3 possible operations:
         - Sale
@@ -188,46 +192,72 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       });
     });
 
+    console.log("Storing information related to the transaction")
+
     if (saleOperationDescription[0] !== undefined) {
       /* There was a movement in concept of sale. */
-      insertTransaction(saleOperation);
-      insertTransactionOperationDescription(saleOperationDescription);
+      console.log("Sale operation")
+      await insertTransaction(saleOperation);
+      await insertTransactionOperationDescription(saleOperationDescription);
     }
 
     if (productDevolutionDescription[0] !== undefined) {
       /* There was a movement in concept of devolution. */
-      insertTransaction(productDevolutionOperation);
-      insertTransactionOperationDescription(productDevolutionDescription);
+      console.log("Product devolution")
+      await insertTransaction(productDevolutionOperation);
+      await insertTransactionOperationDescription(productDevolutionDescription);
     }
 
     if (productRepositionDescription[0] !== undefined) {
       /* There was a movement in concept of reposition. */
-      insertTransaction(productRepositionOperation);
-      insertTransactionOperationDescription(productRepositionDescription);
+      console.log("Product reposition")
+      await insertTransaction(productRepositionOperation);
+      await insertTransactionOperationDescription(productRepositionDescription);
     }
 
+    console.log("Updating the status of the store")
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
+      console.log("The store was found: ", foundStore)
     if (foundStore !== undefined) {
       /*
-        It means, the store is already plannified for this day.
-        So, it is needed to determine on which state the client is in.
+        It means, the store is already plannified for this day, but we don't know if the client
+        asked to be visited or if it is a client that belongs to today.
       */
-      if(foundStore.routeDaystate === enumStoreStates.REQUEST_FOR_SELLING) {
+     console.log("State of the store", foundStore.route_day_state)
+     console.log("Automata state", enumStoreStates.REQUEST_FOR_SELLING)
+     console.log(foundStore.route_day_state)
+      if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
         /* This store doesn't belong to this day, but it was requested to be visited. */
+        // Update redux context
         dispatch(updateStores([{
           ...foundStore,
-          routeDaystate: determineRouteDayState(foundStore.routeDaystate, 4),
+          route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
         }]));
-        
+
+
+        // Update embedded database
+        await updateStore({
+          ...foundStore,
+          route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
+        });
       } else {
-        /* This store belongs to the today route */
+        /* This store belongs to the route of today*/
+        // Update redux context.
+        console.log("Updating context")
         dispatch(updateStores([{
           ...foundStore,
-          routeDaystate: determineRouteDayState(foundStore.routeDaystate, 2),
+          route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         }]));
+
+        // Update embedded context.
+        console.log("Updating database")
+        await updateStore({
+          ...foundStore,
+          route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
+        });
       }
     } else {
       /*
@@ -237,8 +267,13 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       /*To do*/
     }
 
-    // Moving to the next operation
+    /*
+      Moving to the next operation.
+    */
+    console.log("Moving to the next store")
     dispatch(setNextOperation());
+    
+    console.log("go to")
     navigation.navigate('routeOperationMenu');
   };
 

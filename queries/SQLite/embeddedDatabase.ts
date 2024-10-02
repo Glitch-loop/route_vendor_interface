@@ -104,18 +104,18 @@ export const transactionDescriptionsEmbeddedTable = `
     amount                      INT NOT NULL,
     id_route_transaction        TEXT NOT NULL UNIQUE,
     id_product                  TEXT NOT NULL UNIQUE,
-  )
+  );
 `;
 
 export const inventoryOperationsEmbeddedTable = `
-CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (
-  id_inventory_operation  TEXT NOT NULL UNIQUE, 
-  sign_confirmation       TEXT NOT NULL,
-  date                    DATETIME NOT NULL,
-  audit                   INT NOT NULL,
-  id_type_of_operation    TEXT NOT NULL,
-  id_work_day             TEXT NOT NULL
-);
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (
+    id_inventory_operation  TEXT NOT NULL UNIQUE, 
+    sign_confirmation       TEXT NOT NULL,
+    date                    DATETIME NOT NULL,
+    audit                   INT NOT NULL,
+    id_type_of_operation    TEXT NOT NULL,
+    id_work_day             TEXT NOT NULL
+  );
 `;
 
 export const productOperationDescriptionsEmbeddedTable = `

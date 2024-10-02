@@ -43,6 +43,7 @@ import {
   IDayOperation,
   IInventoryOperation,
   IInventoryOperationDescription,
+  IStoreStatusDay,
  } from '../interfaces/interfaces';
 
 // Utils
@@ -66,6 +67,8 @@ import {
   suggestedProductMoock,
   currentProductMoock,
 } from '../moocks/productInventory';
+import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
+import { enumStoreStates } from '../interfaces/enumStoreStates';
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -160,7 +163,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       });
 
       const storesInTheRoute:IRouteDayStores[] = [];
-      const stores:IStore[] = [];
+      const stores:(IStore&IStoreStatusDay)[] = [];
 
       const inventoryOperation:IInventoryOperation = {
         id_inventory_operation: '',
@@ -183,7 +186,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             - Remainded products
       */
      // Determining the type of inventory operation.
-     console.log(startShiftInventory);
      if (startShiftInventory === -1) {
         /*
           When the vendor selected the route that is going to perform today, all of these
@@ -298,7 +300,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Getting the information of the stores that belongs to this work day.
         (await getStoresByArrID(storesInTheRoute
           .map(storeInRoute => {return storeInRoute.id_store;})))
-          .map((storeInformation) => stores.push(storeInformation));
+          .map((storeInformation) => stores.push({
+            ...storeInformation,
+            route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+          }));
 
         // Storing in redux context.
         dispatch(setStores(stores));

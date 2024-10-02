@@ -14,7 +14,7 @@ const storesSlice = createSlice({
   name: 'stores',
   initialState,
   reducers: {
-    setStores: (state, action: PayloadAction<IStore[]>) => {
+    setStores: (state, action: PayloadAction<(IStore&IStoreStatusDay)[]>) => {
       // This function is used for initialize a route.
       action.payload.forEach(store => {
         let index = state.findIndex(storedStore =>
@@ -41,16 +41,16 @@ const storesSlice = createSlice({
             status_store: store.status_store,
 
             /*
-            Related to the information of the stores in the context of the route.
-            This configuration indicates that the store is one of the route itself.
+              Related to the information of the stores in the context of the route.
+              This configuration indicates that the store is one of the route itself.
             */
-            routeDaystate: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+            route_day_state: store.route_day_state,
           });
         } else {
           // The store already exists. Update the information.
           state[index] = {
             ...store,
-            routeDaystate: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+            route_day_state: store.route_day_state,
           };
         }
       });
@@ -68,14 +68,14 @@ const storesSlice = createSlice({
             Related to the information of the stores in the context of the route.
             This configuration indicates that the store is one of the route itself.
             */
-            routeDaystate: store.routeDaystate,
+            route_day_state: store.route_day_state,
           });
         } else {
           // The store already exists. Update the information.
           state[index] = {
             ...state[index],
             ...store,
-            routeDaystate: store.routeDaystate,
+            route_day_state: store.route_day_state,
           };
         }
       });

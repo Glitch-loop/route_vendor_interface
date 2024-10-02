@@ -32,10 +32,7 @@ const defaultStore:IStore&IStoreStatusDay = {
   creation_date: '',
   creation_context: '',
   status_store: '',
-  new_client: false,
-  special_sale: false,
-  visited: false,
-  petition_to_visit: false,
+  route_day_state: enumStoreStates.NUETRAL_STATE,
 };
 
 function getStoreFromContext(idStore:string, stores:(IStore&IStoreStatusDay)[]) {
@@ -99,13 +96,13 @@ function contextOfStore(store:IStore&IStoreStatusDay, currentOperation:IDayOpera
   if (currentOperation.current_operation === 1) {
     style = 'flex flex-row h-6 w-6 bg-indigo-500 rounded-full';
   } else {
-    if (store.routeDaystate === enumStoreStates.NEW_CLIENT) {
+    if (store.route_day_state === enumStoreStates.NEW_CLIENT) {
       style = 'flex flex-row h-6 w-6 bg-green-400 rounded-full';
-    } else if (store.routeDaystate === enumStoreStates.SPECIAL_SALE) {
+    } else if (store.route_day_state === enumStoreStates.SPECIAL_SALE) {
       style = 'flex flex-row h-6 w-6 bg-green-600 rounded-full';
-    } else if (store.routeDaystate === enumStoreStates.REQUEST_FOR_SELLING) {
+    } else if (store.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
       style = 'flex flex-row h-6 w-6 bg-amber-500 rounded-full';
-    } else if (store.routeDaystate === enumStoreStates.SERVED) {
+    } else if (store.route_day_state === enumStoreStates.SERVED) {
       style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
     } else {
       style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';

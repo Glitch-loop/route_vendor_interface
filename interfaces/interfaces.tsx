@@ -102,7 +102,7 @@ export interface IDayOperation {
 }
 
 export interface IStoreStatusDay {
-  routeDaystate: number;
+  route_day_state: number;
 }
 
 

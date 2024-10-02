@@ -29,6 +29,7 @@ import {
   IInventoryOperationDescription,
   ITransactionOperationDescription,
   ITransactionOperation,
+  IStoreStatusDay,
 } from '../../interfaces/interfaces';
 
 // Function to create database
@@ -285,12 +286,12 @@ export async function updateProducts(products: IProductInventory[]) {
 }
 
 // Related to stores
-export async function insertStores(stores: IStore[]) {
+export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
   try {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      stores.forEach(async (store:IStore) => {
+      stores.forEach(async (store:IStore&IStoreStatusDay) => {
         const {
           id_store,
           street,
@@ -307,6 +308,7 @@ export async function insertStores(stores: IStore[]) {
           creation_date,
           creation_context,
           status_store,
+          route_day_state,
         } = store;
         await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.STORES} (id_store, street, ext_number, colony, postal_code, address_reference, store_name, owner_name, cellphone, latitude, longuitude, id_creator, creation_date, creation_context, status_store, route_day_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
           id_store,
@@ -324,11 +326,66 @@ export async function insertStores(stores: IStore[]) {
           creation_date,
           creation_context,
           status_store,
+          route_day_state,
         ]);
       });
     });
+    sqlite.close();
   } catch (error) {
     console.log('Failed to instert stores: ', error);
+  }
+}
+
+export async function updateStore(store: IStore&IStoreStatusDay) {
+  try {
+    console.log("Updating information")
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+
+      const {
+        id_store,
+        street,
+        ext_number,
+        colony,
+        postal_code,
+        address_reference,
+        store_name,
+        owner_name,
+        cellphone,
+        latitude,
+        longuitude,
+        id_creator,
+        creation_date,
+        creation_context,
+        status_store,
+        route_day_state,
+      } = store;
+
+      console.log("Store to update: ", id_store)
+      const result = await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ?
+      WHERE id_store = ${id_store}`, [
+        street,
+        ext_number,
+        colony,
+        postal_code,
+        address_reference,
+        store_name,
+        owner_name,
+        cellphone,
+        latitude,
+        longuitude,
+        id_creator,
+        creation_date,
+        creation_context,
+        status_store,
+        route_day_state,
+      ]);
+
+    });
+    sqlite.close();
+  } catch (error) {
+    console.log('Failed to update: ', error);
   }
 }
 
@@ -502,11 +559,14 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
       id_payment_method,
     } = transactionOperation;
 
+    console.log("Starting information transaction")
     const sqlite = await createSQLiteConnection();
 
+    console.log("OK1")
+    console.log(sqlite)
     await sqlite.transaction(async (tx) => {
-      await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
+      console.log("OK")
+      await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
       `, [
           id_transaction,
           date,
@@ -517,6 +577,7 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
           id_payment_method,
       ]);
     });
+    console.log("Inserting the transaction")
     sqlite.close();
   } catch(error) {
     /*
@@ -549,10 +610,12 @@ export async function insertTransactionOperationDescription(transactionOperation
             amount,
             id_route_transaction,
             id_product,
-          ]);
+          ]
+        );
       });
     });
     sqlite.close();
+    console.log("Inserting the transaction description")
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
