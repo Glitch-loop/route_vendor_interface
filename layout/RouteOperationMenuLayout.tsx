@@ -94,16 +94,16 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               if (dayOperation.current_operation === 1) {
                   style = 'my-2 bg-indigo-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
               } else {
-                if (stores[index].routeDaystate === enumStoreStates.NEW_CLIENT) {
+                if (stores[index].route_day_state === enumStoreStates.NEW_CLIENT) {
                   // New client
                   style = 'my-2 bg-green-400 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
-                } else if (stores[index].routeDaystate === enumStoreStates.SPECIAL_SALE) {
+                } else if (stores[index].route_day_state === enumStoreStates.SPECIAL_SALE) {
                   // Sale to a client outside of the route.
                   style = 'my-2 bg-orange-600 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
-                } else if (stores[index].routeDaystate === enumStoreStates.REQUEST_FOR_SELLING) {
+                } else if (stores[index].route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
                   // It is a petition for visiting a route.
                   style = 'my-2 bg-amber-500 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
-                } else if (stores[index].routeDaystate === enumStoreStates.SERVED) {
+                } else if (stores[index].route_day_state === enumStoreStates.SERVED) {
                   // It is a client that has already visited.
                   style = 'my-2 bg-amber-200/75 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
                 } else {
