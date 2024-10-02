@@ -231,7 +231,7 @@ export async function insertProducts(products: IProductInventory[]) {
               order_to_show,
               amount,
             } = product;
-            console.log(product);
+
             await tx.executeSql(`
               INSERT INTO ${EMBEDDED_TABLES.PRODUCTS} (id_product, product_name, barcode, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             `, [
@@ -291,7 +291,7 @@ export async function updateProducts(products: IProductInventory[]) {
 
         await tx.executeSql(`
           UPDATE ${EMBEDDED_TABLES.PRODUCTS} SET (product_name, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          WHERE id_product = ${id_product}
+          WHERE id_product = '${id_product}';
         `, [
           id_product,
           product_name,
@@ -394,8 +394,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
       } = store;
 
       console.log("Store to update: ", id_store)
-      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ?
-      WHERE id_store = ${id_store}`, [
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ? WHERE id_store = '${id_store}';`, [
         street,
         ext_number,
         colony,
@@ -416,7 +415,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
 
     await sqlite.close();
   } catch (error) {
-    console.error('Failed to update: ', error);
+    console.error('Failed to update the store: ', error);
   }
 }
 
@@ -492,7 +491,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
         current_operation,
       } = dayOperation;
 
-      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET (id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?)WHERE id_day_operation = ${id_day_operation}`, [
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET (id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?) WHERE id_day_operation = '${id_day_operation}';`, [
         id_item,
         id_type_operation,
         operation_order,
@@ -502,7 +501,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 
     await sqlite.close();
   } catch (error) {
-    console.error("Fauled to update day operation: ", error);
+    console.error("Failed to update day operation: ", error);
   }
 }
 
@@ -591,15 +590,9 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
       id_payment_method,
     } = transactionOperation;
 
-    console.log(transactionOperation)
-    console.log("Starting information transaction")
     const sqlite = await createSQLiteConnection();
 
-    console.log("OK1")
-    console.log(sqlite)
-    console.log(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);`)
     await sqlite.transaction(async (tx) => {
-      console.log("OK")
       await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
       `, [
           id_transaction,
@@ -610,8 +603,9 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
           id_type_operation,
           id_payment_method,
       ]);
-    }).catch((error) => console.error(error));
-    console.log("Inserting the transaction")
+    })
+    .catch((error) => console.error(error));
+
     await sqlite.close();
   } catch(error) {
     /*

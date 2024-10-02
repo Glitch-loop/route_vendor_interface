@@ -333,8 +333,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
       navigation.navigate('routeOperationMenu');
     } catch (error) {
-      console.log(error)
-      console.log('Something went wrong');
+      console.error('Something went wrong: ', error);
     }
   };
 

@@ -149,7 +149,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       state: 1, // Indicating "active transaction"
       id_work_day: routeDay.id_work_day,
       id_store: currentOperation.id_item, // Item will be the id of the store in question.
-      id_type_operation: DAYS_OPERATIONS.productRepositionOperation,
+      id_type_operation: DAYS_OPERATIONS.product_reposition,
       id_payment_method: paymnetMethod.id_payment_method,
     };
 
@@ -192,8 +192,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       });
     });
 
-    console.log("Storing information related to the transaction")
-
     if (saleOperationDescription[0] !== undefined) {
       /* There was a movement in concept of sale. */
       console.log("Sale operation")
@@ -215,20 +213,15 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       await insertTransactionOperationDescription(productRepositionDescription);
     }
 
-    console.log("Updating the status of the store")
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
-      console.log("The store was found: ", foundStore)
     if (foundStore !== undefined) {
       /*
         It means, the store is already plannified for this day, but we don't know if the client
         asked to be visited or if it is a client that belongs to today.
       */
-     console.log("State of the store", foundStore.route_day_state)
-     console.log("Automata state", enumStoreStates.REQUEST_FOR_SELLING)
-     console.log(foundStore.route_day_state)
       if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
         /* This store doesn't belong to this day, but it was requested to be visited. */
         // Update redux context
@@ -246,14 +239,12 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       } else {
         /* This store belongs to the route of today*/
         // Update redux context.
-        console.log("Updating context")
         dispatch(updateStores([{
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         }]));
 
         // Update embedded context.
-        console.log("Updating database")
         await updateStore({
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
@@ -270,10 +261,8 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     /*
       Moving to the next operation.
     */
-    console.log("Moving to the next store")
     dispatch(setNextOperation());
-    
-    console.log("go to")
+
     navigation.navigate('routeOperationMenu');
   };
 
