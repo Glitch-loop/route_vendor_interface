@@ -54,6 +54,7 @@ const PaymentMenu = ({
           <View style={tw`text-xl text-black flex flex-row basis-1/2 items-center`}>
             <Text style={tw`text-xl text-black`}>$</Text>
             <TextInput
+              keyboardType={'numeric'}
               style={tw`border border-solid bg-white rounded-md h-5 text-center`}
               onChangeText={(text) => {
                 handleTextChange(text);

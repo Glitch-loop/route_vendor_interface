@@ -369,7 +369,6 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
 
 export async function updateStore(store: IStore&IStoreStatusDay) {
   try {
-    console.log("Updating information")
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
@@ -393,7 +392,6 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
         route_day_state,
       } = store;
 
-      console.log("Store to update: ", id_store)
       await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ? WHERE id_store = '${id_store}';`, [
         street,
         ext_number,
@@ -643,7 +641,6 @@ export async function insertTransactionOperationDescription(transactionOperation
       });
     });
     await sqlite.close();
-    console.log("Inserting the transaction description")
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.

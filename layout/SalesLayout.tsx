@@ -194,21 +194,18 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
     if (saleOperationDescription[0] !== undefined) {
       /* There was a movement in concept of sale. */
-      console.log("Sale operation")
       await insertTransaction(saleOperation);
       await insertTransactionOperationDescription(saleOperationDescription);
     }
 
     if (productDevolutionDescription[0] !== undefined) {
       /* There was a movement in concept of devolution. */
-      console.log("Product devolution")
       await insertTransaction(productDevolutionOperation);
       await insertTransactionOperationDescription(productDevolutionDescription);
     }
 
     if (productRepositionDescription[0] !== undefined) {
       /* There was a movement in concept of reposition. */
-      console.log("Product reposition")
       await insertTransaction(productRepositionOperation);
       await insertTransactionOperationDescription(productRepositionDescription);
     }
@@ -249,6 +246,8 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         });
+
+        console.log(determineRouteDayState(foundStore.route_day_state, 2));
       }
     } else {
       /*
