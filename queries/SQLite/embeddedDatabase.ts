@@ -48,7 +48,7 @@ export const storesEmbeddedTable = `
     ext_number        TEXT NOT NULL,
     colony            TEXT NOT NULL,
     postal_code       TEXT NOT NULL,
-    address_reference TEXT NOT NULL,
+    address_reference TEXT NULL,
     store_name        TEXT NOT NULL,
     owner_name        TEXT,
     cellphone         TEXT,
@@ -66,13 +66,14 @@ export const productsEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.PRODUCTS} (
     id_product      TEXT NOT NULL UNIQUE,
     product_name    TEXT NOT NULL,
+    barcode         TEXT,
     weight          TEXT,
     unit            TEXT,
     comission       NUMERIC(6,3),
     price           NUMERIC(6,3) NOT NULL,
     product_status  INT NOT NULL,
     order_to_show   INT NOT NULL UNIQUE,
-    amount          INT NOT NULL UNIQUE
+    amount          INT NOT NULL
   );
 `;
 

@@ -50,7 +50,7 @@ import {
 import DAYS_OPERATIONS from '../lib/day_operations';
 import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
-import { timesamp_standard_format } from '../utils/momentFormat';
+import { timestamp_format } from '../utils/momentFormat';
 import { planningRouteDayOperations } from '../utils/routesFunctions';
 
 // Redux context
@@ -142,8 +142,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
       const dayGeneralInformation:IDayGeneralInformation = {
         id_work_day: '',
-        start_date : timesamp_standard_format(),
-        finish_date: timesamp_standard_format(),
+        start_date : timestamp_format(),
+        finish_date: timestamp_format(),
         start_petty_cash: 0,
         final_petty_cash: 0,
       };
@@ -204,8 +204,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // General information about the route.
         // Setting general information related to the route.
         dayGeneralInformation.id_work_day = uuidv4();
-        dayGeneralInformation.start_date = timesamp_standard_format();
-        dayGeneralInformation.finish_date = timesamp_standard_format();
+        dayGeneralInformation.start_date = timestamp_format();
+        dayGeneralInformation.finish_date = timestamp_format();
         // Getting the total of money that he is carrying.
         dayGeneralInformation.start_petty_cash = cashInventory
         .reduce((acc, currentCurrency) => { if (currentCurrency.amount === undefined) {return acc;}
@@ -221,7 +221,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Creating the inventory operation (this inventory operation is tied to the "work day").
         inventoryOperation.id_inventory_operation = uuidv4();
         inventoryOperation.sign_confirmation = '1';
-        inventoryOperation.date = timesamp_standard_format();
+        inventoryOperation.date = timestamp_format();
         inventoryOperation.audit = 0;
         inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.start_shift_inventory;
         inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
@@ -238,7 +238,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setDayGeneralInformation(dayGeneralInformation));
 
         // Storing information in embedded database.
-        insertWorkDay({...dayGeneralInformation, ...routeDay});
+        await insertWorkDay({...dayGeneralInformation, ...routeDay});
 
         // Inventory operation.
         /*
@@ -247,7 +247,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           heavy the information is only stored in the embedded database.
         */
         // Storing information in embedded database.
-        insertInventoryOperation(inventoryOperation);
+        await insertInventoryOperation(inventoryOperation);
 
         //Inventory operation description.
         /*
@@ -267,7 +267,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         // Storing information in embedded database.
-        insertInventoryOperationDescription(inventoryOperationDescription);
+        await insertInventoryOperationDescription(inventoryOperationDescription);
 
 
         // Inventory
@@ -279,7 +279,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setProductInventory(inventory));
 
         // Storing information in embedded database.
-        insertProducts(inventory);
+        await insertProducts(inventory);
 
         // Day operation.
         /*
@@ -289,7 +289,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setDayOperation(inventoryDayOperation));
 
         // Store information in embedded database.
-        insertDayOperation(inventoryDayOperation);
+        await insertDayOperation(inventoryDayOperation);
 
         // Stores.
         //Setting information of the stores.
@@ -309,7 +309,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setStores(stores));
 
         // Storing in embedded database
-        insertStores(stores);
+        await insertStores(stores);
 
         //Setting route operations (the stores that are going to be visited during the day).
         planningRouteDayOperations(storesInTheRoute)
@@ -320,12 +320,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setArrayDayOperations(dayOperationPlanification));
 
         // Storing in embedded database
-        insertDayOperations(dayOperationPlanification);
+        await insertDayOperations(dayOperationPlanification);
 
         /*
           At this point the records needed to start a database have been created.
           In the workflow of the application, the first operation has been completed (starting
-          shift inventory), so it is needed to advance to the next operation (first store of 
+          shift inventory), so it is needed to advance to the next operation (first store of
           the route).
         */
         dispatch(setNextOperation());

@@ -53,7 +53,7 @@ export async function createEmbeddedDatabase() {
       tablesToCreate.forEach(async(table) => {
         try {
           await tx.executeSql(table);
-          console.log('Table created successfully');
+          console.log('Table created successfully.');
         } catch (error) {
           console.log('Error creating the database: ', error);
           throw error;
@@ -91,7 +91,7 @@ export async function dropEmbeddedDatabase() {
           await tx.executeSql(`DROP TABLE IF EXISTS ${table};`);
           console.log('Table dropped successfully.');
         } catch (error) {
-          console.log('Failed dropping the table: ', error);
+          console.error('Failed dropping the table: ', error);
         }
       });
     });
@@ -118,17 +118,17 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       route_name,
       description,
       route_status,
-      id_vendor,
+      // id_vendor,
       /*Fields related to IDay interface*/
       id_day,
-      day_name,
-      order_to_show,
+      // day_name,
+      // order_to_show,
       /*Fields relate to IRouteDay*/
       id_route_day,
     } = workday;
     const sqlite = await createSQLiteConnection();
 
-    await sqlite.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUES (?, ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?, ?)`, [
+    await sqlite.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       id_work_day,
       start_date,
       finish_date,
@@ -139,11 +139,11 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       route_name,
       description,
       route_status,
-      id_vendor,
+      // id_vendor,
       /*Fields related to IDay interface*/
       id_day,
-      day_name,
-      order_to_show,
+      // day_name,
+      // order_to_show,
       /*Fields relate to IRouteDay*/
       id_route_day,
     ]);
@@ -216,36 +216,43 @@ export async function insertProducts(products: IProductInventory[]) {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      products.forEach(async (product:IProductInventory) => {
-
-        const {
-          id_product,
-          product_name,
-          barcode,
-          weight,
-          unit,
-          comission,
-          price,
-          product_status,
-          order_to_show,
-          amount,
-        } = product;
-
-        await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.PRODUCTS} (id_product, product_name, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-        `, [
-          id_product,
-          product_name,
-          barcode,
-          weight,
-          unit,
-          comission,
-          price,
-          product_status,
-          order_to_show,
-          amount,
-        ]);
-      });
+      try {
+        products.forEach(async (product:IProductInventory) => {
+          try {
+            const {
+              id_product,
+              product_name,
+              barcode,
+              weight,
+              unit,
+              comission,
+              price,
+              product_status,
+              order_to_show,
+              amount,
+            } = product;
+            console.log(product);
+            await tx.executeSql(`
+              INSERT INTO ${EMBEDDED_TABLES.PRODUCTS} (id_product, product_name, barcode, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            `, [
+              id_product,
+              product_name,
+              barcode,
+              weight,
+              unit,
+              comission,
+              price,
+              product_status,
+              order_to_show,
+              amount,
+            ]);
+          } catch (error) {
+            console.error('Error inserting product: ', error);
+          }
+        });
+      } catch (error) {
+        console.error('Error inserting product process: ', error);
+      }
     });
 
     await sqlite.close();
@@ -253,7 +260,7 @@ export async function insertProducts(products: IProductInventory[]) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to instert products:', error);
+    console.error('Error inserting product process:', error);
   }
 }
 
@@ -356,7 +363,7 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
     });
     await sqlite.close();
   } catch (error) {
-    console.log('Failed to instert stores: ', error);
+    console.error('Failed to instert stores: ', error);
   }
 }
 
@@ -409,7 +416,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
 
     await sqlite.close();
   } catch (error) {
-    console.log('Failed to update: ', error);
+    console.error('Failed to update: ', error);
   }
 }
 
@@ -438,7 +445,7 @@ export async function insertDayOperation(dayOperation: IDayOperation) {
 
     await sqlite.close();
   } catch (error) {
-    console.log("Failed to insert day operation: ", error);
+    console.error("Failed to insert day operation: ", error);
   }
 }
 
@@ -468,7 +475,7 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
 
     await sqlite.close();
   } catch (error) {
-    console.log("Failed to instert day operations: ", error);
+    console.error("Failed to instert day operations: ", error);
   }
 }
 
@@ -495,7 +502,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 
     await sqlite.close();
   } catch (error) {
-    console.log("Fauled to update day operation: ", error);
+    console.error("Fauled to update day operation: ", error);
   }
 }
 
@@ -515,7 +522,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?);
+        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?, ?);
       `, [
           id_inventory_operation,
           sign_confirmation,
@@ -603,7 +610,7 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
           id_type_operation,
           id_payment_method,
       ]);
-    }).catch((error) => console.log(error));
+    }).catch((error) => console.error(error));
     console.log("Inserting the transaction")
     await sqlite.close();
   } catch(error) {
