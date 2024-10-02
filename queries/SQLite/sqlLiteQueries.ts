@@ -35,21 +35,32 @@ import {
 // Function to create database
 export async function createEmbeddedDatabase() {
   try {
+    const tablesToCreate:string[] = [
+      userEmbeddedTable,
+      routeDayEmbeddedTable,
+      storesEmbeddedTable,
+      productsEmbeddedTable,
+      dayOperationsEmbeddedTable,
+      routeTransactionsEmbeddedTable,
+      transactionDescriptionsEmbeddedTable,
+      inventoryOperationsEmbeddedTable,
+      productOperationDescriptionsEmbeddedTable,
+    ];
+
     const sqlite = await createSQLiteConnection();
-    console.log("Creating database")
 
     await sqlite.transaction(async (tx) => {
-      await tx.executeSql(userEmbeddedTable);
-      await tx.executeSql(routeDayEmbeddedTable);
-      await tx.executeSql(storesEmbeddedTable);
-      await tx.executeSql(productsEmbeddedTable);
-      await tx.executeSql(dayOperationsEmbeddedTable);
-      await tx.executeSql(routeTransactionsEmbeddedTable);
-      await tx.executeSql(transactionDescriptionsEmbeddedTable);
-      await tx.executeSql(inventoryOperationsEmbeddedTable);
-      await tx.executeSql(productOperationDescriptionsEmbeddedTable);
+      tablesToCreate.forEach(async(table) => {
+        try {
+          await tx.executeSql(table);
+          console.log('Table created successfully');
+        } catch (error) {
+          console.log('Error creating the database: ', error);
+          throw error;
+        }
+      });
     });
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -57,22 +68,29 @@ export async function createEmbeddedDatabase() {
     console.error('Failed to create table:', error);
   }
 }
-export async function dropDatabase() {
+
+export async function dropEmbeddedDatabase() {
   try {
     const sqlite = await createSQLiteConnection();
-    console.log("Droping database")
 
     await sqlite.transaction(async (tx) => {
       for (let key in EMBEDDED_TABLES) {
-        await tx.executeSql(`DROP TABLE IF EXISTS ${EMBEDDED_TABLES[key]}`);
+        try {
+          console.log(`DROP TABLE IF EXISTS ${[EMBEDDED_TABLES[key]]};`);
+          // await tx.executeSql('DROP TABLE IF EXISTS $;', [EMBEDDED_TABLES[key]]);
+          await tx.executeSql(`DROP TABLE IF EXISTS ${[EMBEDDED_TABLES[key]]};`);
+          console.log('Table dropped successfully.');
+        } catch (error) {
+          console.log('Failed dropping the table: ', error);
+        }
       }
     });
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to create table:', error);
+    console.error('Failed dropping table:', error);
   }
 }
 
@@ -97,10 +115,10 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       order_to_show,
       /*Fields relate to IRouteDay*/
       id_route_day,
-
     } = workday;
     const sqlite = await createSQLiteConnection();
-    const result = await sqlite.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUE (?, ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?, ?)`, [
+
+    await sqlite.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUES (?, ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?,  ?, ?)`, [
       id_work_day,
       start_date,
       finish_date,
@@ -120,13 +138,7 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       id_route_day,
     ]);
 
-    result.forEach((record:any) => {
-      for (let index = 0; index < record.rows.length; index++) {
-        console.log(record.rows.item(index));
-      }
-    });
-
-    sqlite.close();
+    await sqlite.close();
   } catch (error) {
     console.error('Failed to insert work day:', error);
   }
@@ -150,7 +162,8 @@ export async function insertUser(user: IUser) {
         INSERT INTO ${EMBEDDED_TABLES.USER} (id_vendor, cellphone, name, password, status) VALUES (?, ?, ?, ?, ?)
       `, [id_vendor, cellphone, name, password, status]);
     });
-    sqlite.close();
+
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -173,7 +186,7 @@ export async function getUsers():Promise<IUser[]> {
       }
     });
 
-    sqlite.close();
+    await sqlite.close();
 
     return users;
   } catch (error) {
@@ -225,7 +238,7 @@ export async function insertProducts(products: IProductInventory[]) {
       });
     });
 
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -310,6 +323,7 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
           status_store,
           route_day_state,
         } = store;
+
         await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.STORES} (id_store, street, ext_number, colony, postal_code, address_reference, store_name, owner_name, cellphone, latitude, longuitude, id_creator, creation_date, creation_context, status_store, route_day_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
           id_store,
           street,
@@ -330,7 +344,7 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
         ]);
       });
     });
-    sqlite.close();
+    await sqlite.close();
   } catch (error) {
     console.log('Failed to instert stores: ', error);
   }
@@ -363,7 +377,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
       } = store;
 
       console.log("Store to update: ", id_store)
-      const result = await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ?
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ?
       WHERE id_store = ${id_store}`, [
         street,
         ext_number,
@@ -381,9 +395,9 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
         status_store,
         route_day_state,
       ]);
-
     });
-    sqlite.close();
+
+    await sqlite.close();
   } catch (error) {
     console.log('Failed to update: ', error);
   }
@@ -403,7 +417,7 @@ export async function insertDayOperation(dayOperation: IDayOperation) {
         current_operation,
       } = dayOperation;
 
-      tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.DAY_OPERATIONS} (id_day_operation, id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?, ?)`, [
+      await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.DAY_OPERATIONS} (id_day_operation, id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?, ?)`, [
         id_day_operation,
         id_item,
         id_type_operation,
@@ -412,7 +426,7 @@ export async function insertDayOperation(dayOperation: IDayOperation) {
       ]);
     });
 
-    sqlite.close();
+    await sqlite.close();
   } catch (error) {
     console.log("Failed to insert day operation: ", error);
   }
@@ -442,7 +456,7 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
       });
     });
 
-    sqlite.close();
+    await sqlite.close();
   } catch (error) {
     console.log("Failed to instert day operations: ", error);
   }
@@ -461,7 +475,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
         current_operation,
       } = dayOperation;
 
-      tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET (id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?)WHERE id_day_operation = ${id_day_operation}`, [
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET (id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?)WHERE id_day_operation = ${id_day_operation}`, [
         id_item,
         id_type_operation,
         operation_order,
@@ -469,7 +483,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
       ]);
     });
 
-    sqlite.close();
+    await sqlite.close();
   } catch (error) {
     console.log("Fauled to update day operation: ", error);
   }
@@ -501,7 +515,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
           id_work_day,
         ]);
     });
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -533,10 +547,11 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
             amount,
             id_inventory_operation,
             id_product,
-          ]);
+          ]
+        );
       });
     });
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -559,11 +574,13 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
       id_payment_method,
     } = transactionOperation;
 
+    console.log(transactionOperation)
     console.log("Starting information transaction")
     const sqlite = await createSQLiteConnection();
 
     console.log("OK1")
     console.log(sqlite)
+    console.log(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);`)
     await sqlite.transaction(async (tx) => {
       console.log("OK")
       await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
@@ -576,9 +593,9 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
           id_type_operation,
           id_payment_method,
       ]);
-    });
+    }).catch((error) => console.log(error));
     console.log("Inserting the transaction")
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -614,7 +631,7 @@ export async function insertTransactionOperationDescription(transactionOperation
         );
       });
     });
-    sqlite.close();
+    await sqlite.close();
     console.log("Inserting the transaction description")
   } catch(error) {
     /*

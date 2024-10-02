@@ -16,8 +16,14 @@ function openCB() {
 SQLite.enablePromise(true);
 
 export async function createSQLiteConnection() {
-  return SQLite.openDatabase({ name: 'mydb.db', location: 'default' },openCB, errorCB);
-  
+  try {
+    return SQLite
+      .openDatabase({ name: 'mydb.db', location: 'default' },openCB, errorCB);
+
+  } catch (error) {
+    console.error('Failed to open database: ', error);
+    throw error;
+  }
 }
 
 

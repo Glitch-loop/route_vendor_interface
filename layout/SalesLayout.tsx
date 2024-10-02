@@ -45,7 +45,7 @@ import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
-import { timesamp_standard_format } from '../utils/momentFormat';
+import { timesamp_standard_format, timestamp_format } from '../utils/momentFormat';
 import {
   insertTransaction,
   insertTransactionOperationDescription,
@@ -125,7 +125,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     // Creating transaction operations
     const saleOperation:ITransactionOperation = {
       id_transaction: uuidv4(),
-      date: timesamp_standard_format(),
+      date: timestamp_format(),
       state: 1, // Indicating "active transaction"
       id_work_day: routeDay.id_work_day,
       id_store: currentOperation.id_item, // Item will be the id of the store in question.
@@ -135,7 +135,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
     const productDevolutionOperation:ITransactionOperation = {
       id_transaction: uuidv4(),
-      date: timesamp_standard_format(),
+      date: timestamp_format(),
       state: 1, // Indicating "active transaction"
       id_work_day: routeDay.id_work_day,
       id_store: currentOperation.id_item, // Item will be the id of the store in question.
@@ -145,7 +145,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
     const productRepositionOperation:ITransactionOperation = {
       id_transaction: uuidv4(),
-      date: timesamp_standard_format(),
+      date: timestamp_format(),
       state: 1, // Indicating "active transaction"
       id_work_day: routeDay.id_work_day,
       id_store: currentOperation.id_item, // Item will be the id of the store in question.

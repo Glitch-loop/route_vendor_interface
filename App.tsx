@@ -25,11 +25,11 @@ import StoreMenuLayout from './layout/StoreMenuLayout';
 import SalesLayout from './layout/SalesLayout';
 
 // Embedded database
+// Queries
 import {
   createEmbeddedDatabase,
-  dropDatabase,
+  dropEmbeddedDatabase,
  } from './queries/SQLite/sqlLiteQueries';
-
 
 export type RootStackParamList = {
   routeSelection: undefined;
@@ -45,8 +45,16 @@ export type RootStackParamList = {
 */
 
 async function databaseInitialization() {
-  await dropDatabase();
-  await createEmbeddedDatabase();
+  try {
+    // Dropping database
+    await dropEmbeddedDatabase();
+
+    // Creating database
+    await createEmbeddedDatabase();
+
+  } catch (error) {
+    console.log('Error: ', error);
+  }
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

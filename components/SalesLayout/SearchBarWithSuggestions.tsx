@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, Pressable, Text, TouchableOpacity } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import tw from 'twrnc';
 import { Provider } from 'react-native-paper';
@@ -36,7 +36,6 @@ const SearchBarWithSuggestions = ({
 
     // Filter data based on search query
     if (query) {
-      
       const filtered = catalog.filter((item) => {
         let validQuery = item[fieldToSearch].toLowerCase().includes(query.toLowerCase());
         let result = false;

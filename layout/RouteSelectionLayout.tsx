@@ -71,7 +71,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     */
 
     // Getting all the route assigned to a vendor
-    getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257').then(routesData => {
+    getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257')
+    .then(routesData => {
       // Getting all the days in a route
       routesData.forEach(currentRouteData => {
         getAllDaysByRoute(currentRouteData.id_route)
@@ -111,7 +112,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           }
         });
       });
-    });
+    })
+    .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
 
     // Setting the john doe user for testing
     /*
@@ -158,7 +160,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           It means the user already exists, so it is not necessary to save the user or vendor.
         */
       }
-    });
+    })
+    .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
 
     navigation.navigate('selectionRouteOperation');
   };
