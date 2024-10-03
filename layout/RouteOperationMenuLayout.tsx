@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect } from 'react';
-import { ScrollView, View, Pressable } from 'react-native';
+import { BackHandler, ScrollView, View, Pressable, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
@@ -25,10 +25,22 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const stores = useSelector((state: RootState) => state.stores);
 
   useEffect(() => {
-    navigation.setOptions({
-      gestureEnabled: false, // Disable back gesture on iOS
-      headerBackVisible: false, // Disable back button in the header
-    });
+    // navigation.reset({
+    //   index: 0,
+    //   routes: [{name: 'routeOperationMenu'}],
+    // });
+
+    const backAction = () => {
+      console.log('Hold on');
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
   }, []);
 
   // Handlers

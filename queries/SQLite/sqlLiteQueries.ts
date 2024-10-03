@@ -315,6 +315,29 @@ export async function updateProducts(products: IProductInventory[]) {
   }
 }
 
+export async function getProducts():Promise<IProductInventory[]> {
+  try {
+    const product:IProductInventory[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.PRODUCTS};`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        product.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return product;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
+
 // Related to stores
 export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
   try {
@@ -504,6 +527,28 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 }
 
 // Related to inventory operations
+export async function getInventoryOperation(id_inventory_operation:string):Promise<IInventoryOperation[]> {
+  try {
+    const inventoryOperation:IInventoryOperation[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} WHERE id_inventory_operation = '${id_inventory_operation}'`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        inventoryOperation.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return inventoryOperation;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
 export async function insertInventoryOperation(inventoryOperation: IInventoryOperation) {
   try {
     const {
@@ -535,6 +580,28 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
       TODO: Decide what to do in the case of failing the database creation.
     */
     console.error('Failed to instert inventory operation:', error);
+  }
+}
+
+export async function getInventoryOperationDescription(id_inventory_operation:string):Promise<IInventoryOperationDescription[]> {
+  try {
+    const inventoryOperation:IInventoryOperationDescription[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} WHERE id_inventory_operation = '${id_inventory_operation}'`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        inventoryOperation.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return inventoryOperation;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
   }
 }
 

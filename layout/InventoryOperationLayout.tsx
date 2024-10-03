@@ -27,6 +27,9 @@ import {
   insertDayOperation,
   insertInventoryOperation,
   insertInventoryOperationDescription,
+  getInventoryOperation,
+  getInventoryOperationDescription,
+  getProducts,
 } from '../queries/SQLite/sqlLiteQueries';
 
 
@@ -52,6 +55,8 @@ import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/TableCashReception';
 import { timestamp_format } from '../utils/momentFormat';
 import { planningRouteDayOperations } from '../utils/routesFunctions';
+import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
+import { enumStoreStates } from '../interfaces/enumStoreStates';
 
 // Redux context
 import { useSelector, useDispatch } from 'react-redux';
@@ -67,8 +72,19 @@ import {
   suggestedProductMoock,
   currentProductMoock,
 } from '../moocks/productInventory';
-import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
-import { enumStoreStates } from '../interfaces/enumStoreStates';
+
+const initialProduct:IProductInventory = {
+  id_product: '',
+  product_name: '',
+  barcode: '',
+  weight: '',
+  unit: '',
+  comission: 0,
+  price: 0,
+  product_status: 0,
+  order_to_show: 0,
+  amount: 0,
+};
 
 function initialMXNCurrencyState():ICurrency[] {
   let arrDenomination:ICurrency[] = [];
@@ -91,13 +107,50 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const productsInventory = useSelector((state: RootState) => state.productsInventory);
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
+  const currentOperation = useSelector((state: RootState) => state.currentOperation);
 
-  // Defining redux contexts
+  // Defining states
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
+  const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
+  const [currentProduct, setCurrentProduct] = useState<IProductInventory[]>([]);
+  const [isOperation, setIsOperation] = useState<boolean>(true);
 
   // Use effect operations
   useEffect(() => {
+    console.log(currentOperation)
+    /*
+      If the current operation contains an item, that means that the user is consulting
+      a previous inventory operation.
+    */
+    if (currentOperation.id_item) {
+      /*
+        It means that it is a visualization of a product operation.
+      */
+      setIsOperation(true);
+      let productInventory:IProductInventory[] = [];
+      getInventoryOperation(currentOperation.id_item).then((inventoryOperation) => {
+        getInventoryOperationDescription(currentOperation.id_item).then((inventoryOperationDescriptions) => {
+          inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
+            productInventory.push({
+              ...initialProduct,
+              amount: inventoryOperationDescription.amount,
+              id_product: inventoryOperationDescription.id_product,
+              price: inventoryOperationDescription.price_at_moment,
+            });
+          });
+          console.log("Setting product")
+          setCurrentProduct(productInventory)
+          setInventory([]);
+        }).catch((error) => { console.error('Something went wrong: ', error);});
+      }).catch((error) => { console.error('Something went wrong: ', error);});
+
+    } else { // It is a new operation
+      /*
+        It means it is a product operation
+      */
+      setIsOperation(false);
+    }
     getAllProducts().then(products => {
       // Creating inventory for all the products.
       let productInventory:IProductInventory[] = [];
@@ -331,7 +384,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setNextOperation());
       }
 
-      navigation.navigate('routeOperationMenu');
+      navigation.reset({
+        index: 0, // Set the index of the new state (0 means first screen)
+        routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+      });
+      // navigation.navigate('routeOperationMenu');
     } catch (error) {
       console.error('Something went wrong: ', error);
     }
@@ -340,7 +397,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const handlerOnVendorCancelation = () => {
     navigation.navigate('selectionRouteOperation');
   };
-
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
@@ -353,8 +409,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
         <ScrollView horizontal={true}>
           <TableInventoryOperations
-            suggestedInventory={suggestedProductMoock}
-            currentInventory={currentProductMoock}
+            suggestedInventory={suggestedProduct}
+            currentInventory={currentProduct}
             operationInventory={inventory}
             enablingFinalInventory={true}
             setInventoryOperation={setInventory}/>
