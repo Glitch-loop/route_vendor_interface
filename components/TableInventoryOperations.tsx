@@ -145,7 +145,7 @@ const TableInventoryOperations = (
         }
         { enablingFinalInventory &&
           <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Inventario final</Text>
+            <Text style={tw`text-black`}>Inventario a llevar</Text>
           </DataTable.Title>
         }
       </DataTable.Header>

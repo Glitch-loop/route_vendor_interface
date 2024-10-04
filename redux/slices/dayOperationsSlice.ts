@@ -23,8 +23,9 @@ const dayOperationsSlice = createSlice({
   reducers: {
     setArrayDayOperations: (state, action: PayloadAction<IDayOperation[]>) => {
       /*
-        This reducer is to store a set of day operations, it was designed
-        to store the stores to visit in a particular day.
+        This reducer is to store a set of day operations.
+        This functions was designed to store the 'corner shops' that will be visited
+        the current day.
       */
       action.payload.forEach(dayOperation => {
         state.push({
@@ -37,7 +38,10 @@ const dayOperationsSlice = createSlice({
       });
     },
     setDayOperation: (state, action: PayloadAction<IDayOperation>) => {
-      /* This function to store a particular day operation */
+      /*
+        This function is to store a new day operation with the consideration that
+        the operation will be stored at the end of the list od the day operations.
+      */
       try {
         state.push({
           id_day_operation: action.payload.id_day_operation,
@@ -47,13 +51,62 @@ const dayOperationsSlice = createSlice({
           current_operation: action.payload.current_operation,
         });
       } catch (error) {
-        console.log(error)
+        console.error(error);
+      }
+    },
+    setDayOperationBeforeCurrentOpeation: (state, action: PayloadAction<IDayOperation>) => {
+      /*
+        Opposite to "setDayOperation" which push a new operation at the end of the list
+        of day operations, this function push the new operation before the current
+        operation.
+      */
+      try {
+        const newDayoperation:IDayOperation = {
+          id_day_operation: action.payload.id_day_operation,
+          id_item: action.payload.id_item,
+          id_type_operation: action.payload.id_type_operation,
+          operation_order: action.payload.operation_order,
+          current_operation: action.payload.current_operation,
+        };
+
+        const newDayOperationList:IDayOperation[] = [];
+
+        const index = state.findIndex(operationDay =>
+          operationDay.current_operation === 1);
+
+        if (index === -1) {
+          /*
+            It means that something happened to the list, so the order was lost.
+            In this case the new operation is stored at the end of the list.
+          */
+          state.push(newDayoperation);
+        } else {
+          /* All is in order */
+          state.forEach((dayOperation:IDayOperation) => {
+            if (dayOperation.current_operation === 1) {
+              newDayOperationList.push(newDayoperation);
+              newDayOperationList.push(dayOperation);
+            } else {
+              newDayOperationList.push(newDayoperation);
+            }
+          });
+          state = newDayOperationList;
+        }
+      } catch (error) {
+        console.error(error);
       }
     },
     setNextOperation: (state, action: PayloadAction<void>) => {
+      /*
+        In the workflow of the application, at the beginning of the day,
+        it is made a list of operations "stores to visit" that will be made by the vendor during the day.
+
+        So this function is to mark the current operation as a done and going ahead 
+        with the next one.
+      */
       try {
         const index = state.findIndex(operationDay =>
-                        operationDay.current_operation === 1);
+          operationDay.current_operation === 1);
 
         if (index === -1) {
           /* Do nothing */
@@ -81,7 +134,7 @@ const dayOperationsSlice = createSlice({
           }
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   },
@@ -91,6 +144,7 @@ export const {
   setArrayDayOperations,
   setDayOperation,
   setNextOperation,
+  setDayOperationBeforeCurrentOpeation,
 } = dayOperationsSlice.actions;
 
 export default dayOperationsSlice.reducer;

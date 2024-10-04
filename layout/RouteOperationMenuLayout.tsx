@@ -16,6 +16,7 @@ import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 import RouteCard from '../components/RouteCard';
 import TypeOperationItem from '../components/TypeOperationItem';
 import { IDayOperation } from '../interfaces/interfaces';
+import DAYS_OPERATIONS from '../lib/day_operations';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -49,15 +50,26 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   }, []);
 
   // Handlers
-  const onSelectStore = (dayOperation: IDayOperation) => {
+  const onSelectStore = (dayOperation: IDayOperation):void => {
     dispatch(setCurrentOperation(dayOperation));
     navigation.navigate('storeMenu');
   };
 
-  const onSelectInventoryOperation = (dayOperation: IDayOperation) => {
+  const onSelectInventoryOperation = (dayOperation: IDayOperation):void => {
     dispatch(setCurrentOperation(dayOperation));
     navigation.navigate('inventoryOperation');
   };
+
+  const onRestockInventory = ():void => {
+    dispatch(setCurrentOperation({
+      id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
+      id_item: '', // It is still not an operation.
+      id_type_operation: DAYS_OPERATIONS.restock_inventory,
+      operation_order: 0,
+      current_operation: 0,
+    }));
+    navigation.navigate('inventoryOperation');
+  }
 
   return (
     <View style={tw`flex-1`}>
@@ -156,6 +168,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               <Text style={tw`text-sm text-center`}>Crear nuevo cliente</Text>
             </Pressable>
             <Pressable
+              onPress={() => {onRestockInventory();}}
               style={tw`bg-orange-500 px-4 py-3 mx-1 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Restock de producto</Text>
             </Pressable>

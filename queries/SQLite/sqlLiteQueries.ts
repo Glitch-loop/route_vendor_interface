@@ -290,10 +290,18 @@ export async function updateProducts(products: IProductInventory[]) {
         } = product;
 
         await tx.executeSql(`
-          UPDATE ${EMBEDDED_TABLES.PRODUCTS} SET (product_name, weight, unit, comission, price, product_status, order_to_show, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          UPDATE ${EMBEDDED_TABLES.PRODUCTS} SET 
+            product_name = ?, 
+            barcode = ?,
+            weight = ?, 
+            unit = ?, 
+            comission = ?,
+            price = ?, 
+            product_status = ?, 
+            order_to_show = ?, 
+            amount = ? 
           WHERE id_product = '${id_product}';
         `, [
-          id_product,
           product_name,
           barcode,
           weight,
@@ -315,6 +323,12 @@ export async function updateProducts(products: IProductInventory[]) {
   }
 }
 
+/*
+  This function retrieves the products that are currently available in the
+  route.
+
+  In addition, this function retrieves the current inventory for each product.
+*/
 export async function getProducts():Promise<IProductInventory[]> {
   try {
     const product:IProductInventory[] = [];
@@ -495,7 +509,7 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
 
     await sqlite.close();
   } catch (error) {
-    console.error("Failed to instert day operations: ", error);
+    console.error('Failed to instert day operations: ', error);
   }
 }
 
@@ -512,7 +526,12 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
         current_operation,
       } = dayOperation;
 
-      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET (id_item, id_type_operation, operation_order,  current_operation) VALUES (?, ?, ?, ?) WHERE id_day_operation = '${id_day_operation}';`, [
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.DAY_OPERATIONS} SET     
+        id_item = ?, 
+        id_type_operation = ?,
+        operation_order = ?,
+        current_operation = ?
+        WHERE id_day_operation = '${id_day_operation}';`, [
         id_item,
         id_type_operation,
         operation_order,
@@ -522,7 +541,24 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 
     await sqlite.close();
   } catch (error) {
-    console.error("Failed to update day operation: ", error);
+    console.error('Failed to update day operation: ', error);
+  }
+}
+
+export async function deleteAllDayOperations() {
+  try {
+    console.log('Delete day operations')
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`)
+      .then((data) => {console.log(data)})
+      .catch((error) => {console.log(error)});
+    });
+
+    await sqlite.close();
+  } catch (error) {
+    console.error('Failed to delete all the day operations: ', error);
   }
 }
 

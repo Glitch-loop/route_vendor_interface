@@ -30,6 +30,8 @@ import {
   getInventoryOperation,
   getInventoryOperationDescription,
   getProducts,
+  updateProducts,
+  deleteAllDayOperations,
 } from '../queries/SQLite/sqlLiteQueries';
 
 
@@ -64,7 +66,7 @@ import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
-import { setArrayDayOperations, setDayOperation, setNextOperation } from '../redux/slices/dayOperationsSlice';
+import { setArrayDayOperations, setDayOperation, setDayOperationBeforeCurrentOpeation, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 // Moocks
 import {
@@ -161,6 +163,26 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       /*
         It means it is a product operation
       */
+      if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+        /*
+          It means that it is a restock menu.
+          This is an operation which previously has been other inventory operations.
+
+          So, the vendor currently has prouct.
+        */
+        if (productsInventory.length === 0) {
+          // Something happened with the information, so it is needed to consult to the embedded database.
+          getProducts()
+          .then((storedProductsInventory) => {
+            setCurrentProduct(storedProductsInventory);
+          })
+          .catch(() => {
+            setCurrentProduct([]);
+          });
+        } else {
+          setCurrentProduct(productsInventory);
+        }
+      }
       setIsOperation(true);
       setEnablingFinalInventory(true);
     }
@@ -283,7 +305,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             - Remainded products
       */
      // Determining the type of inventory operation.
-     if (startShiftInventory === -1) {
+     if (startShiftInventory === -1) { // It is a start shift inventory operation
         /*
           When the vendor selected the route that is going to perform today, all of these
           were recorded:
@@ -426,13 +448,91 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           the route).
         */
         dispatch(setNextOperation());
+      } else {
+        if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+          // It is a re-stock operation
+          console.log("restock_inventory")
+          // Creating the inventory operation (this inventory operation is tied to the "work day").
+          inventoryOperation.id_inventory_operation = uuidv4();
+          inventoryOperation.sign_confirmation = '1';
+          inventoryOperation.date = timestamp_format();
+          inventoryOperation.audit = 0;
+          inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.restock_inventory;
+          /*
+            Remember that id_work_day from "IDayGeneralInformation" interface and
+
+          */
+          inventoryOperation.id_work_day = routeDay.id_work_day;
+
+          // Creating a day operation (day operation resulted from the ivnentory operation).
+          inventoryDayOperation.id_day_operation = uuidv4();
+          inventoryDayOperation.id_item = inventoryOperation.id_inventory_operation;
+          inventoryDayOperation.id_type_operation = DAYS_OPERATIONS.restock_inventory;
+          inventoryDayOperation.operation_order = 0;
+          inventoryDayOperation.current_operation = 1;
+
+
+          // Inventory
+          /*
+            Since it is a re-stock operation, it is just needed to:
+              - Update the productInventory
+              - Update the day operation
+          */
+          // Storing information in redux context.
+          dispatch(setProductInventory(inventory));
+
+          // Storing information in embedded database.
+          await updateProducts(inventory);
+
+          // Day operations.
+          /*
+            Once all the processes have been stored, the day operation itself is created.
+
+            There are two options:
+             - Instert the specific item at the middle of the day operations list.
+             - Delete and instert all the day operations, respecting the current information, with the differente of
+             place the new operation in the position that correspond.
+
+            Since it is expected that at the day as maximum a vendor can make 100 day operations, and that it might be prone to error
+            the fact of updating the information, it was chosen the second option.
+          */
+          const index = dayOperations.findIndex(operationDay => operationDay.current_operation === 1);
+
+          if (index === -1) {
+            /*
+              It means that something happened to the list, so the order was lost.
+              In this case the new operation is stored at the end of the list.
+            */
+            dayOperations.push(inventoryDayOperation);
+          } else {
+            /* All is in order */
+            dayOperations.forEach((dayOperation:IDayOperation) => {
+              if (dayOperation.current_operation === 1) {
+                dayOperationPlanification.push(inventoryDayOperation);
+                dayOperationPlanification.push(dayOperation);
+              } else {
+                dayOperationPlanification.push(inventoryDayOperation);
+              }
+            });
+          }
+
+          // Store information in redux context.
+          dispatch(setDayOperationBeforeCurrentOpeation(inventoryDayOperation));
+
+          // Delete all the information from the database.
+          // await deleteAllDayOperations();
+
+          // Store information in embedded database.
+          console.log('Insert day operations');
+          // await insertDayOperations(dayOperationPlanification);
+        }
       }
 
       navigation.reset({
         index: 0, // Set the index of the new state (0 means first screen)
         routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
       });
-      // navigation.navigate('routeOperationMenu');
+      navigation.navigate('routeOperationMenu');
     } catch (error) {
       console.error('Something went wrong: ', error);
     }
@@ -469,18 +569,25 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         </ScrollView>
       </View>
       {/* Cash reception section. */}
-      <View style={tw`flex basis-1/6 w-full mt-3`}>
-        <Text style={tw`w-full text-center text-black text-2xl`}>Dinero</Text>
-        <TableCashReception
-          cashInventoryOperation={cashInventory}
-          setCashInventoryOperation={setCashInventory}
-        />
-        <Text style={tw`w-full text-center text-black text-xl mt-2`}>
-          Total:
-          ${cashInventory.reduce((accumulator, denomination) => {
-              return accumulator + denomination.amount! * denomination.value;},0)}
-          </Text>
-      </View>
+      { currentOperation.id_type_operation !== DAYS_OPERATIONS.restock_inventory || !isOperation &&
+        /*
+          The reception of money can only be possible in tow scenarios:
+            1. Start shift inventory operation.
+            2. End shift inventory operation.
+        */
+        <View style={tw`flex basis-1/6 w-full mt-3`}>
+          <Text style={tw`w-full text-center text-black text-2xl`}>Dinero</Text>
+          <TableCashReception
+            cashInventoryOperation={cashInventory}
+            setCashInventoryOperation={setCashInventory}
+          />
+          <Text style={tw`w-full text-center text-black text-xl mt-2`}>
+            Total:
+            ${cashInventory.reduce((accumulator, denomination) => {
+                return accumulator + denomination.amount! * denomination.value;},0)}
+            </Text>
+        </View>
+      }
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
           onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
