@@ -44,24 +44,47 @@ import { IProductInventory } from '../interfaces/interfaces';
 
   Important note: Since productIventory is taken as the main array to display the table the other array
   may not be completed with all the products and it will work without problems.
-
-
-
 */
 
+
+function foundCurrentProductInArray(arrProduct: IProductInventory[], current_id_product: string):number {
+  let resultAmount = 0;
+  if (arrProduct.length > 0) {
+    let foundSuggestedProduct = arrProduct.find(suggestedProduct =>
+      suggestedProduct.id_product === current_id_product);
+
+      if (foundSuggestedProduct !== undefined) {
+        resultAmount = foundSuggestedProduct.amount;
+      } else {
+        resultAmount = 0;
+      }
+  } else {
+    resultAmount =  0;
+  }
+
+  return resultAmount;
+}
 
 const TableInventoryOperations = (
   {
     suggestedInventory,
     currentInventory,
     operationInventory,
+    initialShiftInventory,
+    restockInventories,
+    finalShiftInventory,
     enablingFinalInventory = false,
+    isInventoryOperation = true,
     setInventoryOperation,
   }:{
     suggestedInventory:IProductInventory[],
     currentInventory:IProductInventory[],
     operationInventory:IProductInventory[],
+    initialShiftInventory:IProductInventory[],
+    restockInventories:IProductInventory[][],
+    finalShiftInventory:IProductInventory[],
     enablingFinalInventory:boolean,
+    isInventoryOperation:boolean,
     setInventoryOperation:any,
   }) => {
 
@@ -107,12 +130,19 @@ const TableInventoryOperations = (
             <Text style={tw`text-black`}>Inventario Actual</Text>
           </DataTable.Title>
         }
+        { initialShiftInventory.length > 0 &&
+          <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Inventario inicial</Text>
+          </DataTable.Title>
+        }
         {/*
           This field is never empty since it is the reason of this component (inventory operation)
         */}
-        <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Producto recibido</Text>
-        </DataTable.Title>
+        { isInventoryOperation &&
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+            <Text style={tw`text-black`}>Producto recibido</Text>
+          </DataTable.Title>
+        }
         { enablingFinalInventory &&
           <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
             <Text style={tw`text-black`}>Inventario final</Text>
@@ -120,6 +150,20 @@ const TableInventoryOperations = (
         }
       </DataTable.Header>
       {/* Body section */}
+      {/*
+        It was decided that all the table will depend on "operationInventory".
+        This array will contain all the products so it is just matter of searching in the other
+        array to get the "current product" in the actual iteration, if it was not found, that means
+        that product in that particular operation have any implication.
+
+        Due this component architecture is that it is considered as very expensive, this becuase of
+        we need to traverse the main array while we have to search if there is match in the other arrays.
+
+        A good new is that it is expected that in "production" the amount of products don't pass of houndred of
+        products (it implies many rows), at the same time the restocks (columns) it is expected that at maximum,
+        a vendor makes five restocks in a day.
+        In addition, the consult of inventories is expected that it won't be so common.
+      */}
       { operationInventory.length > 0 ?
         operationInventory.map((product) => {
           // Propierties that are always going to be present.
@@ -129,22 +173,13 @@ const TableInventoryOperations = (
           // Properties that might not appear
           let suggestedAmount = 0;
           let currentInventoryAmount = 0;
+          let currentInitialShiftAmount = 0;
 
-          if (suggestedInventory.length > 0) {
-            let foundSuggestedProduct = suggestedInventory.find(suggestedProduct =>
-              suggestedProduct.id_product === id_product);
 
-              if (foundSuggestedProduct !== undefined) { suggestedAmount = foundSuggestedProduct.amount; }
-          }
-
-          if (currentInventory.length > 0) {
-            let foundCurrentInventoryProduct = currentInventory.find(currentInventoryProduct =>
-              currentInventoryProduct.id_product === id_product);
-
-            if (foundCurrentInventoryProduct !== undefined)
-              { currentInventoryAmount = foundCurrentInventoryProduct.amount; }
-          }
-
+          // Searching products for each array
+          suggestedAmount = foundCurrentProductInArray(suggestedInventory, id_product);
+          currentInventoryAmount = foundCurrentProductInArray(currentInventory, id_product);
+          currentInitialShiftAmount = foundCurrentProductInArray(initialShiftInventory, id_product);
 
           return (
             <DataTable.Row key={product.id_product}>
@@ -162,19 +197,26 @@ const TableInventoryOperations = (
                   <Text style={tw`text-black`}>{currentInventoryAmount}</Text>
                 </DataTable.Cell>
               }
+              { initialShiftInventory.length > 0 &&
+                  <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{currentInitialShiftAmount}</Text>
+                </DataTable.Cell>
+              }
               {/*
                 This field is never empty since it is the reason of this component (inventory operation)
               */}
-              <DataTable.Cell style={tw`w-28 flex flex-row justify-center`}>
-                <TextInput
-                  style={tw`h-10 w-full 
-                    border border-black rounded-lg px-4 bg-slate-100 
-                    text-xs text-black text-center`}
-                  onChangeText={(input:string) => handleChangeInventory(id_product, input)}
-                  placeholder={'Cantidad'}
-                  keyboardType={'numeric'}
-                  />
-              </DataTable.Cell>
+              { isInventoryOperation &&
+                <DataTable.Cell style={tw`w-28 flex flex-row justify-center`}>
+                  <TextInput
+                    style={tw`h-10 w-full 
+                      border border-black rounded-lg px-4 bg-slate-100 
+                      text-xs text-black text-center`}
+                    onChangeText={(input:string) => handleChangeInventory(id_product, input)}
+                    placeholder={'Cantidad'}
+                    keyboardType={'numeric'}
+                    />
+                </DataTable.Cell>
+              }
               { enablingFinalInventory &&
                 <DataTable.Cell style={tw`w-28 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{ amount + currentInventoryAmount }</Text>

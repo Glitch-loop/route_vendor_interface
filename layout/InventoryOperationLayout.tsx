@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Text } from 'react-native';
+import { View, ScrollView, Text, BackHandler } from 'react-native';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 import tw from 'twrnc';
@@ -114,11 +114,16 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
   const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
   const [currentProduct, setCurrentProduct] = useState<IProductInventory[]>([]);
+  const [initialShiftInventory, setInitialShiftInventory] = useState<IProductInventory[]>([]);
+  const [restockInventories, setRestockInventories] = useState<IProductInventory[][]>([[]]);
+  const [finalShiftInventory, setFinalShiftInventory] = useState<IProductInventory[]>([]);
+
+
   const [isOperation, setIsOperation] = useState<boolean>(true);
+  const [enablingFinalInventory, setEnablingFinalInventory] = useState<boolean>(true);
 
   // Use effect operations
   useEffect(() => {
-    console.log(currentOperation)
     /*
       If the current operation contains an item, that means that the user is consulting
       a previous inventory operation.
@@ -127,9 +132,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       /*
         It means that it is a visualization of a product operation.
       */
-      setIsOperation(true);
+      setIsOperation(false);
       let productInventory:IProductInventory[] = [];
+      // Getting the inventory operation.
       getInventoryOperation(currentOperation.id_item).then((inventoryOperation) => {
+        // Getting the movements of the inventory operation.
         getInventoryOperationDescription(currentOperation.id_item).then((inventoryOperationDescriptions) => {
           inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
             productInventory.push({
@@ -139,9 +146,14 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               price: inventoryOperationDescription.price_at_moment,
             });
           });
-          console.log("Setting product")
-          setCurrentProduct(productInventory)
+          setCurrentProduct([]);
+          setInitialShiftInventory(productInventory);
           setInventory([]);
+          /*
+            Since it is the first inventory of the day, it is not necessary to show
+            the calculus between the initial inventory and the final one.
+           */
+          setEnablingFinalInventory(false);
         }).catch((error) => { console.error('Something went wrong: ', error);});
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
@@ -149,7 +161,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       /*
         It means it is a product operation
       */
-      setIsOperation(false);
+      setIsOperation(true);
+      setEnablingFinalInventory(true);
     }
     getAllProducts().then(products => {
       // Creating inventory for all the products.
@@ -162,36 +175,67 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       });
       setInventory(productInventory);
     });
+
+
+    // Determining where to redirect in case of the user touch the handler "back handler" of the phone
+    const backAction = () => {
+      if (currentOperation.id_type_operation === '') {
+        navigation.navigate('selectionRouteOperation');
+      } else {
+        navigation.navigate('routeOperationMenu');
+      }
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
   }, []);
 
   // Handlers
   const handlerGoBack = () => {
-    navigation.navigate('selectionRouteOperation');
+    /*
+      According with the workflow of the system, the system identify if the user is making the first "inventory
+      operation" of the day (referring to "Start shift inventory operation") when the current operation is undefined.
+
+      In this case, the navigation should return to the select inventory reception.
+
+      Following the scenario below, once the user finishes the first operation, all of the following operations
+      should return to the route menu.
+    */
+    if (currentOperation.id_type_operation === '') {
+      navigation.navigate('selectionRouteOperation');
+    } else {
+      navigation.navigate('routeOperationMenu');
+    }
   };
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
       // Variables for different processes.
-      const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
-        /*Fields related to the general information.*/
-        id_work_day: '',
-        start_date: '',
-        finish_date: '',
-        start_petty_cash: 0,
-        final_petty_cash: 0,
-        /*Fields related to IRoute interface*/
-        id_route: '',
-        route_name: '',
-        description: '',
-        route_status: '',
-        id_vendor: '',
-        /*Fields related to IDay interface*/
-        id_day: '',
-        day_name: '',
-        order_to_show: 0,
-        /*Fields relate to IRouteDay*/
-        id_route_day: '',
-      };
+      // const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
+      //   /*Fields related to the general information.*/
+      //   id_work_day: '',
+      //   start_date: '',
+      //   finish_date: '',
+      //   start_petty_cash: 0,
+      //   final_petty_cash: 0,
+      //   /*Fields related to IRoute interface*/
+      //   id_route: '',
+      //   route_name: '',
+      //   description: '',
+      //   route_status: '',
+      //   id_vendor: '',
+      //   /*Fields related to IDay interface*/
+      //   id_day: '',
+      //   day_name: '',
+      //   order_to_show: 0,
+      //   /*Fields relate to IRouteDay*/
+      //   id_route_day: '',
+      // };
 
       const dayGeneralInformation:IDayGeneralInformation = {
         id_work_day: '',
@@ -398,6 +442,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     navigation.navigate('selectionRouteOperation');
   };
 
+  const handlerReturnToRouteMenu = async ():Promise<void> => {
+    navigation.navigate('routeOperationMenu');
+  };
+
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
@@ -411,8 +459,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           <TableInventoryOperations
             suggestedInventory={suggestedProduct}
             currentInventory={currentProduct}
+            initialShiftInventory={initialShiftInventory}
+            restockInventories={restockInventories}
+            finalShiftInventory={finalShiftInventory}
             operationInventory={inventory}
-            enablingFinalInventory={true}
+            enablingFinalInventory={enablingFinalInventory}
+            isInventoryOperation={isOperation}
             setInventoryOperation={setInventory}/>
         </ScrollView>
       </View>
@@ -431,8 +483,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       </View>
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
-          onConfirm={handleVendorConfirmation}
-          onCancel={handlerOnVendorCancelation}
+          onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
+          onCancel={isOperation ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>
       <View style={tw`flex basis-1/6`}><Text> </Text></View>

@@ -31,7 +31,12 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     // });
 
     const backAction = () => {
-      console.log('Hold on');
+      /*
+        In this particular case, the "back handler" of the phone should not do anything.
+        This because the "route store" becomes the new main menu of the vendor.
+
+        This will be true until the user finishes the route of the day.
+      */
       return true;
     };
 
