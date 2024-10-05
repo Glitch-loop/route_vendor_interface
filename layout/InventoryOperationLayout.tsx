@@ -113,6 +113,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
 
   // Defining states
+  const [isFirstInventory, setIsFirstInventory] = useState<boolean>(false);
+
   /* The state of 'inventory' is which will store all the modification during the product operation*/
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
@@ -167,6 +169,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       setCurrentProduct([]);
       setInventory([]);
       setIsOperation(false);
+      setIsFirstInventory(false);
 
       // Getting the inventory operation.
       getInventoryOperation(currentOperation.id_item)
@@ -225,6 +228,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         } else {
           setCurrentProduct(productsInventory);
         }
+
+        setIsFirstInventory(false);
       } else {
         /* It is a initial shift inventory operation */
         /*
@@ -232,6 +237,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           'inventory' stores an inventory in blank, we can copy this inventory
           in currentProduct.
         */
+        setIsFirstInventory(true);
         setCurrentProduct(inventory);
       }
       setIsOperation(true);
@@ -670,8 +676,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
-          onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
-          onCancel={isOperation ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
+          onConfirm={isFirstInventory ? handleVendorConfirmation : handlerReturnToRouteMenu}
+          onCancel={isFirstInventory ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>
       <View style={tw`flex basis-1/6`}><Text> </Text></View>
