@@ -113,15 +113,28 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
 
   // Defining states
+  /* The state of 'inventory' is which will store all the modification during the product operation*/
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
+
+  /*
+    Suggested product is a special state that uses, at the moment, initial inventory operation, providing
+    information about the idoneal amount of product to carry for beginning the route.
+  */
   const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
+
+  /*
+    current product state is used to store the current inventory (current inventory at the moment of 
+    making the inventory operation).
+  */
   const [currentProduct, setCurrentProduct] = useState<IProductInventory[]>([]);
+
+  /*
+    States used for inventory oepration vizualization.
+  */
   const [initialShiftInventory, setInitialShiftInventory] = useState<IProductInventory[]>([]);
   const [restockInventories, setRestockInventories] = useState<IProductInventory[][]>([[]]);
   const [finalShiftInventory, setFinalShiftInventory] = useState<IProductInventory[]>([]);
-
-
   const [isOperation, setIsOperation] = useState<boolean>(true);
   const [enablingFinalInventory, setEnablingFinalInventory] = useState<boolean>(true);
 
@@ -131,6 +144,19 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       If the current operation contains an item, that means that the user is consulting
       a previous inventory operation.
     */
+
+    getAllProducts().then(products => {
+      // Creating inventory for all the products.
+      let productInventory:IProductInventory[] = [];
+      products.map(product => {
+        productInventory.push({
+          ...product,
+          amount: 0,
+        });
+      });
+      setInventory(productInventory);
+    });
+
     if (currentOperation.id_item) {
       /* It means that it is a visualization of a product operation. */
       setIsOperation(false);
@@ -182,25 +208,16 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         }
       } else {
         /* It is a initial shift inventory operation */
+        /*
+          Since it is the first inventory operation and the state
+          'inventory' stores an inventory in blank, we can copy this inventory
+          in currentProduct.
+        */
+        setCurrentProduct(inventory);
       }
       setIsOperation(true);
       setEnablingFinalInventory(true);
     }
-
-
-    getAllProducts().then(products => {
-      // Creating inventory for all the products.
-      let productInventory:IProductInventory[] = [];
-      products.map(product => {
-        productInventory.push({
-          ...product,
-          amount: 0,
-        });
-      });
-      setInventory(productInventory);
-      setCurrentProduct(productInventory);
-    });
-
 
     // Determining where to redirect in case of the user touch the handler "back handler" of the phone
     const backAction = () => {
@@ -462,10 +479,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           inventoryOperation.date = timestamp_format();
           inventoryOperation.audit = 0;
           inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.restock_inventory;
-          /*
-            Remember that id_work_day from "IDayGeneralInformation" interface and
-
-          */
           inventoryOperation.id_work_day = routeDay.id_work_day;
 
           // Creating a day operation (day operation resulted from the ivnentory operation).
@@ -508,6 +521,13 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           dispatch(updateProductsInventory(inventory));
 
           //Calculating the new product inventory
+          /*
+            Note: Remember that from the a product inventory operation
+            there is 2 'items' to be stored.
+
+            - The operation itself (how many product the vendor is carrying or returning)
+            - And the updated inventory, bascially the current product amount + inventory operation amount.
+          */
           currentProduct.forEach((currentProductUpdate) => {
             const productFound:undefined|IProductInventory = inventory
               .find(productInventory => productInventory.id_product === currentProductUpdate.id_product);

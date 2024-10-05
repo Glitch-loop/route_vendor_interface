@@ -78,10 +78,12 @@ const TableInventoryOperations = (
     setInventoryOperation:any,
   }) => {
 
-  // Inventory
+  /*
+    This handler updates the amount that the vendor took to carry to the route.
+  */
   const handleChangeInventory = (id_product:string, input: string) => {
-    const index:number|undefined = operationInventory.findIndex(
-    (product:IProductInventory) => product.id_product === id_product);
+    const index:number|undefined = operationInventory
+      .findIndex((product:IProductInventory) => product.id_product === id_product);
 
     const updatedInventory: IProductInventory[] = [...operationInventory];
 
