@@ -1,6 +1,6 @@
 // Libraries
-import React, { useState, useCallback } from 'react';
-import { View, Text } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import tw from 'twrnc';
 
 // Components
@@ -30,14 +30,22 @@ const TableProduct = ({
 
     // Handlers
     const onSelectAnItem = (selectedItem:IProductInventory) => {
+      const newItem:IProductInventory = {
+        ...selectedItem,
+      };
+
       //Avoiding duplicates
-      const foundItem = commitedProducts.find(product => {
+      const foundItem:IProductInventory|undefined = commitedProducts.find(product => {
         return product.id_product === selectedItem.id_product;
       });
 
       if (foundItem === undefined) {
-        selectedItem.amount = 1;
-        setCommitedProduct([...commitedProducts, selectedItem]);
+        newItem.amount = 1;
+
+        setCommitedProduct([
+          ...commitedProducts,
+          {...newItem},
+        ]);
       }
     };
 
@@ -105,7 +113,7 @@ const TableProduct = ({
       />
       <View style={tw`w-11/12 border border-solid mt-2`} />
     </View>
-  )
+  );
 };
 
 export default TableProduct;

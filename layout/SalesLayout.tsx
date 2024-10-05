@@ -49,6 +49,7 @@ import { timesamp_standard_format, timestamp_format } from '../utils/momentForma
 import {
   insertTransaction,
   insertTransactionOperationDescription,
+  updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
 import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
@@ -246,18 +247,19 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       inventory to determine the "product devolution inventory".
     */
     // Updating redux context
-    console.log("Product to update: ")
-    console.log(updateInventory[0].product_name)
-    console.log(updateInventory[0].amount)
+    console.log("redux context")
     dispatch(updateProductsInventory(updateInventory));
+    
+    console.log("products")
 
     // Updating embedded database
-
+    await updateProducts(updateInventory);
 
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
+    console.log("Updating store")
     if (foundStore !== undefined) {
       /*
         It means, the store is already plannified for this day, but we don't know if the client
@@ -284,7 +286,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         }]));
-
+        console.log("Planified client")
         // Update embedded context.
         await updateStore({
           ...foundStore,
@@ -303,7 +305,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       Moving to the next operation.
     */
     dispatch(setNextOperation());
-
+    console.log("Go to route menu")
     navigation.navigate('routeOperationMenu');
   };
 

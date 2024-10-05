@@ -265,8 +265,12 @@ export async function insertProducts(products: IProductInventory[]) {
 }
 
 /*
-  This function is for when the vendor must update the information.
-  To keep the things easy, this function will update all the infomration in the
+  This function is for when the vendor must update the information of the inventory.
+
+  This function update records in the table "products" that store the product information but also
+  the inventory (amount for each product).
+
+  To keep things easy, this function will update all the infomration in the
   row where the record is stored.
 */
 export async function updateProducts(products: IProductInventory[]) {
@@ -416,43 +420,62 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-
-      const {
-        id_store,
-        street,
-        ext_number,
-        colony,
-        postal_code,
-        address_reference,
-        store_name,
-        owner_name,
-        cellphone,
-        latitude,
-        longuitude,
-        id_creator,
-        creation_date,
-        creation_context,
-        status_store,
-        route_day_state,
-      } = store;
-
-      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET street = ?, ext_number = ?, colony = ?, postal_code = ?, address_reference = ?, store_name = ?, owner_name = ?, cellphone = ?, latitude = ?, longuitude = ?, id_creator = ?, creation_date = ?, creation_context = ?, status_store = ?, route_day_state = ? WHERE id_store = '${id_store}';`, [
-        street,
-        ext_number,
-        colony,
-        postal_code,
-        address_reference,
-        store_name,
-        owner_name,
-        cellphone,
-        latitude,
-        longuitude,
-        id_creator,
-        creation_date,
-        creation_context,
-        status_store,
-        route_day_state,
-      ]);
+      try {
+        const {
+          id_store,
+          street,
+          ext_number,
+          colony,
+          postal_code,
+          address_reference,
+          store_name,
+          owner_name,
+          cellphone,
+          latitude,
+          longuitude,
+          id_creator,
+          creation_date,
+          creation_context,
+          status_store,
+          route_day_state,
+        } = store;
+  
+        await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET 
+          street = ?, 
+          ext_number = ?, 
+          colony = ?, 
+          postal_code = ?, 
+          address_reference = ?, 
+          store_name = ?, 
+          owner_name = ?, 
+          cellphone = ?, 
+          latitude = ?, 
+          longuitude = ?, 
+          id_creator = ?, 
+          creation_date = ?, 
+          creation_context = ?, 
+          status_store = ?, 
+          route_day_state = ? 
+          WHERE id_store = '${id_store}';`, [
+          street,
+          ext_number,
+          colony,
+          postal_code,
+          address_reference,
+          store_name,
+          owner_name,
+          cellphone,
+          latitude,
+          longuitude,
+          id_creator,
+          creation_date,
+          creation_context,
+          status_store,
+          route_day_state,
+        ]);
+      } catch (error) {
+        console.log('Something was wrong during store updation: ', error)
+      }
     });
 
     await sqlite.close();
@@ -698,18 +721,21 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
-      `, [
-          id_transaction,
-          date,
-          state,
-          id_work_day,
-          id_store,
-          id_type_operation,
-          id_payment_method,
-      ]);
-    })
-    .catch((error) => console.error(error));
+      try {
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
+        `, [
+            id_transaction,
+            date,
+            state,
+            id_work_day,
+            id_store,
+            id_type_operation,
+            id_payment_method,
+        ]);
+      } catch (error) {
+        console.error('Something was wrong during "transacion" instertion.');
+      }
+    });
 
     await sqlite.close();
   } catch(error) {
@@ -724,29 +750,33 @@ export async function insertTransactionOperationDescription(transactionOperation
   try {
     const sqlite = await createSQLiteConnection();
 
-    transactionOperationDescription
-    .forEach(async (transactionDescription:ITransactionOperationDescription)=> {
-      const {
-        id_transaction_description,
-        price_at_moment,
-        amount,
-        id_route_transaction,
-        id_product,
-      } = transactionDescription;
-
-      await sqlite.transaction(async (tx) => {
-        await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (id_transaction_description, price_at_moment, amount, id_route_transaction, id_product) VALUES (?, ?, ?, ?, ?);
-          `, [
+    await sqlite.transaction(async (tx) => {
+      transactionOperationDescription
+        .forEach(async (transactionDescription:ITransactionOperationDescription)=> {
+        try {
+          const {
             id_transaction_description,
             price_at_moment,
             amount,
             id_route_transaction,
             id_product,
-          ]
-        );
+          } = transactionDescription;
+
+          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (id_transaction_description, price_at_moment, amount, id_route_transaction, id_product) VALUES (?, ?, ?, ?, ?);
+            `, [
+              id_transaction_description,
+              price_at_moment,
+              amount,
+              id_route_transaction,
+              id_product,
+            ]
+          );
+        } catch (error) {
+          console.error('Failed to instert inventory operation:', error);
+        }
       });
     });
+
     await sqlite.close();
   } catch(error) {
     /*
