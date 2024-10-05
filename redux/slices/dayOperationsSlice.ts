@@ -61,15 +61,13 @@ const dayOperationsSlice = createSlice({
         operation.
       */
       try {
-        const newDayoperation:IDayOperation = {
+        const newDayOperation:IDayOperation = {
           id_day_operation: action.payload.id_day_operation,
           id_item: action.payload.id_item,
           id_type_operation: action.payload.id_type_operation,
           operation_order: action.payload.operation_order,
           current_operation: action.payload.current_operation,
         };
-
-        const newDayOperationList:IDayOperation[] = [];
 
         const index = state.findIndex(operationDay =>
           operationDay.current_operation === 1);
@@ -79,18 +77,10 @@ const dayOperationsSlice = createSlice({
             It means that something happened to the list, so the order was lost.
             In this case the new operation is stored at the end of the list.
           */
-          state.push(newDayoperation);
+          state.push(newDayOperation);
         } else {
           /* All is in order */
-          state.forEach((dayOperation:IDayOperation) => {
-            if (dayOperation.current_operation === 1) {
-              newDayOperationList.push(newDayoperation);
-              newDayOperationList.push(dayOperation);
-            } else {
-              newDayOperationList.push(newDayoperation);
-            }
-          });
-          state = newDayOperationList;
+          state.splice(index, 0, newDayOperation);
         }
       } catch (error) {
         console.error(error);

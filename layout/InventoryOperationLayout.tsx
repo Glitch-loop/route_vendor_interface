@@ -64,7 +64,7 @@ import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
-import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setProductInventory, updateProductsInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 import { setArrayDayOperations, setDayOperation, setDayOperationBeforeCurrentOpeation, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
@@ -74,6 +74,7 @@ import {
   suggestedProductMoock,
   currentProductMoock,
 } from '../moocks/productInventory';
+import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
 
 const initialProduct:IProductInventory = {
   id_product: '',
@@ -131,11 +132,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       a previous inventory operation.
     */
     if (currentOperation.id_item) {
-      /*
-        It means that it is a visualization of a product operation.
-      */
+      /* It means that it is a visualization of a product operation. */
       setIsOperation(false);
       let productInventory:IProductInventory[] = [];
+
       // Getting the inventory operation.
       getInventoryOperation(currentOperation.id_item).then((inventoryOperation) => {
         // Getting the movements of the inventory operation.
@@ -160,9 +160,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
     } else { // It is a new operation
-      /*
-        It means it is a product operation
-      */
+      /* It means it is a product operation */
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
         /*
           It means that it is a restock menu.
@@ -182,10 +180,14 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         } else {
           setCurrentProduct(productsInventory);
         }
+      } else {
+        /* It is a initial shift inventory operation */
       }
       setIsOperation(true);
       setEnablingFinalInventory(true);
     }
+
+
     getAllProducts().then(products => {
       // Creating inventory for all the products.
       let productInventory:IProductInventory[] = [];
@@ -196,6 +198,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
       });
       setInventory(productInventory);
+      setCurrentProduct(productInventory);
     });
 
 
@@ -294,6 +297,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       };
 
       const inventoryOperationDescription:IInventoryOperationDescription[] = [];
+
+      const newInventory:IProductInventory[] = [];
 
       /*
         There are 3 types of inventory operations:
@@ -451,7 +456,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       } else {
         if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
           // It is a re-stock operation
-          console.log("restock_inventory")
           // Creating the inventory operation (this inventory operation is tied to the "work day").
           inventoryOperation.id_inventory_operation = uuidv4();
           inventoryOperation.sign_confirmation = '1';
@@ -469,8 +473,30 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           inventoryDayOperation.id_item = inventoryOperation.id_inventory_operation;
           inventoryDayOperation.id_type_operation = DAYS_OPERATIONS.restock_inventory;
           inventoryDayOperation.operation_order = 0;
-          inventoryDayOperation.current_operation = 1;
+          inventoryDayOperation.current_operation = 0;
 
+          // Storing information in embedded database.
+          await insertInventoryOperation(inventoryOperation);
+
+          //Inventory operation description.
+          /*
+            This is a sub-record of the inventory description. This table contains the "movements"
+            or actions that were made in the inventiry operation... Essentially: product, amount of
+            product.
+          */
+          // Extracting information from the inventory operation.
+          inventory.forEach(product => {
+            inventoryOperationDescription.push({
+              id_product_operation_description: uuidv4(),
+              price_at_moment: product.price,
+              amount: product.amount,
+              id_inventory_operation: inventoryOperation.id_inventory_operation,
+              id_product: product.id_product,
+            });
+          });
+
+          // Storing information in embedded database.
+          await insertInventoryOperationDescription(inventoryOperationDescription);
 
           // Inventory
           /*
@@ -479,10 +505,23 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               - Update the day operation
           */
           // Storing information in redux context.
-          dispatch(setProductInventory(inventory));
+          dispatch(updateProductsInventory(inventory));
+
+          //Calculating the new product inventory
+          currentProduct.forEach((currentProductUpdate) => {
+            const productFound:undefined|IProductInventory = inventory
+              .find(productInventory => productInventory.id_product === currentProductUpdate.id_product);
+
+              if (productFound !== undefined) {
+                newInventory.push({
+                  ...productFound,
+                  amount: currentProductUpdate.amount + productFound.amount,
+                });
+              }
+          });
 
           // Storing information in embedded database.
-          await updateProducts(inventory);
+          await updateProducts(newInventory);
 
           // Day operations.
           /*
@@ -498,33 +537,26 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           */
           const index = dayOperations.findIndex(operationDay => operationDay.current_operation === 1);
 
+          dayOperations.forEach(dayOperation => {
+            dayOperationPlanification.push(dayOperation);
+          });
+
           if (index === -1) {
-            /*
-              It means that something happened to the list, so the order was lost.
-              In this case the new operation is stored at the end of the list.
-            */
-            dayOperations.push(inventoryDayOperation);
+            /* If there is no current operation, append the new operation to the end of the list. */
+            dayOperationPlanification.push(inventoryDayOperation);
           } else {
-            /* All is in order */
-            dayOperations.forEach((dayOperation:IDayOperation) => {
-              if (dayOperation.current_operation === 1) {
-                dayOperationPlanification.push(inventoryDayOperation);
-                dayOperationPlanification.push(dayOperation);
-              } else {
-                dayOperationPlanification.push(inventoryDayOperation);
-              }
-            });
+            /* Insert the new operation before the current operation. */
+           dayOperationPlanification.splice(index, 0, inventoryDayOperation);
           }
 
           // Store information in redux context.
           dispatch(setDayOperationBeforeCurrentOpeation(inventoryDayOperation));
 
           // Delete all the information from the database.
-          // await deleteAllDayOperations();
+          await deleteAllDayOperations();
 
           // Store information in embedded database.
-          console.log('Insert day operations');
-          // await insertDayOperations(dayOperationPlanification);
+          await insertDayOperations(dayOperationPlanification);
         }
       }
 
@@ -553,23 +585,33 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           onGoBack={handlerGoBack}/>
       </View>
       {/* Product inventory section. */}
-      <View style={tw`flex basis-3/6 w-full mt-3`}>
-        <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
-        <ScrollView horizontal={true}>
-          <TableInventoryOperations
-            suggestedInventory={suggestedProduct}
-            currentInventory={currentProduct}
-            initialShiftInventory={initialShiftInventory}
-            restockInventories={restockInventories}
-            finalShiftInventory={finalShiftInventory}
-            operationInventory={inventory}
-            enablingFinalInventory={enablingFinalInventory}
-            isInventoryOperation={isOperation}
-            setInventoryOperation={setInventory}/>
-        </ScrollView>
-      </View>
+      <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
+      {/* Depending on the action is that one menu or another one will be displayed. */}
+      { isOperation ?
+        <View style={tw`flex basis-3/6 w-full mt-3`}>
+          <ScrollView horizontal={true}>
+            <TableInventoryOperations
+              suggestedInventory={suggestedProduct}
+              currentInventory={currentProduct}
+              operationInventory={inventory}
+              setInventoryOperation={setInventory}/>
+          </ScrollView>
+        </View> :
+        <TableInventoryVisualization
+          inventory             = {productsInventory}
+          suggestedInventory    = {[]}
+          initialInventory      = {initialShiftInventory}
+          restockOperations     = {[]}
+          soldOperations        = {[]}
+          repositionsOperations = {[]}
+          returnedInventory     = {[]}
+          inventoryWithdrawal   = {false}
+          inventoryOutflow      = {false}
+          finalOperation        = {false}
+          issueInventory        = {false}/>
+      }
       {/* Cash reception section. */}
-      { currentOperation.id_type_operation !== DAYS_OPERATIONS.restock_inventory || !isOperation &&
+      { currentOperation.id_type_operation !== DAYS_OPERATIONS.restock_inventory && isOperation &&
         /*
           The reception of money can only be possible in tow scenarios:
             1. Start shift inventory operation.

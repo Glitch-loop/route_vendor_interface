@@ -274,45 +274,52 @@ export async function updateProducts(products: IProductInventory[]) {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      products.forEach(async (product:IProductInventory) => {
+      try {
+        products.forEach(async (product:IProductInventory) => {
+          try {
+            const {
+              id_product,
+              product_name,
+              barcode,
+              weight,
+              unit,
+              comission,
+              price,
+              product_status,
+              order_to_show,
+              amount,
+            } = product;
 
-        const {
-          id_product,
-          product_name,
-          barcode,
-          weight,
-          unit,
-          comission,
-          price,
-          product_status,
-          order_to_show,
-          amount,
-        } = product;
-
-        await tx.executeSql(`
-          UPDATE ${EMBEDDED_TABLES.PRODUCTS} SET 
-            product_name = ?, 
-            barcode = ?,
-            weight = ?, 
-            unit = ?, 
-            comission = ?,
-            price = ?, 
-            product_status = ?, 
-            order_to_show = ?, 
-            amount = ? 
-          WHERE id_product = '${id_product}';
-        `, [
-          product_name,
-          barcode,
-          weight,
-          unit,
-          comission,
-          price,
-          product_status,
-          order_to_show,
-          amount,
-        ]);
-      });
+            await tx.executeSql(`
+              UPDATE ${EMBEDDED_TABLES.PRODUCTS} SET 
+                product_name = ?, 
+                barcode = ?,
+                weight = ?, 
+                unit = ?, 
+                comission = ?,
+                price = ?, 
+                product_status = ?, 
+                order_to_show = ?, 
+                amount = ? 
+              WHERE id_product = '${id_product}';
+            `, [
+              product_name,
+              barcode,
+              weight,
+              unit,
+              comission,
+              price,
+              product_status,
+              order_to_show,
+              amount,
+            ]);
+          } catch (error) {
+            console.error('Failed to update products:', error);
+          }
+        });
+      } catch (error) {
+        console.error('Failed to update products (transaction execution):', error);
+      }
     });
     sqlite.close();
   } catch(error) {
@@ -547,13 +554,10 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
 
 export async function deleteAllDayOperations() {
   try {
-    console.log('Delete day operations')
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`)
-      .then((data) => {console.log(data)})
-      .catch((error) => {console.log(error)});
     });
 
     await sqlite.close();
