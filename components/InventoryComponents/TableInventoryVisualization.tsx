@@ -211,7 +211,7 @@ const TableInventoryVisualization = (
                 <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{returnedInventoryOperationAmount}</Text>
                 </DataTable.Cell>
-              }
+              } 
             </DataTable.Row>
           );
         })
