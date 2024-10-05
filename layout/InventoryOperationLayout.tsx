@@ -676,7 +676,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
-          onConfirm={isFirstInventory ? handleVendorConfirmation : handlerReturnToRouteMenu}
+          onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
           onCancel={isFirstInventory ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>

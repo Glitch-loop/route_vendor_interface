@@ -439,7 +439,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
           status_store,
           route_day_state,
         } = store;
-  
+
         await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET 
           street = ?, 
           ext_number = ?, 
