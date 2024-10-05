@@ -30,7 +30,7 @@ const productsInventorySlice = createSlice({
         });
       });
     },
-    updateProductsInventory: (state, action: PayloadAction<IProductInventory[]>) => {
+    addProductsInventory: (state, action: PayloadAction<IProductInventory[]>) => {
       for (let i = 0; i < state.length; i++) {
         const foundProduct:undefined|IProductInventory = action.payload
           .find((product) => {return product.id_product === state[i].id_product;});
@@ -45,9 +45,23 @@ const productsInventorySlice = createSlice({
         }
       }
     },
+    updateProductsInventory: (state, action: PayloadAction<IProductInventory[]>) => {
+      for (let i = 0; i < state.length; i++) {
+        const foundProduct:undefined|IProductInventory = action.payload
+          .find((product) => {return product.id_product === state[i].id_product;});
+
+        if(foundProduct === undefined) {
+          /* Do nothing*/
+        } else {
+          state[i] = {
+            ...foundProduct
+           };
+        }
+      }
+    },
   },
 });
 
-export const { setProductInventory, updateProductsInventory } = productsInventorySlice.actions;
+export const { setProductInventory, addProductsInventory, updateProductsInventory } = productsInventorySlice.actions;
 
 export default productsInventorySlice.reducer;

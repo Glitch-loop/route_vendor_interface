@@ -64,7 +64,7 @@ import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
-import { setProductInventory, updateProductsInventory } from '../redux/slices/productsInventorySlice';
+import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 import { setArrayDayOperations, setDayOperation, setDayOperationBeforeCurrentOpeation, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
@@ -133,7 +133,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     States used for inventory oepration vizualization.
   */
   const [initialShiftInventory, setInitialShiftInventory] = useState<IProductInventory[]>([]);
-  const [restockInventories, setRestockInventories] = useState<IProductInventory[][]>([[]]);
+  const [restockInventories, setRestockInventories] = useState<IProductInventory[][]>([]);
   const [finalShiftInventory, setFinalShiftInventory] = useState<IProductInventory[]>([]);
   const [isOperation, setIsOperation] = useState<boolean>(true);
   const [enablingFinalInventory, setEnablingFinalInventory] = useState<boolean>(true);
@@ -157,32 +157,51 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       setInventory(productInventory);
     });
 
-    if (currentOperation.id_item) {
-      /* It means that it is a visualization of a product operation. */
-      setIsOperation(false);
+    if (currentOperation.id_item) { // It is a inventory operation visualization.
       let productInventory:IProductInventory[] = [];
 
+      /*
+        Since it is an visualization, it is need to 'reset' the states related to
+        'inventory operations'.
+      */
+      setCurrentProduct([]);
+      setInventory([]);
+      setIsOperation(false);
+
       // Getting the inventory operation.
-      getInventoryOperation(currentOperation.id_item).then((inventoryOperation) => {
-        // Getting the movements of the inventory operation.
-        getInventoryOperationDescription(currentOperation.id_item).then((inventoryOperationDescriptions) => {
-          inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
-            productInventory.push({
-              ...initialProduct,
-              amount: inventoryOperationDescription.amount,
-              id_product: inventoryOperationDescription.id_product,
-              price: inventoryOperationDescription.price_at_moment,
-            });
-          });
-          setCurrentProduct([]);
-          setInitialShiftInventory(productInventory);
-          setInventory([]);
-          /*
-            Since it is the first inventory of the day, it is not necessary to show
-            the calculus between the initial inventory and the final one.
-           */
-          setEnablingFinalInventory(false);
-        }).catch((error) => { console.error('Something went wrong: ', error);});
+      getInventoryOperation(currentOperation.id_item)
+        .then((inventoryOperation) => {
+          // Getting the movements of the inventory operation.
+          getInventoryOperationDescription(currentOperation.id_item)
+            .then((inventoryOperationDescriptions) => {
+              inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
+                productInventory.push({
+                  ...initialProduct,
+                  amount: inventoryOperationDescription.amount,
+                  id_product: inventoryOperationDescription.id_product,
+                  price: inventoryOperationDescription.price_at_moment,
+                });
+              });
+
+              /*
+                Depending on what inventory operation the vendor want to see, is how the
+                state will be filled.
+              */
+              if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                setInitialShiftInventory(productInventory);
+                setRestockInventories([]);
+                setFinalShiftInventory([]);
+              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+                setInitialShiftInventory([]);
+                setRestockInventories([productInventory]);
+                setFinalShiftInventory([]);
+              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+                setInitialShiftInventory([]);
+                setRestockInventories([]);
+                setFinalShiftInventory(productInventory);
+              }
+
+          }).catch((error) => { console.error('Something went wrong: ', error);});
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
     } else { // It is a new operation
@@ -216,7 +235,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         setCurrentProduct(inventory);
       }
       setIsOperation(true);
-      setEnablingFinalInventory(true);
     }
 
     // Determining where to redirect in case of the user touch the handler "back handler" of the phone
@@ -518,7 +536,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               - Update the day operation
           */
           // Storing information in redux context.
-          dispatch(updateProductsInventory(inventory));
+          dispatch(addProductsInventory(inventory));
 
           //Calculating the new product inventory
           /*
@@ -619,12 +637,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         </View> :
         <TableInventoryVisualization
           inventory             = {productsInventory}
-          suggestedInventory    = {[]}
+          suggestedInventory    = {suggestedProduct}
           initialInventory      = {initialShiftInventory}
-          restockOperations     = {[]}
+          restockInventories    = {restockInventories}
           soldOperations        = {[]}
           repositionsOperations = {[]}
-          returnedInventory     = {[]}
+          returnedInventory     = {finalShiftInventory}
           inventoryWithdrawal   = {false}
           inventoryOutflow      = {false}
           finalOperation        = {false}

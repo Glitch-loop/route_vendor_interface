@@ -56,7 +56,7 @@ const TableInventoryVisualization = (
     inventory,
     suggestedInventory,
     initialInventory,
-    restockOperations,
+    restockInventories,
     soldOperations,
     repositionsOperations,
     returnedInventory,
@@ -68,7 +68,7 @@ const TableInventoryVisualization = (
     inventory:IProductInventory[],
     suggestedInventory: IProductInventory[],
     initialInventory:IProductInventory[],
-    restockOperations:IProductInventory[][],
+    restockInventories:IProductInventory[][],
     soldOperations: ITransactionDescriptions[],
     repositionsOperations: ITransactionDescriptions[],
     returnedInventory:IProductInventory[],
@@ -91,10 +91,14 @@ const TableInventoryVisualization = (
             <Text style={tw`text-black`}>Inventario inicial</Text>
           </DataTable.Title>
         }
-        { restockOperations.length > 0 &&
-          <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Re-stock</Text>
-          </DataTable.Title>
+        { restockInventories.length > 0 &&
+          restockInventories.map(() => {
+            return (
+            <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
+              <Text style={tw`text-black`}>Re-stock</Text>
+            </DataTable.Title>
+            );
+          })
         }
         {/*
           This field is never empty since it is the reason of this component (inventory operation)
@@ -136,7 +140,7 @@ const TableInventoryVisualization = (
         }
       </DataTable.Header>
       {/* Body section */}
-      { (initialInventory.length > 0 || returnedInventory.length > 0 || restockOperations.length > 0) ?
+      { (initialInventory.length > 0 || returnedInventory.length > 0 || restockInventories.length > 0) ?
         inventory.map((product) => {
           /*
             To understand how this component works, since inventory already have all the products that the vendor is currently
@@ -159,10 +163,16 @@ const TableInventoryVisualization = (
           let suggestedAmount = 0;
           let initialInventoryOperationAmount = 0;
           let returnedInventoryOperationAmount = 0;
+          let restockInventoryOperationAmount:number[] = [];
 
-          suggestedAmount                 = findProductAmountInArray(suggestedInventory, id_product);
-          initialInventoryOperationAmount = findProductAmountInArray(initialInventory, id_product);
-          returnedInventoryOperationAmount = findProductAmountInArray(returnedInventory, id_product);
+          suggestedAmount                   = findProductAmountInArray(suggestedInventory, id_product);
+          initialInventoryOperationAmount   = findProductAmountInArray(initialInventory, id_product);
+          returnedInventoryOperationAmount  = findProductAmountInArray(returnedInventory, id_product);
+
+          restockInventories.forEach((restockInventory:IProductInventory[]) => {
+            restockInventoryOperationAmount.push(findProductAmountInArray(restockInventory, id_product));
+          });
+
 
           /*
             Pending to do:
@@ -185,6 +195,17 @@ const TableInventoryVisualization = (
                 <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{initialInventoryOperationAmount}</Text>
                 </DataTable.Cell>
+              }
+              { restockInventoryOperationAmount.length > 0 &&
+                restockInventoryOperationAmount.map((productAmount, index) => {
+                  return (
+                  <DataTable.Cell
+                    key={index}
+                    style={tw`w-24 flex flex-row justify-center`}>
+                    <Text style={tw`text-black`}>{productAmount}</Text>
+                  </DataTable.Cell>
+                  );
+                })
               }
               { returnedInventory.length > 0 &&
                 <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>

@@ -51,6 +51,7 @@ import {
   insertTransactionOperationDescription,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
+import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
 
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
@@ -158,6 +159,10 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     const productDevolutionDescription:ITransactionOperationDescription[] = [];
     const productRepositionDescription:ITransactionOperationDescription[] = [];
 
+
+    // Inventory after sale
+    const updateInventory = productInventory.map((product) => {return {...product};});
+
     //Extracting information from the selling process.
     // Sale
     productSale.forEach((product) => {
@@ -168,6 +173,18 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         id_route_transaction: saleOperation.id_transaction,
         id_product: product.id_product,
       });
+
+      const index:number = updateInventory
+        .findIndex(currentProduct => {return currentProduct.id_product === product.id_product; });
+      if(index === -1) {
+        /* Do nothing */
+      } else {
+        console.log("Amount: ", updateInventory[index].amount - product.amount)
+        updateInventory[index] = {
+          ...updateInventory[index],
+          amount: updateInventory[index].amount - product.amount,
+        };
+      }
     });
 
     // Product devolution
@@ -190,6 +207,15 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         id_route_transaction: productRepositionOperation.id_transaction,
         id_product: product.id_product,
       });
+
+      const index:number = updateInventory
+      .findIndex(currentProduct => {currentProduct.id_product === product.id_product; });
+
+      if(index === -1) {
+        /* Do nothing */
+      } else {
+        updateInventory[index].amount = updateInventory[index].amount - product.amount;
+      }
     });
 
     if (saleOperationDescription[0] !== undefined) {
@@ -209,6 +235,24 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       await insertTransaction(productRepositionOperation);
       await insertTransactionOperationDescription(productRepositionDescription);
     }
+
+    // Updating inventory
+    /*
+      Sales and product reposition will directly be substracted from the inventory
+      (the outflow of these concepts impact to the inventory).
+
+      In the other hand, the product devolutions will not have any effect in the inventory,
+      in this case, this movements will be gathered until the end of shift to calculate an
+      inventory to determine the "product devolution inventory".
+    */
+    // Updating redux context
+    console.log("Product to update: ")
+    console.log(updateInventory[0].product_name)
+    console.log(updateInventory[0].amount)
+    dispatch(updateProductsInventory(updateInventory));
+
+    // Updating embedded database
+
 
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
@@ -246,8 +290,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         });
-
-        console.log(determineRouteDayState(foundStore.route_day_state, 2));
       }
     } else {
       /*
