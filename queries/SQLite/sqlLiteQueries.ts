@@ -58,7 +58,7 @@ export async function createEmbeddedDatabase() {
           await tx.executeSql(table);
           console.log('Table created successfully.');
         } catch (error) {
-          console.log('Error creating the database: ', error);
+          console.error('Error creating the database: ', error);
           throw error;
         }
       });
@@ -426,7 +426,6 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
 export async function updateStore(store: IStore&IStoreStatusDay) {
   try {
     const sqlite = await createSQLiteConnection();
-    console.log(store)
     await sqlite.transaction(async (tx) => {
       try {
         const {
@@ -447,7 +446,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
           status_store,
           route_day_state,
         } = store;
-        console.log("Executing update stores")
+
         await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET 
           street = ?, 
           ext_number = ?, 
@@ -482,10 +481,10 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
           route_day_state,
         ]);
       } catch (error) {
-        console.log('Something was wrong during store updation: ', error);
+        console.error('Something was wrong during store updation: ', error);
       }
     });
-    console.log("Finish")
+
     await sqlite.close();
   } catch (error) {
     console.error('Failed to update the store: ', error);
@@ -724,7 +723,7 @@ export async function insertRouteTransaction(transactionOperation: IRouteTransac
       id_store,
       id_payment_method,
     } = transactionOperation;
-    console.log(transactionOperation)
+
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
