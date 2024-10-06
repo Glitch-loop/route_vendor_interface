@@ -10,7 +10,8 @@ import {
   productsEmbeddedTable,
   dayOperationsEmbeddedTable,
   routeTransactionsEmbeddedTable,
-  transactionDescriptionsEmbeddedTable,
+  routeTransactionOperationsEmbeddedTable,
+  routeTransactionOperationDescriptionsEmbeddedTable,
   inventoryOperationsEmbeddedTable,
   productOperationDescriptionsEmbeddedTable,
 } from './embeddedDatabase';
@@ -42,7 +43,8 @@ export async function createEmbeddedDatabase() {
       productsEmbeddedTable,
       dayOperationsEmbeddedTable,
       routeTransactionsEmbeddedTable,
-      transactionDescriptionsEmbeddedTable,
+      routeTransactionOperationsEmbeddedTable,
+      routeTransactionOperationDescriptionsEmbeddedTable,
       inventoryOperationsEmbeddedTable,
       productOperationDescriptionsEmbeddedTable,
     ];
@@ -72,15 +74,16 @@ export async function createEmbeddedDatabase() {
 export async function dropEmbeddedDatabase() {
   try {
     const tablesToDelete:string[] = [
-      EMBEDDED_TABLES.DAY_OPERATIONS,
-      EMBEDDED_TABLES.INVENTORY_OPERATIONS,
-      EMBEDDED_TABLES.PRODUCTS,
-      EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS,
-      EMBEDDED_TABLES.ROUTE_DAY,
-      EMBEDDED_TABLES.ROUTE_TRANSACTIONS,
-      EMBEDDED_TABLES.STORES,
-      EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS,
       EMBEDDED_TABLES.USER,
+      EMBEDDED_TABLES.ROUTE_DAY,
+      EMBEDDED_TABLES.STORES,
+      EMBEDDED_TABLES.PRODUCTS,
+      EMBEDDED_TABLES.DAY_OPERATIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS,
+      EMBEDDED_TABLES.INVENTORY_OPERATIONS,
+      EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS,
     ];
 
     const sqlite = await createSQLiteConnection();

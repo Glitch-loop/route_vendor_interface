@@ -1,4 +1,4 @@
-import EMBEDDED_TABLES from "../../utils/embeddedTables";
+import EMBEDDED_TABLES from '../../utils/embeddedTables';
 
 /*
   This document contains the database that the system uses to
@@ -93,19 +93,27 @@ export const routeTransactionsEmbeddedTable = `
     date              DATETIME NOT NULL,
     state             INT NOT NULL,
     id_work_day       TEXT NOT NULL,
-    id_store          TEXT NOT NULL,
     id_type_operation TEXT NOT NULL,
-    id_payment_method TEXT NOT NULL
+    id_payment_method TEXT NOT NULL,
+    id_store          TEXT NOT NULL
   );
 `;
 
-export const transactionDescriptionsEmbeddedTable = `
-  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (
-    id_transaction_description  TEXT NOT NULL,
-    price_at_moment             NUMERIC(6,3) NOT NULL,
-    amount                      INT NOT NULL,
-    id_route_transaction        TEXT NOT NULL UNIQUE,
-    id_product                  TEXT NOT NULL UNIQUE
+export const routeTransactionOperationsEmbeddedTable = `
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS} (
+    id_route_transaction_operation      TEXT NOT NULL UNIQUE,
+    id_route_transaction                TEXT NOT NULL,
+    id_route_transaction_operation_type TEXT NOT NULL
+  );
+`;
+
+export const routeTransactionOperationDescriptionsEmbeddedTable = `
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS} (
+    id_route_transaction_operation_description  TEXT NOT NULL UNIQUE,
+    price_at_moment                             NUMERIC(6,3) NOT NULL,
+    amount                                      INT NOT NULL,
+    id_route_transaction_operation              TEXT NOT NULL,
+    id_product                                  TEXT NOT NULL
   );
 `;
 

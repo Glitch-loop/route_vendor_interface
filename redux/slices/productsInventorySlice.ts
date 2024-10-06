@@ -54,7 +54,7 @@ const productsInventorySlice = createSlice({
           /* Do nothing*/
         } else {
           state[i] = {
-            ...foundProduct
+            ...foundProduct,
            };
         }
       }

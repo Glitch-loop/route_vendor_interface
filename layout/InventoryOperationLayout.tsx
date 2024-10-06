@@ -191,6 +191,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 state will be filled.
               */
               if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                console.log(productInventory)
                 setInitialShiftInventory(productInventory);
                 setRestockInventories([]);
                 setFinalShiftInventory([]);
