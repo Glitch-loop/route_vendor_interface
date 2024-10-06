@@ -105,21 +105,7 @@ export interface IStoreStatusDay {
   route_day_state: number;
 }
 
-
-export interface IPaymentMethod {
-  id_payment_method: string;
-  payment_method_name: string;
-}
-
-export interface ITransactionDescriptions {
-  id_transaction_description: string;
-  price_at_moment: string;
-  amount: number;
-  id_route_transaction: string;
-  id_product: string;
-}
-
-
+// Related to inventory operation
 export interface IInventoryOperation {
   id_inventory_operation: string;
   sign_confirmation: string;
@@ -137,20 +123,31 @@ export interface IInventoryOperationDescription {
   id_product: string;
 }
 
-export interface ITransactionOperation {
-  id_transaction: string;
+// Related to transactions
+export interface IPaymentMethod {
+  id_payment_method: string;
+  payment_method_name: string;
+}
+
+export interface IRouteTransaction {
+  id_route_transaction: string;
   date: string;
   state: number;
   id_work_day: string;
-  id_store: string;
-  id_type_operation: string;
   id_payment_method: string;
+  id_store: string;
 }
 
-export interface ITransactionOperationDescription {
-  id_transaction_description: string;
+export interface IRouteTransactionOperation {
+  id_route_transaction_operation: string;
+  id_route_transaction: string;
+  id_route_transaction_operation_type: string;
+}
+
+export interface IRouteTransactionOperationDescription {
+  id_route_transaction_operation_description: string;
   price_at_moment: number;
   amount: number;
-  id_route_transaction: string;
+  id_route_transaction_operation: string;
   id_product: string;
 }
