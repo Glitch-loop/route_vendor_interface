@@ -25,11 +25,12 @@ import {
   IDay,
   IRouteDay,
   IDayOperation,
+  IRouteTransaction,
+  IRouteTransactionOperation,
+  IRouteTransactionOperationDescription,
   IStore,
   IInventoryOperation,
   IInventoryOperationDescription,
-  ITransactionOperationDescription,
-  ITransactionOperation,
   IStoreStatusDay,
 } from '../../interfaces/interfaces';
 
@@ -62,6 +63,7 @@ export async function createEmbeddedDatabase() {
         }
       });
     });
+
     await sqlite.close();
   } catch(error) {
     /*
@@ -98,6 +100,7 @@ export async function dropEmbeddedDatabase() {
         }
       });
     });
+
     await sqlite.close();
   } catch(error) {
     /*
@@ -131,25 +134,27 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
     } = workday;
     const sqlite = await createSQLiteConnection();
 
-    await sqlite.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-      id_work_day,
-      start_date,
-      finish_date,
-      start_petty_cash,
-      final_petty_cash,
-      /*Fields related to IRoute interface*/
-      id_route,
-      route_name,
-      description,
-      route_status,
-      // id_vendor,
-      /*Fields related to IDay interface*/
-      id_day,
-      // day_name,
-      // order_to_show,
-      /*Fields relate to IRouteDay*/
-      id_route_day,
-    ]);
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_DAY} (id_work_day, start_date, end_date, start_petty_cash, end_petty_cash, id_route, route_name, description, route_status, id_day, id_route_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        id_work_day,
+        start_date,
+        finish_date,
+        start_petty_cash,
+        final_petty_cash,
+        /*Fields related to IRoute interface*/
+        id_route,
+        route_name,
+        description,
+        route_status,
+        // id_vendor,
+        /*Fields related to IDay interface*/
+        id_day,
+        // day_name,
+        // order_to_show,
+        /*Fields relate to IRouteDay*/
+        id_route_day,
+      ]);
+    });
 
     await sqlite.close();
   } catch (error) {
@@ -328,7 +333,7 @@ export async function updateProducts(products: IProductInventory[]) {
         console.error('Failed to update products (transaction execution):', error);
       }
     });
-    sqlite.close();
+    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -421,7 +426,7 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
 export async function updateStore(store: IStore&IStoreStatusDay) {
   try {
     const sqlite = await createSQLiteConnection();
-
+    console.log(store)
     await sqlite.transaction(async (tx) => {
       try {
         const {
@@ -442,7 +447,7 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
           status_store,
           route_day_state,
         } = store;
-
+        console.log("Executing update stores")
         await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.STORES} SET 
           street = ?, 
           ext_number = ?, 
@@ -477,10 +482,10 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
           route_day_state,
         ]);
       } catch (error) {
-        console.log('Something was wrong during store updation: ', error)
+        console.log('Something was wrong during store updation: ', error);
       }
     });
-
+    console.log("Finish")
     await sqlite.close();
   } catch (error) {
     console.error('Failed to update the store: ', error);
@@ -709,34 +714,33 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
 
 
 // Related to transcations
-export async function insertTransaction(transactionOperation: ITransactionOperation) {
+export async function insertRouteTransaction(transactionOperation: IRouteTransaction) {
   try {
     const {
-      id_transaction,
+      id_route_transaction,
       date,
       state,
       id_work_day,
       id_store,
-      id_type_operation,
       id_payment_method,
     } = transactionOperation;
-
+    console.log(transactionOperation)
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
       try {
-        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_transaction, date, state, id_work_day, id_store, id_type_operation, id_payment_method) VALUES (?, ?, ?, ?, ?, ?, ?);
-        `, [
-            id_transaction,
-            date,
-            state,
-            id_work_day,
-            id_store,
-            id_type_operation,
-            id_payment_method,
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (id_route_transaction, date, state, id_work_day, id_payment_method, id_store) VALUES (?, ?, ?, ?, ?, ?);
+        `,
+        [
+          id_route_transaction,
+          date,
+          state,
+          id_work_day,
+          id_payment_method,
+          id_store,
         ]);
       } catch (error) {
-        console.error('Something was wrong during "transacion" instertion.');
+        console.error('Something was wrong during "route transacion" instertion:', error);
       }
     });
 
@@ -745,37 +749,72 @@ export async function insertTransaction(transactionOperation: ITransactionOperat
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to instert inventory operation:', error);
+      console.error('Something was wrong during "route transacion" instertion:', error);
   }
 }
 
-export async function insertTransactionOperationDescription(transactionOperationDescription: ITransactionOperationDescription[]) {
+export async function insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation) {
+  try {
+    const {
+      id_route_transaction_operation,
+      id_route_transaction,
+      id_route_transaction_operation_type,
+    } = transactionOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      try {
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS} (id_route_transaction_operation, id_route_transaction, id_route_transaction_operation_type) VALUES (?, ?, ?);
+        `,
+        [
+          id_route_transaction_operation,
+          id_route_transaction,
+          id_route_transaction_operation_type,
+        ]);
+      } catch (error) {
+        console.error('Something was wrong during "route transacion operation" instertion:', error);
+      }
+    });
+
+    await sqlite.close();
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+    console.error('Something was wrong during "route transacion operation" instertion:', error);
+  }
+}
+
+
+
+export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]) {
   try {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
       transactionOperationDescription
-        .forEach(async (transactionDescription:ITransactionOperationDescription)=> {
+        .forEach(async (transactionDescription:IRouteTransactionOperationDescription)=> {
         try {
           const {
-            id_transaction_description,
+            id_route_transaction_operation_description,
             price_at_moment,
             amount,
-            id_route_transaction,
+            id_route_transaction_operation,
             id_product,
           } = transactionDescription;
 
-          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.TRANSACTION_DESCRIPTIONS} (id_transaction_description, price_at_moment, amount, id_route_transaction, id_product) VALUES (?, ?, ?, ?, ?);
+          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS} (id_route_transaction_operation_description, price_at_moment, amount, id_route_transaction_operation, id_product) VALUES (?, ?, ?, ?, ?);
             `, [
-              id_transaction_description,
+              id_route_transaction_operation_description,
               price_at_moment,
               amount,
-              id_route_transaction,
+              id_route_transaction_operation,
               id_product,
             ]
           );
         } catch (error) {
-          console.error('Failed to instert inventory operation:', error);
+          console.error('Something was wrong during "route transacion operation description" instertion:', error);
         }
       });
     });
@@ -785,6 +824,6 @@ export async function insertTransactionOperationDescription(transactionOperation
     /*
       TODO: Decide what to do in the case of failing the database creation.
     */
-    console.error('Failed to instert inventory operation:', error);
+      console.error('Something was wrong during "route transacion operation description" instertion:', error);
   }
 }

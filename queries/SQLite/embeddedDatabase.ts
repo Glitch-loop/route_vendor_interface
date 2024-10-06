@@ -89,13 +89,12 @@ export const dayOperationsEmbeddedTable = `
 
 export const routeTransactionsEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} (
-    id_transaction    TEXT NOT NULL UNIQUE,
-    date              DATETIME NOT NULL,
-    state             INT NOT NULL,
-    id_work_day       TEXT NOT NULL,
-    id_type_operation TEXT NOT NULL,
-    id_payment_method TEXT NOT NULL,
-    id_store          TEXT NOT NULL
+    id_route_transaction    TEXT NOT NULL UNIQUE,
+    date                    TEXT NOT NULL,
+    state                   INT NOT NULL,
+    id_work_day             TEXT NOT NULL,
+    id_payment_method       TEXT NOT NULL,
+    id_store                TEXT NOT NULL
   );
 `;
 

@@ -14,10 +14,11 @@ import { setNextOperation } from '../redux/slices/dayOperationsSlice';
 import {
   IPaymentMethod,
   IProductInventory,
+  IRouteTransaction,
+  IRouteTransactionOperation,
+  IRouteTransactionOperationDescription,
   IStore,
   IStoreStatusDay,
-  ITransactionOperation,
-  ITransactionOperationDescription,
 } from '../interfaces/interfaces';
 
 // Utils
@@ -45,20 +46,21 @@ import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
-import { timesamp_standard_format, timestamp_format } from '../utils/momentFormat';
+import { timestamp_format } from '../utils/momentFormat';
 import {
-  insertTransaction,
-  insertTransactionOperationDescription,
+  insertRouteTransaction,
+  insertRouteTransactionOperation,
+  insertRouteTransactionOperationDescription,
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
 import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
 
+// Axiliar funciton
 const SalesLayout = ({navigation}:{navigation:any}) => {
   // Redux context definitions
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
-  const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
 
   const stores = useSelector((state: RootState) => state.stores);
@@ -115,63 +117,78 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   */
   const handlerOnSuccessfullCompletionSale = async () => {
     /*
-      At the moment of completing a transaction there will be 3 possible operations:
+      When a vendor vistis a store, a transaction is created.
+
+      A transaction can contain of one the following "transaction  operations":
         - Sale
         - Product devolution
         - Product Reposition
 
-      So, if one of the possible operations don't have any product description, it is not necessary to
-      declare or store the transaction because there were not movement for that transaction.
+      It is possible that a transaction doesn't have any "transaction operation", in this way,
+      if this case happens, it indicates that the vendor visited the store but it wasn't any operation.
+
+      To determine if it were a transaction operation, it is necessary that the transaction opertation
+      counts with at least one transaction operation movement (this one is actual movement inventory and
+      cash {inflow/outflow} operations that were made in the visit to the store).
     */
+    // Creating transaction
+    console.log("Formatting information")
+    const routeTransaction:IRouteTransaction = {
+      id_route_transaction: uuidv4(),
+      date: timestamp_format(),
+      state: 1, // Indicating "active transaction"
+      id_work_day: routeDay.id_work_day,
+      id_payment_method: paymnetMethod.id_payment_method,
+      id_store: currentOperation.id_item, // Item will be the id of the store in question.
+    };
 
     // Creating transaction operations
-    const saleOperation:ITransactionOperation = {
-      id_transaction: uuidv4(),
-      date: timestamp_format(),
-      state: 1, // Indicating "active transaction"
-      id_work_day: routeDay.id_work_day,
-      id_store: currentOperation.id_item, // Item will be the id of the store in question.
-      id_type_operation: DAYS_OPERATIONS.sales,
-      id_payment_method: paymnetMethod.id_payment_method,
+    const saleRouteTransactionOperation:IRouteTransactionOperation = {
+      id_route_transaction_operation: uuidv4(),
+      id_route_transaction: routeTransaction.id_route_transaction,
+      id_route_transaction_operation_type: DAYS_OPERATIONS.sales,
     };
 
-    const productDevolutionOperation:ITransactionOperation = {
-      id_transaction: uuidv4(),
-      date: timestamp_format(),
-      state: 1, // Indicating "active transaction"
-      id_work_day: routeDay.id_work_day,
-      id_store: currentOperation.id_item, // Item will be the id of the store in question.
-      id_type_operation: DAYS_OPERATIONS.product_devolution,
-      id_payment_method: paymnetMethod.id_payment_method,
+    const productDevolutionRouteTransactionOperation:IRouteTransactionOperation = {
+      id_route_transaction_operation: uuidv4(),
+      id_route_transaction: routeTransaction.id_route_transaction,
+      id_route_transaction_operation_type: DAYS_OPERATIONS.product_devolution,
     };
 
-    const productRepositionOperation:ITransactionOperation = {
-      id_transaction: uuidv4(),
-      date: timestamp_format(),
-      state: 1, // Indicating "active transaction"
-      id_work_day: routeDay.id_work_day,
-      id_store: currentOperation.id_item, // Item will be the id of the store in question.
-      id_type_operation: DAYS_OPERATIONS.product_reposition,
-      id_payment_method: paymnetMethod.id_payment_method,
+    const productRepositionRouteTransactionOperation:IRouteTransactionOperation = {
+      id_route_transaction_operation: uuidv4(),
+      id_route_transaction: routeTransaction.id_route_transaction,
+      id_route_transaction_operation_type: DAYS_OPERATIONS.product_reposition,
     };
 
-    // Creating description for each type of transaction.
-    const saleOperationDescription:ITransactionOperationDescription[] = [];
-    const productDevolutionDescription:ITransactionOperationDescription[] = [];
-    const productRepositionDescription:ITransactionOperationDescription[] = [];
+    // Creating description for each type of transaction operation.
+    const saleRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
+    const productDevolutionRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
+    const productRepositionRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
 
 
-    // Inventory after sale
+    // Variable get the inventory after sale.
     const updateInventory = productInventory.map((product) => {return {...product};});
 
     //Extracting information from the selling process.
-    // Sale
-    productSale.forEach((product) => {
-      saleOperationDescription.push({
-        id_transaction_description: uuidv4(),
+    // Product devolution
+    productDevolution.forEach((product) => {
+      productDevolutionRouteTransactionOperationDescription.push({
+        id_route_transaction_operation_description: uuidv4(),
         price_at_moment: product.price,
         amount: product.amount,
-        id_route_transaction: saleOperation.id_transaction,
+        id_route_transaction_operation: productDevolutionRouteTransactionOperation.id_route_transaction_operation,
+        id_product: product.id_product,
+      });
+    });
+
+    // Sale
+    productSale.forEach((product) => {
+      saleRouteTransactionOperationDescription.push({
+        id_route_transaction_operation_description: uuidv4(),
+        price_at_moment: product.price,
+        amount: product.amount,
+        id_route_transaction_operation: saleRouteTransactionOperation.id_route_transaction,
         id_product: product.id_product,
       });
 
@@ -180,7 +197,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       if(index === -1) {
         /* Do nothing */
       } else {
-        console.log("Amount: ", updateInventory[index].amount - product.amount)
         updateInventory[index] = {
           ...updateInventory[index],
           amount: updateInventory[index].amount - product.amount,
@@ -188,53 +204,51 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       }
     });
 
-    // Product devolution
-    productDevolution.forEach((product) => {
-      productDevolutionDescription.push({
-        id_transaction_description: uuidv4(),
-        price_at_moment: product.price,
-        amount: product.amount,
-        id_route_transaction: productDevolutionOperation.id_transaction,
-        id_product: product.id_product,
-      });
-    });
-
     // Product reposition
     productReposition.forEach((product) => {
-      productRepositionDescription.push({
-        id_transaction_description: uuidv4(),
+      productRepositionRouteTransactionOperationDescription.push({
+        id_route_transaction_operation_description: uuidv4(),
         price_at_moment: product.price,
         amount: product.amount,
-        id_route_transaction: productRepositionOperation.id_transaction,
+        id_route_transaction_operation: productRepositionRouteTransactionOperation.id_route_transaction_operation,
         id_product: product.id_product,
       });
 
       const index:number = updateInventory
-      .findIndex(currentProduct => {currentProduct.id_product === product.id_product; });
+      .findIndex(currentProduct => {return currentProduct.id_product === product.id_product; });
 
       if(index === -1) {
         /* Do nothing */
       } else {
-        updateInventory[index].amount = updateInventory[index].amount - product.amount;
+        updateInventory[index] = {
+          ...updateInventory[index],
+          amount: updateInventory[index].amount - product.amount,
+        };
       }
     });
 
-    if (saleOperationDescription[0] !== undefined) {
-      /* There was a movement in concept of sale. */
-      await insertTransaction(saleOperation);
-      await insertTransactionOperationDescription(saleOperationDescription);
-    }
-
-    if (productDevolutionDescription[0] !== undefined) {
+    console.log("Creating transaction")
+    // Storing transaction
+    await insertRouteTransaction(routeTransaction);
+    if (productDevolutionRouteTransactionOperationDescription[0] !== undefined) {
+      console.log("Creating devolution transaction operation")
       /* There was a movement in concept of devolution. */
-      await insertTransaction(productDevolutionOperation);
-      await insertTransactionOperationDescription(productDevolutionDescription);
+      await insertRouteTransactionOperation(productDevolutionRouteTransactionOperation);
+      await insertRouteTransactionOperationDescription(productDevolutionRouteTransactionOperationDescription);
     }
 
-    if (productRepositionDescription[0] !== undefined) {
+    if (saleRouteTransactionOperationDescription[0] !== undefined) {
+      console.log("Creating  transaction operation")
+      /* There was a movement in concept of sale. */
+      await insertRouteTransactionOperation(saleRouteTransactionOperation);
+      await insertRouteTransactionOperationDescription(saleRouteTransactionOperationDescription);
+    }
+
+    if (productRepositionRouteTransactionOperationDescription[0] !== undefined) {
+      console.log("Creating reposition transaction operation")
       /* There was a movement in concept of reposition. */
-      await insertTransaction(productRepositionOperation);
-      await insertTransactionOperationDescription(productRepositionDescription);
+      await insertRouteTransactionOperation(productRepositionRouteTransactionOperation);
+      await insertRouteTransactionOperationDescription(productRepositionRouteTransactionOperationDescription);
     }
 
     // Updating inventory
@@ -246,20 +260,18 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       in this case, this movements will be gathered until the end of shift to calculate an
       inventory to determine the "product devolution inventory".
     */
+   console.log("Creating updating products transaction operation")
     // Updating redux context
-    console.log("redux context")
     dispatch(updateProductsInventory(updateInventory));
-    
-    console.log("products")
 
     // Updating embedded database
     await updateProducts(updateInventory);
 
+    console.log("Creating updating stores operation")
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
-    console.log("Updating store")
     if (foundStore !== undefined) {
       /*
         It means, the store is already plannified for this day, but we don't know if the client
@@ -304,6 +316,8 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     /*
       Moving to the next operation.
     */
+
+    console.log("Next operation")
     dispatch(setNextOperation());
     console.log("Go to route menu")
     navigation.navigate('routeOperationMenu');
