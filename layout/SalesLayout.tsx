@@ -54,6 +54,7 @@ import {
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
+
 import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
 
 // Axiliar funciton
@@ -188,7 +189,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
         id_route_transaction_operation_description: uuidv4(),
         price_at_moment: product.price,
         amount: product.amount,
-        id_route_transaction_operation: saleRouteTransactionOperation.id_route_transaction,
+        id_route_transaction_operation: saleRouteTransactionOperation.id_route_transaction_operation,
         id_product: product.id_product,
       });
 
