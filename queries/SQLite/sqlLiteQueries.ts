@@ -711,7 +711,6 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
   }
 }
 
-
 // Related to transcations
 export async function insertRouteTransaction(transactionOperation: IRouteTransaction) {
   try {
@@ -785,8 +784,6 @@ export async function insertRouteTransactionOperation(transactionOperation: IRou
   }
 }
 
-
-
 export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]) {
   try {
     const sqlite = await createSQLiteConnection();
@@ -824,5 +821,72 @@ export async function insertRouteTransactionOperationDescription(transactionOper
       TODO: Decide what to do in the case of failing the database creation.
     */
       console.error('Something was wrong during "route transacion operation description" instertion:', error);
+  }
+}
+
+export async function getRouteTransactionByStore(id_store:string):Promise<IRouteTransaction[]> {
+  try {
+    const transactions:IRouteTransaction[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} WHERE id_store = '${id_store}';`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        transactions.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return transactions;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
+
+export async function getRouteTransactionOperations(id_route_transaction:string):Promise<IRouteTransactionOperation[]> {
+  try {
+    const transactionsOperations:IRouteTransactionOperation[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS} WHERE id_route_transaction = '${id_route_transaction}';`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        transactionsOperations.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return transactionsOperations;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
+export async function getRouteTransactionOperationDescriptions(id_route_transaction_operation:string):Promise<IRouteTransactionOperationDescription[]> {
+  try {
+    const transactionsOperationDescriptions:IRouteTransactionOperationDescription[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS} WHERE id_route_transaction_operation = '${id_route_transaction_operation}';`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        transactionsOperationDescriptions.push(record.rows.item(index));
+      }
+    });
+
+    await sqlite.close();
+
+    return transactionsOperationDescriptions;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
   }
 }

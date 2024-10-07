@@ -8,13 +8,15 @@ import { enumStoreStates } from '../interfaces/enumStoreStates';
 
 // Components
 import RouteMap from '../components/RouteMap';
+import SummarizeTransaction from '../components/TransactionComponents/SummarizeTransaction';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
-import { IDayOperation, IStore, IStoreStatusDay } from '../interfaces/interfaces';
+import { IDayOperation, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription, IStore, IStoreStatusDay } from '../interfaces/interfaces';
 import GoButton from '../components/generalComponents/GoButton';
+import { getRouteTransactionByStore, getRouteTransactionOperationDescriptions, getRouteTransactionOperations } from '../queries/SQLite/sqlLiteQueries';
 
 const defaultStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -122,6 +124,16 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   // Defining state
   const [store, setStore] =
     useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation.id_item, stores));
+  const [isConsultTransaction, setIsConsultTransaction] = useState<boolean>(false);
+  const [routeTransactions, setRouteTransactions] = useState<IRouteTransaction[]>([]);
+  const [
+    routeTransactionOperations,
+    setRouteTransactionOperations,
+  ] = useState<Map<string, IRouteTransactionOperation[]>>(new Map());
+  const [
+    routeTransactionOperationDescriptions,
+    setRouteTransactionOperationDescriptions,
+  ] = useState<Map<string, IRouteTransactionOperationDescription[]>>(new Map());
 
   useEffect(() => {
     setStore(getStoreFromContext(currentOperation.id_item, stores));
@@ -133,22 +145,69 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
     navigation.navigate('routeOperationMenu');
   };
 
+  const handlerGoBackToStoreMenu = () => {
+    setIsConsultTransaction(false);
+  };
+
   const handlerOnStartSale = () => {
     navigation.navigate('sales');
   };
 
+  const handlerOnConsultTransactions = async() => {
+    try {
+      const arrTransactions:IRouteTransaction[] = [];
+      const mapTransactionOperations = new Map<string, IRouteTransactionOperation[]>();
+      const mapTransactionOperationDescriptions = new Map<string, IRouteTransactionOperationDescription[]>();
 
 
-  return (
+      /* Getting all the transaciton of the store of today. */
+      (await getRouteTransactionByStore(store.id_store))
+      .forEach((transaction:IRouteTransaction) => {
+        arrTransactions.push(transaction);
+      });
+
+      /* Getting all the transaction operations from the transaction of today. */
+      for (const transaction of arrTransactions) {
+        const { id_route_transaction } = transaction;
+        mapTransactionOperations.set(
+          id_route_transaction,
+          await (getRouteTransactionOperations(id_route_transaction))
+        );
+      }
+
+      /* Getting all the descriptions (or movements) of the transaction operations of today. */
+      for (const [key, transactionOperation] of mapTransactionOperations.entries()) {
+        for (const currentTransactionOperation of transactionOperation) {
+          const { id_route_transaction_operation } = currentTransactionOperation;
+          mapTransactionOperationDescriptions.set(
+            id_route_transaction_operation,
+            await getRouteTransactionOperationDescriptions(id_route_transaction_operation)
+          );
+        }
+      }
+
+      setRouteTransactions(arrTransactions);
+      setRouteTransactionOperations(mapTransactionOperations);
+      setRouteTransactionOperationDescriptions(mapTransactionOperationDescriptions);
+      setIsConsultTransaction(true);
+
+    } catch (error) {
+      console.error('Something was wrong during transaction retrieving: ', error);
+    }
+  };
+
+
+  return (!isConsultTransaction ?
+    // Main menu of store
     <View style={tw`w-full flex-1 justify-center items-center`}>
       <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
-      <GoButton
-        iconName={'chevron-left'}
-        onPressButton={handlerGoBackToMainOperationMenu}/>
-        <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
-        <Text style={tw`text-2xl text-black mx-1`}>|</Text>
-        <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
-        <View style={tw`${contextOfStore(store, currentOperation)}`} />
+        <GoButton
+          iconName={'chevron-left'}
+          onPressButton={handlerGoBackToMainOperationMenu}/>
+          <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
+          <Text style={tw`text-2xl text-black mx-1`}>|</Text>
+          <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
+          <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
       <View style={tw`h-1/2 w-11/12 flex-1 border-solid border-2 rounded-sm`}>
         <RouteMap
@@ -178,8 +237,10 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
         </View>
         <View style={tw`h-3/5 h-1/2 flex flex-row basis-1/3 justify-around items-center`}>
           <View style={tw`h-1/2 flex basis-1/2 justify-center items-center`}>
-            <Pressable style={tw`w-11/12 h-full border-solid border bg-blue-500 
-              rounded flex flex-row justify-center items-center`}>
+            <Pressable
+              style={tw`w-11/12 h-full border-solid border bg-blue-500 
+                rounded flex flex-row justify-center items-center`}
+              onPress={() => {handlerOnConsultTransactions();}}>
               <Text style={tw`text-center text-black`}>Transacciones de hoy</Text>
             </Pressable>
           </View>
@@ -193,6 +254,55 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           </View>
         </View>
       </View>
+    </View> :
+    // Transaction visualization
+    <View style={tw`w-full flex-1 justify-start items-center`}>
+      <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
+        <GoButton
+          iconName={'chevron-left'}
+          onPressButton={handlerGoBackToStoreMenu}/>
+          <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
+          <Text style={tw`text-2xl text-black mx-1`}>|</Text>
+          <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
+          <View style={tw`${contextOfStore(store, currentOperation)}`} />
+      </View>
+      { routeTransactions.map(current_transaction => {
+        const id_current_transaction = current_transaction.id_route_transaction;
+        const current_transaction_operations:IRouteTransactionOperation[] = [];
+        const current_transaction_operation_descriptions = new Map<string, IRouteTransactionOperationDescription[]>();
+
+        let transactionOperations = routeTransactionOperations.get(id_current_transaction);
+
+        /* Avoiding undefined value for operations of the transaction */
+        if (transactionOperations === undefined) {
+          /* Do nothing */
+        } else {
+          transactionOperations.forEach(operation => {
+            const {id_route_transaction_operation} = operation;
+            current_transaction_operations.push(operation);
+
+            /* In addition, it means that it must be operation descriptions */
+            let transactionOperationDescription = routeTransactionOperationDescriptions
+              .get(id_route_transaction_operation);
+
+            /* Avoiding undefined values for operation descriptions */
+            if (transactionOperationDescription === undefined) {
+              /* Do nothing*/
+            } else {
+              current_transaction_operation_descriptions
+                .set(id_route_transaction_operation, transactionOperationDescription);
+            }
+          });
+        }
+
+        return (
+          <SummarizeTransaction
+            key={id_current_transaction}
+            routeTransaction={current_transaction}
+            routeTransactionOperations={current_transaction_operations}
+            routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
+        );
+      })}
     </View>
   );
 };
