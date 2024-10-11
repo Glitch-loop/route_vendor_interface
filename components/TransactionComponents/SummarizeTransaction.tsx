@@ -17,7 +17,7 @@ import DAYS_OPERATIONS from '../../lib/day_operations';
 
 // Components
 import SectionTitle from '../SalesLayout/SectionTitle';
-import SummarizeFormat from './summarizeFormat';
+import SummarizeFormat from './SummarizeFormat';
 
 
 function convertTransactionOperationDescriptionToProductInventoryInterface(
@@ -110,7 +110,7 @@ const SummarizeTransaction = ({
 
 
   return (
-    <View style={tw`w-full flex flex-col`}>
+    <View style={tw`w-full flex flex-col flex-row `}>
       <SectionTitle
         title={`Operation - ${routeTransaction.date}`}
         caption={''}

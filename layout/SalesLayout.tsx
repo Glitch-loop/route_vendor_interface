@@ -133,7 +133,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       cash {inflow/outflow} operations that were made in the visit to the store).
     */
     // Creating transaction
-    console.log("Formatting information")
     const routeTransaction:IRouteTransaction = {
       id_route_transaction: uuidv4(),
       date: timestamp_format(),

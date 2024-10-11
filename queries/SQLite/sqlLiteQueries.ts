@@ -53,18 +53,19 @@ export async function createEmbeddedDatabase() {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      tablesToCreate.forEach(async(table) => {
-        try {
-          await tx.executeSql(table);
-          console.log('Table created successfully.');
-        } catch (error) {
-          console.error('Error creating the database: ', error);
-          throw error;
-        }
-      });
+      try {
+        tablesToCreate.forEach(async (table:string) => {
+          try {
+            await tx.executeSql(table);
+            console.log('Table created successfully.');
+          } catch (error) {
+            console.error('Error creating the database: ', error);
+          }
+        });
+      } catch (error) {
+        console.error('There were an error during the execution of the for each: ', error);
+      }
     });
-
-    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -101,7 +102,7 @@ export async function dropEmbeddedDatabase() {
       });
     });
 
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -156,9 +157,45 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       ]);
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to insert work day:', error);
+  }
+}
+
+export async function getWorkDay():Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
+  const workDayState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
+    /*Fields related to the general information.*/
+    id_work_day: '',
+    start_date: '',
+    finish_date: '',
+    start_petty_cash: 0,
+    final_petty_cash: 0,
+    /*Fields related to IRoute interface*/
+    id_route: '',
+    route_name: '',
+    description: '',
+    route_status: '',
+    id_vendor: '',
+    /*Fields related to IDay interface*/
+    id_day: '',
+    day_name: '',
+    order_to_show: 0,
+    /*Fields relate to IRouteDay*/
+    id_route_day: '',
+  };
+  try {
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_DAY};`);
+
+    const record = result[0];
+
+
+
+    return record.rows.item(0);
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return workDayState;
   }
 }
 
@@ -181,7 +218,7 @@ export async function insertUser(user: IUser) {
       `, [id_vendor, cellphone, name, password, status]);
     });
 
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -204,7 +241,7 @@ export async function getUsers():Promise<IUser[]> {
       }
     });
 
-    await sqlite.close();
+
 
     return users;
   } catch (error) {
@@ -262,8 +299,6 @@ export async function insertProducts(products: IProductInventory[]) {
         console.error('Error inserting product process: ', error);
       }
     });
-
-    await sqlite.close();
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -333,7 +368,7 @@ export async function updateProducts(products: IProductInventory[]) {
         console.error('Failed to update products (transaction execution):', error);
       }
     });
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -361,7 +396,7 @@ export async function getProducts():Promise<IProductInventory[]> {
       }
     });
 
-    await sqlite.close();
+
 
     return product;
   } catch (error) {
@@ -369,7 +404,6 @@ export async function getProducts():Promise<IProductInventory[]> {
     return [];
   }
 }
-
 
 // Related to stores
 export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
@@ -417,7 +451,7 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]) {
         ]);
       });
     });
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to instert stores: ', error);
   }
@@ -485,9 +519,31 @@ export async function updateStore(store: IStore&IStoreStatusDay) {
       }
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to update the store: ', error);
+  }
+}
+
+export async function getStores():Promise<(IStore&IStoreStatusDay)[]> {
+  try {
+    const stores:(IStore&IStoreStatusDay)[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.STORES};`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        stores.push(record.rows.item(index));
+      }
+    });
+
+
+
+    return stores;
+  } catch (error) {
+    console.error('Failed to fetch stores:', error);
+    return [];
   }
 }
 
@@ -514,7 +570,7 @@ export async function insertDayOperation(dayOperation: IDayOperation) {
       ]);
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error("Failed to insert day operation: ", error);
   }
@@ -544,7 +600,7 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
       });
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to instert day operations: ', error);
   }
@@ -576,7 +632,7 @@ export async function updateDayOperation(dayOperation: IDayOperation) {
       ]);
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to update day operation: ', error);
   }
@@ -587,12 +643,40 @@ export async function deleteAllDayOperations() {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`)
+      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`);
     });
 
-    await sqlite.close();
+
   } catch (error) {
     console.error('Failed to delete all the day operations: ', error);
+  }
+}
+
+export async function getDayOperations():Promise<IDayOperation[]> {
+  try {
+    const arrDayOperations:IDayOperation[] = [];
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      try {
+        const result  = await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`);
+
+        const rows = result[1].rows;
+        const length = result[1].rows.length;
+
+        for (let index = 0; index < length; index++) {
+          arrDayOperations.push(rows.item(index));
+        }
+
+      } catch (error) {
+        console.error('Inside: Something was wrong during day operation retrieving transaction: ', error);
+      }
+    });
+
+    return arrDayOperations;
+  } catch (error) {
+    console.error('Something was wrong during day operation retrieving: ', error);
+    return [];
   }
 }
 
@@ -610,7 +694,7 @@ export async function getInventoryOperation(id_inventory_operation:string):Promi
       }
     });
 
-    await sqlite.close();
+
 
     return inventoryOperation;
   } catch (error) {
@@ -644,7 +728,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
           id_work_day,
         ]);
     });
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -666,7 +750,7 @@ export async function getInventoryOperationDescription(id_inventory_operation:st
       }
     });
 
-    await sqlite.close();
+
 
     return inventoryOperation;
   } catch (error) {
@@ -702,7 +786,7 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
         );
       });
     });
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -742,7 +826,7 @@ export async function insertRouteTransaction(transactionOperation: IRouteTransac
       }
     });
 
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -775,7 +859,7 @@ export async function insertRouteTransactionOperation(transactionOperation: IRou
       }
     });
 
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -815,7 +899,7 @@ export async function insertRouteTransactionOperationDescription(transactionOper
       });
     });
 
-    await sqlite.close();
+
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -837,7 +921,7 @@ export async function getRouteTransactionByStore(id_store:string):Promise<IRoute
       }
     });
 
-    await sqlite.close();
+
 
     return transactions;
   } catch (error) {
@@ -860,7 +944,7 @@ export async function getRouteTransactionOperations(id_route_transaction:string)
       }
     });
 
-    await sqlite.close();
+
 
     return transactionsOperations;
   } catch (error) {
@@ -882,7 +966,7 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
       }
     });
 
-    await sqlite.close();
+
 
     return transactionsOperationDescriptions;
   } catch (error) {

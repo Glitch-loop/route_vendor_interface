@@ -17,6 +17,10 @@ import {
 import {
   insertUser,
   getUsers,
+  getDayOperations,
+  getProducts,
+  getStores,
+  getWorkDay,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Utils
@@ -33,17 +37,23 @@ import {
   setDayInformation,
   setRouteInformation,
   setRouteDay,
+  setDayGeneralInformation,
+  setArrayDayOperations,
+  setAllGeneralInformation,
+
 } from '../redux/slices/routeDaySlice';
 
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IRoute, IUser } from '../interfaces/interfaces';
+import { ICompleteRoute, ICompleteRouteDay, IDayOperation, IProductInventory, IRoute, IRouteDay, IUser } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
 
 // Testing
 import { testingUser } from '../moocks/user';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setStores } from '../redux/slices/storesSlice';
 
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
@@ -59,8 +69,9 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
   useEffect(() => {
     /*
-      In the system can exist different routes (route 1, route 2, route 3), each route is made
-      by "route day" this concept refers that each route will have stores to visit by each day.
+      In the system can exist different routes (route 1, route 2, route 3), each
+      route is made by "route day" this concept refers that each route will have
+      stores to visit by each day.
 
       Wrapping up:
       vendor <-(has a vendor) route <-(belongs to a route) day route
@@ -70,57 +81,90 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       In addition, each route will have assigend a vendor who is in charge of maintin the route.
     */
 
-    // Getting all the route assigned to a vendor
-    getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257')
-    .then(routesData => {
-      // Getting all the days in a route
-      routesData.forEach(currentRouteData => {
-        getAllDaysByRoute(currentRouteData.id_route)
-        .then(routeDaysData => {
-          let currentRoute: ICompleteRoute;
-          let arrRouteDays: ICompleteRouteDay[] = [];
-
-          // Getting the name of the day
-          routeDaysData.forEach(routeDayData => {
-            let routeDay:ICompleteRouteDay = {
-              ...routeDayData,
-              day: DAYS[routeDayData.id_day],
-            };
-            arrRouteDays.push(routeDay);
-          });
-
-          // Ordering the days
-          arrRouteDays.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
-
-          currentRoute = {
-            ...currentRouteData,
-            description: capitalizeFirstLetter(currentRouteData.description),
-            route_name: capitalizeFirstLetter(currentRouteData.route_name),
-            routeDays: arrRouteDays,
-          };
-
-          // Avoiding store routes without days.
-          if(arrRouteDays[0] !== undefined) {
-            let index = routes.findIndex(route => route.id_route === currentRoute.id_route);
-            // Avoiding duplicate records
-            if (index === -1) {
-              // The route doesn't exist
-              setRoutes([...routes, currentRoute]);
-            } else {
-              setRoutes(routes.map(route => route.id_route === currentRoute.id_route ? currentRoute : route));
-            }
-          }
-        });
-      });
-    })
-    .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
-
     // Setting the john doe user for testing
     /*
       TODO: This request is made at the beginning of the application (login)
     */
     // Store information in state.
     dispatch(setUser(testingUser));
+
+    // Determining if there an initialized route day
+    getDayOperations()
+    .then(async (dayOperations:IDayOperation[]) => {
+      console.log(dayOperations.length)
+      if (dayOperations.length > 0) {
+        console.log("It is a started day")
+        /*
+          It means it is a day operation, so it is necessary to get retrieve the information and
+          set it in the context.
+        */
+
+        // Getting general information of the day.
+        // setAllGeneralInformation(await getWorkDay());
+
+        // Setting the operations of the day
+        await setArrayDayOperations(dayOperations);
+
+        // Setting inventory of the day
+        // setProductInventory(await getProducts());
+
+        // Setting the information of the stores to visit
+        // setStores(await getStores());
+
+        navigation.navigate('routeOperationMenu');
+      } else {
+        console.log("New day")
+        /*
+          It means that there is not currentlu a day operation, so continuing with the
+          normal workflow of the application.
+        */
+        // Getting all the route assigned to a vendor
+        getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257')
+        .then(routesData => {
+          // Getting all the days in a route
+          routesData.forEach(currentRouteData => {
+            getAllDaysByRoute(currentRouteData.id_route)
+            .then(routeDaysData => {
+              let currentRoute: ICompleteRoute;
+              let arrRouteDays: ICompleteRouteDay[] = [];
+    
+              // Getting the name of the day
+              routeDaysData.forEach(routeDayData => {
+                let routeDay:ICompleteRouteDay = {
+                  ...routeDayData,
+                  day: DAYS[routeDayData.id_day],
+                };
+                arrRouteDays.push(routeDay);
+              });
+    
+              // Ordering the days
+              arrRouteDays.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
+    
+              currentRoute = {
+                ...currentRouteData,
+                description: capitalizeFirstLetter(currentRouteData.description),
+                route_name: capitalizeFirstLetter(currentRouteData.route_name),
+                routeDays: arrRouteDays,
+              };
+    
+              // Avoiding store routes without days.
+              if(arrRouteDays[0] !== undefined) {
+                let index = routes.findIndex(route => route.id_route === currentRoute.id_route);
+                // Avoiding duplicate records
+                if (index === -1) {
+                  // The route doesn't exist
+                  setRoutes([...routes, currentRoute]);
+                } else {
+                  setRoutes(routes.map(route => route.id_route === currentRoute.id_route ? currentRoute : route));
+                }
+              }
+            });
+          });
+        })
+        .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
+      }
+    });
+
   },[]);
 
   // Auxiliar functions
