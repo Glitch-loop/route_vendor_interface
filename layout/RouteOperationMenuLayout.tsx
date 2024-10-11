@@ -22,6 +22,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
   const dispatch:AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
+  console.log("Route operations menu: ", dayOperations)
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
 

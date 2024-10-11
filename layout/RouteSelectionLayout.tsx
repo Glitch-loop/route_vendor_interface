@@ -32,15 +32,12 @@ import { current_day_name } from '../utils/momentFormat';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
-import { setDayOperation } from '../redux/slices/dayOperationsSlice';
+import { setDayOperation, setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 import {
   setDayInformation,
   setRouteInformation,
   setRouteDay,
-  setDayGeneralInformation,
-  setArrayDayOperations,
   setAllGeneralInformation,
-
 } from '../redux/slices/routeDaySlice';
 
 // Components
@@ -91,7 +88,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     // Determining if there an initialized route day
     getDayOperations()
     .then(async (dayOperations:IDayOperation[]) => {
-      console.log(dayOperations.length)
       if (dayOperations.length > 0) {
         console.log("It is a started day")
         /*
@@ -100,17 +96,22 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         */
 
         // Getting general information of the day.
-        // setAllGeneralInformation(await getWorkDay());
-
+        console.log("Getting the information of the day")
+        dispatch(setAllGeneralInformation(await getWorkDay()));
+        
         // Setting the operations of the day
-        await setArrayDayOperations(dayOperations);
-
+        console.log("Getting the day operations")
+        dispatch(setArrayDayOperations(dayOperations));
+        
         // Setting inventory of the day
-        // setProductInventory(await getProducts());
-
+        console.log("Getting products")
+        dispatch(setProductInventory(await getProducts()));
+        
         // Setting the information of the stores to visit
-        // setStores(await getStores());
-
+        console.log("Getting stores")
+        dispatch(setStores(await getStores()));
+        
+        console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
         console.log("New day")
