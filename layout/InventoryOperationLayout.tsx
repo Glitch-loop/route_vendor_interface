@@ -140,6 +140,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [isOperation, setIsOperation] = useState<boolean>(true);
   const [enablingFinalInventory, setEnablingFinalInventory] = useState<boolean>(true);
 
+  // State used for the logic of the component
+  const [isInventoryAccepted, setIsInventoryAccepted] = useState<boolean>(false);
+
   // Use effect operations
   useEffect(() => {
     /*
@@ -282,6 +285,13 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
+      /* Avoiding re-executions in case of inventory */
+      if (isInventoryAccepted === true) {
+        return;
+      }
+
+      setIsInventoryAccepted(true);
+
       // Variables for different processes.
       // const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
       //   /*Fields related to the general information.*/
@@ -610,8 +620,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
       });
       navigation.navigate('routeOperationMenu');
+
     } catch (error) {
       console.error('Something went wrong: ', error);
+      setIsInventoryAccepted(false);
     }
   };
 
