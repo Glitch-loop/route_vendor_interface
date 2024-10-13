@@ -31,6 +31,9 @@ import {
   dropEmbeddedDatabase,
  } from './queries/SQLite/sqlLiteQueries';
 
+// Services
+import { getPrinterBluetoothConnction } from './services/printerService';
+
 export type RootStackParamList = {
   routeSelection: undefined;
   selectionRouteOperation: undefined;
@@ -44,13 +47,18 @@ export type RootStackParamList = {
   TODO: Place the database initilization at the beginning of the program
 */
 
+
 async function databaseInitialization() {
   try {
     // Dropping database
-    await dropEmbeddedDatabase();
+    // await dropEmbeddedDatabase();
 
     // Creating database
     await createEmbeddedDatabase();
+
+
+    // Connecting to the printer
+    await getPrinterBluetoothConnction();
 
   } catch (error) {
     console.log('Error: ', error);

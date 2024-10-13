@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
-import { ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator, Button } from 'react-native-paper';
 
 // Queries
 // Main database
@@ -51,6 +51,8 @@ import { capitalizeFirstLetter } from '../utils/generalFunctions';
 import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
+
+import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
 
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
@@ -245,6 +247,16 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
   return (
     <View style={tw`w-full h-full`}>
+          <Button onPress={async () => {
+            try {
+              await printTicketBluetooth("hello world\n\n\n\n")
+            } catch (error) {
+              console.log("There is an error")
+              await getPrinterBluetoothConnction();
+            }
+            }}>
+            <Text>Print</Text>
+          </Button>
         <ActionDialog
           visible={showDialog}
           onAcceptDialog={handlerOnAcceptMakeRoute}
