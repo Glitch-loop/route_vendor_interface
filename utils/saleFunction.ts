@@ -178,14 +178,14 @@ export function getListSectionTicket(productList:IProductInventory[], messageNoM
         The issue is that what is going to be displayed before will affect into the identation. So that means
         that the words that will be displayed must be subtracted to the next word identation.
       */
-      
+
       // First section
       sectionTicket = sectionTicket + getTicketLine(amount,false); // Cantidad
       sectionTicket = sectionTicket + getTicketLine(product_name,true, (9 - amount.length)); // Producto
 
       // Second section
       sectionTicket = sectionTicket + getTicketLine(price,false, 18); // Price
-      sectionTicket = sectionTicket + getTicketLine(total,true, (9 - price.length)); // Total
+      sectionTicket = sectionTicket + getTicketLine(total,true, (8 - price.length)); // Total
     });
   } else { // There weren't movements for this concept.
     if (messageNoMovements !== undefined) {
@@ -199,7 +199,36 @@ export function getListSectionTicket(productList:IProductInventory[], messageNoM
 }
 
 export function getTicketSale(productsDevolution:IProductInventory[], productsReposition:IProductInventory[], productsSale: IProductInventory[], ):string {
+  // Variable used to containt the ticket to print
   let ticket = '\n';
+
+  // Getting Subtotals of each concept
+  let subtotalProductDevolution = getProductDevolutionBalance(productsDevolution,[]);
+  let subtotalProductReposition = getProductDevolutionBalance(productsReposition,[]);
+  let subtotalSaleProduct = getProductDevolutionBalance(productsSale,[]);
+  let productDevolutionBalance = '$0';
+  let greatTotal = '$0';
+
+  /*
+  Variables for setting the format of the ticket.
+    Note: The anchor of the printer that is used for the application is 58mm equivalent to 32
+    characters
+  */
+
+  let showTotalPosition:number = 26; // 32 - 26 = $99999 (maximum possible number to print)
+
+  if (subtotalProductReposition - subtotalProductDevolution < 0) {
+    productDevolutionBalance = '-$' + ((subtotalProductReposition - subtotalProductDevolution) * -1).toString();
+  } else {
+    productDevolutionBalance = '$' + (subtotalProductReposition - subtotalProductDevolution).toString();
+  }
+
+  if (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution < 0) {
+    greatTotal = '-$' + ((subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution) * -1).toString();
+  } else {
+    greatTotal = '$' + (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution).toString();
+  }
+
 
   // Header of the ticket
   ticket += getTicketLine('Ferdis', true, 13);
@@ -207,28 +236,58 @@ export function getTicketSale(productsDevolution:IProductInventory[], productsRe
   ticket += getTicketLine('Vendedor: ', true);
   ticket += getTicketLine('Estatus: Completado', true);
   ticket += getTicketLine('Cliente: Tienda', true);
+  ticket += getTicketLine('', true);
 
   // Body of the ticket
   // Writing devolution products section
   ticket += getTicketLine('Devolucion de producto', true, 5);
   ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsDevolution, 'No hubo movmimentos en la seccion de mermas');
+  if (productsDevolution.length > 0) {
+    ticket += getTicketLine(`Valor total de devolucion: $${subtotalProductDevolution}`,true);
+  }
   ticket += getTicketLine('', true);
 
   // Writing reposition product section
   ticket += getTicketLine('Reposicion de producto', true, 5);
   ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsReposition, 'No hubo movmimentos en la seccion de reposiciones');
+  if (productsReposition.length > 0) {
+    ticket += getTicketLine(`Valor total de reposicion: $${subtotalProductReposition}`,true);
+  }
   ticket += getTicketLine('', true);
 
   // Writing product of the sale section
   ticket += getTicketLine('Venta', true, 13);
   ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsSale, 'No hubo movmimentos en la seccion de ventas');
-  ticket += getTicketLine('', true);
+  if (productsSale.length > 0) {
+    ticket += getTicketLine('Total venta:', false); // 12-lenght characters string
+    ticket += getTicketLine(`$${subtotalSaleProduct}`,true, (showTotalPosition - 12));
+  } else {
+    ticket += getTicketLine('',true);
+  }
+  
+  // Summarizing Section
+  ticket += getTicketLine('--------------------------------',true);
+
+  ticket += getTicketLine('Valor concepto devolucion:', false); // 26-lenght characters string
+  ticket += getTicketLine(`-$${subtotalProductDevolution}`,true, (showTotalPosition - 26));
+
+  ticket += getTicketLine('Valor concepto reposicion:',false); // 26-lenght characters string
+  ticket += getTicketLine(`$${subtotalProductReposition}`,true, (showTotalPosition - 26));
+
+  ticket += getTicketLine('Balance devolucion de productos:',false);
+  ticket += getTicketLine(`${productDevolutionBalance}`, true, (showTotalPosition - 10));
+
+  ticket += getTicketLine('Venta total:',false); // 11-lenght characters string
+  ticket += getTicketLine(`$${subtotalSaleProduct}`,true, (showTotalPosition - 12));
+
+  ticket += getTicketLine('Gran total:',false); // 11-lenght characters string
+  ticket += getTicketLine(`${greatTotal}`,true, (showTotalPosition - 11));
 
   // Finishing ticket
-  ticket += '\n\n';
+  ticket += '\n\n\n';
 
   return ticket;
 }
