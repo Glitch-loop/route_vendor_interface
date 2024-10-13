@@ -15,7 +15,7 @@ export async function getPrinterBluetoothConnction() {
         await RNBluetoothClassic.requestBluetoothEnabled();
         console.log('You have to enable the permissions');
       } else {
-
+        console.log("Discovering new devices")
         const foundDevices = await RNBluetoothClassic.startDiscovery(); // Searching for possibles printers to connect
 
         // From the found devices get the devices that are the printers.
@@ -63,7 +63,6 @@ export async function getPrinterBluetoothConnction() {
 
 export async function printTicketBluetooth(messageToPrint:string)  {
   try {
-    
     if (connectedPritner !== undefined) {
       if (await connectedPritner.isConnected() === true) {
         //Example of sending data to the printer
@@ -85,4 +84,4 @@ export async function printTicketBluetooth(messageToPrint:string)  {
     console.error('Printing error: ', err);
     throw Error;
   }
-};
+}

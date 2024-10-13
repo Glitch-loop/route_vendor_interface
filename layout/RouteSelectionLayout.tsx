@@ -52,9 +52,6 @@ import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 
-import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
-
-
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
   const dispatch: AppDispatch = useDispatch();
@@ -247,16 +244,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
   return (
     <View style={tw`w-full h-full`}>
-          <Button onPress={async () => {
-            try {
-              await printTicketBluetooth("hello world\n\n\n\n")
-            } catch (error) {
-              console.log("There is an error")
-              await getPrinterBluetoothConnction();
-            }
-            }}>
-            <Text>Print</Text>
-          </Button>
         <ActionDialog
           visible={showDialog}
           onAcceptDialog={handlerOnAcceptMakeRoute}

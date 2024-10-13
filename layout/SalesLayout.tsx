@@ -26,6 +26,7 @@ import {
   getGreatTotal,
   getMessageForProductDevolutionOperation,
   getProductDevolutionBalanceWithoutNegativeNumber,
+  getTicketSale,
 } from '../utils/saleFunction';
 import PAYMENT_METHODS from '../utils/paymentMethod';
 import DAYS_OPERATIONS from '../lib/day_operations';
@@ -56,6 +57,7 @@ import {
 } from '../queries/SQLite/sqlLiteQueries';
 
 import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
+import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
 
 // Axiliar funciton
 const SalesLayout = ({navigation}:{navigation:any}) => {
@@ -331,7 +333,13 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     navigation.navigate('routeOperationMenu');
   };
 
-  const handlerOnPrintTicket = () => {
+  const handlerOnPrintTicket = async () => {
+    try {
+      await printTicketBluetooth(
+        getTicketSale(productDevolution,productReposition, productSale));
+    } catch(error) {
+      await getPrinterBluetoothConnction();
+    }
     console.log('Printing ticket');
   };
 
