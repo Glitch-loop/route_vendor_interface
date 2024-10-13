@@ -1,5 +1,4 @@
 
-import { stringify } from 'uuid';
 import { IProductInventory } from '../interfaces/interfaces';
 import { timestamp_format } from './momentFormat';
 
@@ -104,6 +103,16 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
   let text:string = '';
   let line:string = '';
   let filteredLineToWrite:string = '';
+  let indentation = 0;
+
+  // Validation for indentation
+  if (indent < 0) {
+    indentation = 0;
+  } else if  (indent > 32) {
+    indentation = 25;
+  } else {
+    indentation = indent;
+  }
 
   // Filtering tabulators and enters
   for (let  i = 0; i < lineToWrite.length; i++) {
@@ -120,22 +129,22 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
 
   // Filtering blank spaces or empty strings.
   const words = wordsToFilter.filter((word:string) => {return word !== '';});
-
+  console.log("-------------------------------")
   for(let i = 0; i < words.length; i++) {
-    const remaindLenght = line.length + words[i].length;
+    const remaindLenght = indentation + line.length + words[i].length;
     if (i === words.length - 1) { // Last iteration
       if (remaindLenght < anchorPrint) {
         /*anchorPrint + 1: The addition represents the space between words.*/
-        text = text + '\n' + line + words[i];
+        text = text + ' '.repeat(indentation) + line + words[i];
       } else {
-        text = text + '\n' + line + '\n' + words[i];
+        text = text + '\n' + ' '.repeat(indentation) + line + '\n' + ' '.repeat(indentation) + words[i];
       }
     } else {
       if (remaindLenght + 1 < anchorPrint) {
         /*anchorPrint + 1: The addition represents the space between words.*/
         line = line + words[i] + ' ';
       } else {
-        text = text + '\n' + line;
+        text = text + '\n' + ' '.repeat(indentation) + line;
         line = words[i] + ' ';
       }
     }
@@ -146,7 +155,7 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
   } else {
     /* Do nothing*/
   }
-
+  console.log("Text to print: ", text)
   return text;
 }
 
@@ -158,48 +167,65 @@ export function getListSectionTicket(productList:IProductInventory[], messageNoM
   let sectionTicket = '';
   if (productList.length > 0) { // There were movements for this concept.
     productList.forEach(product => {
-      let firstSectionLine:string = `${product.amount} ${product.product_name}`;
-      let secondSectionLine:string = `$${product.price} $${product.amount * product.price}`;
-      sectionTicket = sectionTicket + getTicketLine(firstSectionLine,false);
-      sectionTicket = sectionTicket + getTicketLine(secondSectionLine,false);
+      let amount:   string = `${product.amount}`;
+      let product_name:  string = `${product.product_name}`;
+      let price:  string = `$${product.price}`;
+      let total:  string = `$${product.amount * product.price}`;
+
+      /*
+        At least for sale ticket sectino, the identation is calculated according with the headers of the list 
+        on which are displayed.
+        The issue is that what is going to be displayed before will affect into the identation. So that means
+        that the words that will be displayed must be subtracted to the next word identation.
+      */
+      
+      // First section
+      sectionTicket = sectionTicket + getTicketLine(amount,false); // Cantidad
+      sectionTicket = sectionTicket + getTicketLine(product_name,true, (9 - amount.length)); // Producto
+
+      // Second section
+      sectionTicket = sectionTicket + getTicketLine(price,false, 18); // Price
+      sectionTicket = sectionTicket + getTicketLine(total,true, (9 - price.length)); // Total
     });
   } else { // There weren't movements for this concept.
     if (messageNoMovements !== undefined) {
-      sectionTicket += messageNoMovements;
+      sectionTicket += getTicketLine(messageNoMovements,true, 0);
     } else {
-      sectionTicket += 'No hubieron movimientos en este concepto';
+      sectionTicket += getTicketLine('No hubieron movimientos en este concepto',true, 0);
     }
   }
 
-  return messageNoMovements;
+  return sectionTicket;
 }
 
 export function getTicketSale(productsDevolution:IProductInventory[], productsReposition:IProductInventory[], productsSale: IProductInventory[], ):string {
   let ticket = '\n';
 
   // Header of the ticket
-  ticket += getTicketLine('Ferdis', false);
-  ticket += getTicketLine(`Fecha: ${timestamp_format()}`, false);
-  ticket += getTicketLine('Vendedor: ', false);
-  ticket += getTicketLine('Estatus: Completado', false);
+  ticket += getTicketLine('Ferdis', true, 13);
+  ticket += getTicketLine(`Fecha: ${timestamp_format()}`, true);
+  ticket += getTicketLine('Vendedor: ', true);
+  ticket += getTicketLine('Estatus: Completado', true);
   ticket += getTicketLine('Cliente: Tienda', true);
-  
 
   // Body of the ticket
   // Writing devolution products section
-  ticket += getTicketLine('Devolucion de producto', false);
-  ticket += getTicketLine('Cantidad Producto Importe Total',false);
+  ticket += getTicketLine('Devolucion de producto', true, 5);
+  ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsDevolution, 'No hubo movmimentos en la seccion de mermas');
+  ticket += getTicketLine('', true);
 
   // Writing reposition product section
-  ticket += getTicketLine('Reposicion de producto', false);
-  ticket += getTicketLine('Cantidad Producto Importe Total',false);
+  ticket += getTicketLine('Reposicion de producto', true, 5);
+  ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsReposition, 'No hubo movmimentos en la seccion de reposiciones');
+  ticket += getTicketLine('', true);
 
   // Writing product of the sale section
-  ticket += getTicketLine('Venta', false);
-  ticket += getTicketLine('Cantidad Producto Importe Total',false);
+  ticket += getTicketLine('Venta', true, 13);
+  ticket += getTicketLine('Cantidad Producto Precio Total',true);
   ticket += getListSectionTicket(productsSale, 'No hubo movmimentos en la seccion de ventas');
+  ticket += getTicketLine('', true);
 
   // Finishing ticket
   ticket += '\n\n';
