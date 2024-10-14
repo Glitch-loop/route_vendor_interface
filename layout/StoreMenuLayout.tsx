@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import tw from 'twrnc';
 
 // Interface and enums
@@ -266,43 +266,53 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
           <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
-      { routeTransactions.map(current_transaction => {
-        const id_current_transaction = current_transaction.id_route_transaction;
-        const current_transaction_operations:IRouteTransactionOperation[] = [];
-        const current_transaction_operation_descriptions = new Map<string, IRouteTransactionOperationDescription[]>();
+      <ScrollView
+        showsVerticalScrollIndicator={false}>
+        { routeTransactions.map(current_transaction => {
+          const id_current_transaction = current_transaction.id_route_transaction;
+          const current_transaction_operations:IRouteTransactionOperation[] = [];
+          const current_transaction_operation_descriptions = new Map<string, IRouteTransactionOperationDescription[]>();
 
-        let transactionOperations = routeTransactionOperations.get(id_current_transaction);
+          /* Getting the operations of the transactions */
+          let transactionOperations = routeTransactionOperations.get(id_current_transaction);
 
-        /* Avoiding undefined value for operations of the transaction */
-        if (transactionOperations === undefined) {
-          /* Do nothing */
-        } else {
-          transactionOperations.forEach(operation => {
-            const {id_route_transaction_operation} = operation;
-            current_transaction_operations.push(operation);
+          /* Avoiding undefined value for operations of the transaction */
+          if (transactionOperations === undefined) {
+            /* Do nothing */
+          } else {
+            /* Storing all the operations related to the current transaction */
+            transactionOperations.forEach(operation => {
+              const {id_route_transaction_operation} = operation;
+              current_transaction_operations.push(operation);
 
-            /* In addition, it means that it must be operation descriptions */
-            let transactionOperationDescription = routeTransactionOperationDescriptions
-              .get(id_route_transaction_operation);
+              /* Consulting the description of the operation */
+              let transactionOperationDescription = routeTransactionOperationDescriptions
+                .get(id_route_transaction_operation);
 
-            /* Avoiding undefined values for operation descriptions */
-            if (transactionOperationDescription === undefined) {
-              /* Do nothing*/
-            } else {
-              current_transaction_operation_descriptions
-                .set(id_route_transaction_operation, transactionOperationDescription);
-            }
-          });
-        }
+              /* Avoiding undefined values for operation descriptions */
+              if (transactionOperationDescription === undefined) {
+                /* Do nothing*/
+              } else {
+                /*
+                  If there were found description for the operation, then
+                  store it in the map.
+                */
+                current_transaction_operation_descriptions
+                  .set(id_route_transaction_operation, transactionOperationDescription);
+              }
+            });
+          }
 
-        return (
-          <SummarizeTransaction
-            key={id_current_transaction}
-            routeTransaction={current_transaction}
-            routeTransactionOperations={current_transaction_operations}
-            routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
-        );
-      })}
+          return (
+              <SummarizeTransaction
+                key={id_current_transaction}
+                routeTransaction={current_transaction}
+                routeTransactionOperations={current_transaction_operations}
+                routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
+          );
+        })}
+        <View style={tw`h-32`}/>
+      </ScrollView>
     </View>
   );
 };

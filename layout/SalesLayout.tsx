@@ -374,7 +374,6 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     } catch(error) {
       await getPrinterBluetoothConnction();
     }
-    console.log('Printing ticket');
   };
 
   const handlerOnTryAgain = () => {

@@ -32,7 +32,6 @@ const ResultSale = ({
       <Text style={tw`my-10 text-black text-3xl text-center`}>
         { resultSaleState ? 'Venta completada exitosamente' : 'Algo salio mal... intenta nuevamente' }
       </Text>
-
       <View style={tw`w-full`}>
         <ConfirmationBand
             textOnAccept={resultSaleState ? 'Continuar' : 'Continuar con el siguiente cliente'}

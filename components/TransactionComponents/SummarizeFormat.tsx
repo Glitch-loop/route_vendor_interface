@@ -24,9 +24,11 @@ import SubtotalLine from '../SalesLayout/SubtotalLine';
 
 const SummarizeFormat = ({
     arrayProducts,
-    emptyMovementCaption = 'Ningún producto en la operación',
+    totalSectionCaptionMessage = 'Total: ',
+    emptyMovementCaption = 'Ningún movimiento en la operación',
   }:{
     arrayProducts:IProductInventory[],
+    totalSectionCaptionMessage?:string,
     emptyMovementCaption?: string,
   }) => {
   return (
@@ -57,7 +59,7 @@ const SummarizeFormat = ({
       {/* Getting subtotal product devolution */}
       { arrayProducts.length > 0 &&
         <SubtotalLine
-          description={'Total devolución de producto:'}
+          description={totalSectionCaptionMessage}
           total={getProductDevolutionBalanceWithoutNegativeNumber(arrayProducts,
                   []).toString()}
           fontStyle={'font-bold italic text-base'}/>
