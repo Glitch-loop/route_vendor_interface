@@ -52,6 +52,7 @@ import {
   insertRouteTransaction,
   insertRouteTransactionOperation,
   insertRouteTransactionOperationDescription,
+  updateDayOperation,
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
@@ -65,6 +66,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const routeDay = useSelector((state: RootState) => state.routeDay);
+  const dayOperations = useSelector((state: RootState) => state.dayOperations);
 
   const stores = useSelector((state: RootState) => state.stores);
   const productInventory = useSelector((state: RootState) => state.productsInventory);
@@ -262,14 +264,14 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
       in this case, this movements will be gathered until the end of shift to calculate an
       inventory to determine the "product devolution inventory".
     */
-   console.log("Creating updating products transaction operation")
+   console.log("Updating products transaction operation")
     // Updating redux context
     dispatch(updateProductsInventory(updateInventory));
 
     // Updating embedded database
     await updateProducts(updateInventory);
 
-    console.log("Creating updating stores operation")
+    console.log("Updating stores operation")
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
@@ -294,6 +296,7 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
           route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
         });
       } else {
+
         /* This store belongs to the route of today*/
         // Update redux context.
         dispatch(updateStores([{
@@ -320,7 +323,38 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
     */
 
     console.log("Next operation")
+    // Updating redux state
     dispatch(setNextOperation());
+
+    // Updating embedded database
+    const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
+    console.log("INDEX TO UPDATE: ", index, "+++++++++++++++++++++++++++++++++++++++++++")
+    if (index > -1) { // The operations is the list of day operations to do.
+      if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
+        console.log("UPDATING+++++++++++++++++++++++++++++++++++++++++++++")
+        const currentDayOperation = dayOperations[index];
+        const nextDayOperation = dayOperations[index + 1];
+
+        // Updating in database that the current operation is not longer the current one
+        currentDayOperation.current_operation = 0;
+        nextDayOperation.current_operation = 1;
+
+        console.log("currentDayOperation: ", {currentDayOperation})
+        console.log("nextDayOperation: ", nextDayOperation)
+
+        // Update embedded database.
+        await updateDayOperation({
+          ...currentDayOperation,
+          current_operation: 0,
+        });
+        await updateDayOperation({
+          ...nextDayOperation,
+          current_operation: 1,
+        });
+
+      }
+    }
+
     console.log("Go to route menu")
     navigation.navigate('routeOperationMenu');
   };

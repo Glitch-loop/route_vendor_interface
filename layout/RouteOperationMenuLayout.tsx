@@ -23,12 +23,11 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const dispatch:AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
 
-  // dayOperations.forEach(operation => {
-  //   console.log("----------------------------")
-  //   console.log(operation)
-  // })
-  console.log("Analyzing first operation: ")
-  console.log(dayOperations[0])
+  dayOperations.forEach(operation => {
+    console.log("----------------------------")
+    console.log(operation)
+  })
+
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
 

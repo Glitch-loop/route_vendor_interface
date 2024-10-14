@@ -99,19 +99,19 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         // Getting general information of the day.
         console.log("Getting the information of the day")
         dispatch(setAllGeneralInformation(await getWorkDay()));
-        
+
         // Setting the operations of the day
         console.log("Getting the day operations")
         dispatch(setArrayDayOperations(dayOperations));
-        
+
         // Setting inventory of the day
         console.log("Getting products")
         dispatch(setProductInventory(await getProducts()));
-        
+
         // Setting the information of the stores to visit
         console.log("Getting stores")
         dispatch(setStores(await getStores()));
-        
+
         console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
@@ -129,7 +129,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
             .then(routeDaysData => {
               let currentRoute: ICompleteRoute;
               let arrRouteDays: ICompleteRouteDay[] = [];
-    
+
               // Getting the name of the day
               routeDaysData.forEach(routeDayData => {
                 let routeDay:ICompleteRouteDay = {
@@ -138,17 +138,17 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
                 };
                 arrRouteDays.push(routeDay);
               });
-    
+
               // Ordering the days
               arrRouteDays.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
-    
+
               currentRoute = {
                 ...currentRouteData,
                 description: capitalizeFirstLetter(currentRouteData.description),
                 route_name: capitalizeFirstLetter(currentRouteData.route_name),
                 routeDays: arrRouteDays,
               };
-    
+
               // Avoiding store routes without days.
               if(arrRouteDays[0] !== undefined) {
                 let index = routes.findIndex(route => route.id_route === currentRoute.id_route);

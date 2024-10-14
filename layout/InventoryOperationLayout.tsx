@@ -466,6 +466,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setDayOperation(inventoryDayOperation));
 
         // Store information in embedded database.
+        // Start shift inventory is not longer the current activity.
+        inventoryDayOperation.current_operation = 0;
         await insertDayOperation(inventoryDayOperation);
 
         // Stores.
@@ -497,6 +499,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setArrayDayOperations(dayOperationPlanification));
 
         // Storing in embedded database
+        if (dayOperationPlanification.length > 0) {
+          // Updating the first store of the route is the new current operation. 
+          dayOperationPlanification[0].current_operation = 1;
+        }
+
         await insertDayOperations(dayOperationPlanification);
 
         /*
