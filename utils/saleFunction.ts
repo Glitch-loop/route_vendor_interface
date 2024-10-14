@@ -267,7 +267,7 @@ export function getTicketSale(productsDevolution:IProductInventory[], productsRe
   } else {
     ticket += getTicketLine('',true);
   }
-  
+
   // Summarizing Section
   ticket += getTicketLine('--------------------------------',true);
 

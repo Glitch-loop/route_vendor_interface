@@ -31,7 +31,7 @@ const dayOperationsSlice = createSlice({
         state.push({
           id_day_operation: dayOperation.id_day_operation,
           id_item: dayOperation.id_item,
-          id_type_operation: dayOperation.id_day_operation,
+          id_type_operation: dayOperation.id_type_operation,
           operation_order: dayOperation.operation_order,
           current_operation: dayOperation.current_operation,
         });

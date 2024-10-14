@@ -88,6 +88,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     getDayOperations()
     .then(async (dayOperations:IDayOperation[]) => {
       if (dayOperations.length > 0) {
+        console.log("From get operation array, consulting the first one: ", dayOperations[0])
+
         console.log("It is a started day")
         /*
           It means it is a day operation, so it is necessary to get retrieve the information and

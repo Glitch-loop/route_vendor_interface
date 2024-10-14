@@ -22,7 +22,13 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
   const dispatch:AppDispatch = useDispatch();
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
-  console.log("Route operations menu: ", dayOperations)
+
+  // dayOperations.forEach(operation => {
+  //   console.log("----------------------------")
+  //   console.log(operation)
+  // })
+  console.log("Analyzing first operation: ")
+  console.log(dayOperations[0])
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
 
@@ -70,7 +76,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       current_operation: 0,
     }));
     navigation.navigate('inventoryOperation');
-  }
+  };
 
   return (
     <View style={tw`flex-1`}>

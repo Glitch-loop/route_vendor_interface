@@ -461,6 +461,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         /*
           Once all the process have been stored, the day operation itself is created.
         */
+       console.log("Inserting a new operation: ", inventoryDayOperation)
         // Store information in redux context.
         dispatch(setDayOperation(inventoryDayOperation));
 

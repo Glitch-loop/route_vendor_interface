@@ -551,7 +551,7 @@ export async function getStores():Promise<(IStore&IStoreStatusDay)[]> {
 export async function insertDayOperation(dayOperation: IDayOperation) {
   try {
     const sqlite = await createSQLiteConnection();
-
+    console.log("Inserting day operation: ", dayOperation)
     await sqlite.transaction(async (tx) => {
       const {
         id_day_operation,
