@@ -266,53 +266,61 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
           <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}>
-        { routeTransactions.map(current_transaction => {
-          const id_current_transaction = current_transaction.id_route_transaction;
-          const current_transaction_operations:IRouteTransactionOperation[] = [];
-          const current_transaction_operation_descriptions = new Map<string, IRouteTransactionOperationDescription[]>();
+        { routeTransactions.length > 0 ?
+          <ScrollView
+            showsVerticalScrollIndicator={false}>
+            { routeTransactions.map(current_transaction => {
+              const id_current_transaction = current_transaction.id_route_transaction;
+              const current_transaction_operations:IRouteTransactionOperation[] = [];
+              const current_transaction_operation_descriptions = new Map<string, IRouteTransactionOperationDescription[]>();
 
-          /* Getting the operations of the transactions */
-          let transactionOperations = routeTransactionOperations.get(id_current_transaction);
+              /* Getting the operations of the transactions */
+              let transactionOperations = routeTransactionOperations.get(id_current_transaction);
 
-          /* Avoiding undefined value for operations of the transaction */
-          if (transactionOperations === undefined) {
-            /* Do nothing */
-          } else {
-            /* Storing all the operations related to the current transaction */
-            transactionOperations.forEach(operation => {
-              const {id_route_transaction_operation} = operation;
-              current_transaction_operations.push(operation);
-
-              /* Consulting the description of the operation */
-              let transactionOperationDescription = routeTransactionOperationDescriptions
-                .get(id_route_transaction_operation);
-
-              /* Avoiding undefined values for operation descriptions */
-              if (transactionOperationDescription === undefined) {
-                /* Do nothing*/
+              /* Avoiding undefined value for operations of the transaction */
+              if (transactionOperations === undefined) {
+                /* Do nothing */
               } else {
-                /*
-                  If there were found description for the operation, then
-                  store it in the map.
-                */
-                current_transaction_operation_descriptions
-                  .set(id_route_transaction_operation, transactionOperationDescription);
-              }
-            });
-          }
+                /* Storing all the operations related to the current transaction */
+                transactionOperations.forEach(operation => {
+                  const {id_route_transaction_operation} = operation;
+                  current_transaction_operations.push(operation);
 
-          return (
-              <SummarizeTransaction
-                key={id_current_transaction}
-                routeTransaction={current_transaction}
-                routeTransactionOperations={current_transaction_operations}
-                routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
-          );
-        })}
+                  /* Consulting the description of the operation */
+                  let transactionOperationDescription = routeTransactionOperationDescriptions
+                    .get(id_route_transaction_operation);
+
+                  /* Avoiding undefined values for operation descriptions */
+                  if (transactionOperationDescription === undefined) {
+                    /* Do nothing*/
+                  } else {
+                    /*
+                      If there were found description for the operation, then
+                      store it in the map.
+                    */
+                    current_transaction_operation_descriptions
+                      .set(id_route_transaction_operation, transactionOperationDescription);
+                  }
+                });
+              }
+
+              return (
+                  <SummarizeTransaction
+                    key={id_current_transaction}
+                    routeTransaction={current_transaction}
+                    routeTransactionOperations={current_transaction_operations}
+                    routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
+              );
+            })};
+          </ScrollView>
+          :
+          <View style={tw`h-full flex flex-col items-center justify-center`}>
+            <Text style={tw`text-xl font-bold mb-20`}>La tienda no tiene ventas para mostrar</Text>
+          </View>
+
+        }
         <View style={tw`h-32`}/>
-      </ScrollView>
+      
     </View>
   );
 };
