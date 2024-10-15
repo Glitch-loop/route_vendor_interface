@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, VirtualizedList } from 'react-native';
 import tw from 'twrnc';
 import {
   IProductInventory,
@@ -23,6 +23,9 @@ import TotalsSummarize from '../SalesLayout/TotalsSummarize';
 // Services
 import { printTicketBluetooth, getPrinterBluetoothConnction } from '../../services/printerService';
 import { getTicketSale } from '../../utils/saleFunction';
+import DangerButton from '../generalComponents/DangerButton';
+import { updateTransation } from '../../queries/SQLite/sqlLiteQueries';
+import ActionDialog from '../ActionDialog';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -119,6 +122,8 @@ const SummarizeTransaction = ({
     interface.
 
   */
+  const [currentTransaction, setCurrentTransaction] = useState<IRouteTransaction>(routeTransaction);
+
   const [productsDevolution, setProductsDevolution] =
     useState<IProductInventory[]>(
       convertOperationDescriptionToProductInventoryInterface(
@@ -142,6 +147,9 @@ const SummarizeTransaction = ({
         .get(getConceptTransactionOperation(DAYS_OPERATIONS.sales, routeTransactionOperations)),
         productInventory)
       );
+  
+  // States regarded to the logic of the component
+  const [showDialog, setShowDialog] = useState<boolean>(false);
 
   // Handlers
   const handleOnPrint = async () => {
@@ -152,57 +160,103 @@ const SummarizeTransaction = ({
     }
   };
 
+  const handleOnCancelASale = async () => {
+    try {
+      const updateTransaction:IRouteTransaction = {
+        ...currentTransaction,
+        state: 0,
+      };
+      await updateTransation(updateTransaction);
+      setCurrentTransaction(updateTransaction);
+      setShowDialog(false);
+    } catch (error) {
+      setCurrentTransaction(currentTransaction);
+      setShowDialog(false);
+    }
+  };
+
+  const handleOnStartASale = async () => {
+
+  };
+
+  const handleOnShowDialog = () => {
+    setShowDialog(true);
+  };
+
+  const handleOnCancelShowDialog = () => {
+    setShowDialog(false);
+  };
+
   return (
-    <View style={tw`w-full bg-amber-300 border p-2
-      flex flex-col justify-center items-center rounded-md`}>
-      <SectionTitle
-        title={`Operation - ${routeTransaction.date}`}
-        caption={''}
-        titlePositionStyle={'text-center w-full flex flex-row justify-center'}
-      />
-      {/* Product devolution section */}
-      <SectionTitle
-        title={'Devolución de producto'}
-        caption={''}
-        titlePositionStyle={'text-center w-full flex flex-row justify-center'}
-      />
-      <SummarizeFormat
-        arrayProducts={productsDevolution}
-        totalSectionCaptionMessage={'Valor total de devolución: '}/>
-      <View style={tw`w-11/12 border`}/>
-      {/* Product reposition section */}
-      <SectionTitle
-        title={'Reposición de producto'}
-        caption={''}
-        titlePositionStyle={'text-center w-full flex flex-row justify-center'}
-        />
-      <SummarizeFormat
-        arrayProducts={productsReposition}
-        totalSectionCaptionMessage={'Valor total de reposición: '}/>
-      <View style={tw`w-11/12 border`}/>
-      {/* Product sale section */}
-      <SectionTitle
-        title={'Venta'}
-        caption={''}
-        titlePositionStyle={'text-center w-full flex flex-row justify-center'}
-        />
-      <SummarizeFormat
-        arrayProducts={productsSale}
-            totalSectionCaptionMessage={'Total venta: '}/>
-      <View style={tw`w-11/12 border`}/>
-      {/* Totals sections */}
-      <TotalsSummarize
-          productsDevolution={productsDevolution}
-          productsReposition={productsReposition}
-          productsSale={productsSale}
-      />
-      <View style={tw`w-full flex flex-row justify-start ml-3`}>
-        <Pressable style={
-          tw`bg-blue-500 h-14 max-w-32 border border-solid rounded
-          flex flex-row basis-1/2 justify-center items-center`}
-          onPress={() => {handleOnPrint();}}>
-          <Text style={tw`text-center text-black`}>Imprimir</Text>
-        </Pressable>
+    <View style={tw`w-full flex flex-row justify-center pt-7`}>
+      <ActionDialog
+        visible={showDialog}
+        onAcceptDialog={() => {handleOnCancelASale();}}
+        onDeclinedialog={() => {handleOnCancelShowDialog();}}>
+          <Text style={tw`text-black text-xl text-center`}>
+            ¿Estas seguro de cancelar la venta?
+          </Text>
+      </ActionDialog>
+      <View style={tw`w-full flex flex-row justify-center pt-7`}>
+        <View style={tw`absolute -top-0 -right-3 z-10 mr-3 mb-6`}>
+          <DangerButton
+            iconName={'trash'}
+            onPressButton={() => {handleOnShowDialog();}}/>
+        </View>
+        <View style={tw`w-11/12 
+          ${currentTransaction.state ? 'bg-amber-300' : 'bg-amber-200'} 
+          border p-2 flex flex-col justify-center items-center rounded-md`}>
+          <View style={tw`w-full flex flex-col`}>
+            <SectionTitle
+              title={`Operation - ${routeTransaction.date}`}
+              caption={currentTransaction.state ? '' : '(Cancelada)'}
+              titlePositionStyle={'text-center w-full items-center justify-center'}/>
+            {/* Product devolution section */}
+            <SectionTitle
+              title={'Devolución de producto'}
+              caption={''}
+              titlePositionStyle={'text-center w-full items-center justify-center'}
+            />
+            <SummarizeFormat
+              arrayProducts={productsDevolution}
+              totalSectionCaptionMessage={'Valor total de devolución: '}/>
+            <View style={tw`w-full border`}/>
+            {/* Product reposition section */}
+            <SectionTitle
+              title={'Reposición de producto'}
+              caption={''}
+              titlePositionStyle={'text-center w-full flex flex-row justify-center'}
+              />
+            <SummarizeFormat
+              arrayProducts={productsReposition}
+              totalSectionCaptionMessage={'Valor total de reposición: '}/>
+            <View style={tw`w-full border`}/>
+            {/* Product sale section */}
+            <SectionTitle
+              title={'Venta'}
+              caption={''}
+              titlePositionStyle={'text-center w-full flex flex-row justify-center'}
+              />
+            <SummarizeFormat
+              arrayProducts={productsSale}
+                  totalSectionCaptionMessage={'Total venta: '}/>
+            <View style={tw`w-full border`}/>
+            {/* Totals sections */}
+            <TotalsSummarize
+                productsDevolution={productsDevolution}
+                productsReposition={productsReposition}
+                productsSale={productsSale}
+            />
+            <View style={tw`w-full flex flex-row justify-start ml-3`}>
+              <Pressable style={
+                tw`bg-blue-500 h-14 max-w-32 border border-solid rounded
+                flex flex-row basis-1/2 justify-center items-center`}
+                onPress={() => {handleOnPrint();}}>
+                <Text style={tw`text-center text-black`}>Imprimir</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </View>
     </View>
   );

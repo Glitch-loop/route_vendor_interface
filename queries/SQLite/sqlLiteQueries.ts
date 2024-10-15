@@ -932,7 +932,6 @@ export async function getRouteTransactionByStore(id_store:string):Promise<IRoute
   }
 }
 
-
 export async function getRouteTransactionOperations(id_route_transaction:string):Promise<IRouteTransactionOperation[]> {
   try {
     const transactionsOperations:IRouteTransactionOperation[] = [];
@@ -968,11 +967,55 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
       }
     });
 
-
-
     return transactionsOperationDescriptions;
   } catch (error) {
     console.error('Failed to fetch products:', error);
     return [];
+  }
+}
+
+
+export async function updateTransation(transactionOperation: IRouteTransaction) {
+  try {
+    const {
+      id_route_transaction,
+      date,
+      state,
+      id_work_day,
+      id_store,
+      id_payment_method,
+    } = transactionOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      try {
+        await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} SET  
+          date = ?, 
+          state = ?, 
+          id_work_day = ?, 
+          id_payment_method = ?, 
+          id_store = ?
+          WHERE id_route_transaction = ?;
+        `,
+        [
+          date,
+          state,
+          id_work_day,
+          id_payment_method,
+          id_store,
+          id_route_transaction,
+        ]);
+      } catch (error) {
+        console.error('Something was wrong during "route transacion" instertion:', error);
+      }
+    });
+
+
+  } catch(error) {
+    /*
+      TODO: Decide what to do in the case of failing the database creation.
+    */
+      console.error('Something was wrong during "route transacion" instertion:', error);
   }
 }

@@ -198,7 +198,10 @@ export function getListSectionTicket(productList:IProductInventory[], messageNoM
   return sectionTicket;
 }
 
-export function getTicketSale(productsDevolution:IProductInventory[], productsReposition:IProductInventory[], productsSale: IProductInventory[], ):string {
+export function getTicketSale(
+  productsDevolution:IProductInventory[],
+  productsReposition:IProductInventory[],
+  productsSale: IProductInventory[]):string {
   // Variable used to containt the ticket to print
   let ticket = '\n';
 

@@ -43,7 +43,9 @@ const SummarizeFormat = ({
         arrayProducts.map(product => {
         return (
           <View key={product.id_product} style={tw`w-full my-1 flex flex-row items-center`}>
-            <Text style={tw`flex basis-1/4 text-center text-black`}>{product.product_name}</Text>
+            <Text style={tw`flex basis-1/4 text-center text-black`}>
+              {product.product_name}
+            </Text>
             <Text style={tw`flex basis-1/4 text-center text-black`}>${product.price}</Text>
             <Text style={tw`flex basis-1/4 text-center text-black`}>{product.amount}</Text>
             <Text style={tw`flex basis-1/4 text-center text-black`}>

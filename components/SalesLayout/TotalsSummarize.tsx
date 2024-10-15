@@ -35,25 +35,59 @@ const TotalsSummarize = ({
   } else {
     greatTotal = '$' + (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution).toString();
   }
+
   return (
-    <View style={tw`w-full my-5 flex flex-col items-end`}>
-        <Text style={tw`italic text-base text-black`}>
-          Valor total de devolución de producto: -${subtotalProductDevolution}
+    <View style={tw`w-full my-5 flex flex-col justify-center items-center`}>
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right italic`}>
+          Valor total de devolución de producto:
         </Text>
-        <Text style={tw`italic text-base text-black`}>
-          Valor total de reposición de producto: ${subtotalProductReposition}
+        <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle italic`}>
+          -${subtotalProductDevolution}
         </Text>
-        <Text style={tw`italic text-base text-black font-bold`}>
-          Balance de devolución de producto: { productDevolutionBalance }
+      </View>
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right italic`}>
+          Valor total de reposición de producto:
         </Text>
-        <View style={tw`flex flex-row w-10/12 border border-solid mt-2`} />
-        <Text style={tw`italic text-base text-black`}>
-          Balance de devolución de producto: { productDevolutionBalance }
+        <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle italic`}>
+          ${subtotalProductReposition}
         </Text>
-        <Text style={tw`italic text-base text-black`}>
-          Total de venta: ${ subtotalSaleProduct }
+      </View>
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right font-bold italic`}>
+          Balance de devolución de producto:
         </Text>
-        <Text style={tw`italic text-base font-bold text-black`}>Gran total: { greatTotal } </Text>
+        <Text
+          style={tw`flex basis-2/6 italic text-base text-black text-center align-middle font-bold italic`}>
+          { productDevolutionBalance }
+        </Text>
+      </View>
+      <View style={tw`flex flex-row w-11/12 border border-solid mt-2`} />
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right italic`}>
+          Balance de devolución de producto:
+        </Text>
+        <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle italic`}>
+          { productDevolutionBalance }
+        </Text>
+      </View>
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right italic`}>
+          Total de venta:
+        </Text>
+        <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle italic`}>
+          ${ subtotalSaleProduct }
+        </Text>
+      </View>
+      <View style={tw`w-full flex flex-row`}>
+        <Text style={tw`flex basis-4/6 italic text-base text-black text-right font-bold italic`}>
+          Gran total:
+        </Text>
+        <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle font-bold italic`}>
+          { greatTotal }
+        </Text>
+      </View>
     </View>
   );
 };

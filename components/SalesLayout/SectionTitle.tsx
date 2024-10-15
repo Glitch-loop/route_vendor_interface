@@ -14,9 +14,9 @@ const SectionTitle = ({
   }) => {
   return (
     <View style={tw`w-full flex flex-col ${titlePositionStyle}`}>
-      <Text style={tw`text-black text-xl`}>{title}</Text>
+      <Text style={tw`flex text-black text-xl`}>{title}</Text>
       { (caption !== undefined && caption !== '') &&
-        <Text style={tw`text-black text-sm`}>{caption}</Text>
+        <Text style={tw`flex text-black text-sm`}>{caption}</Text>
       }
     </View>
   );
