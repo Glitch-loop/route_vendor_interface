@@ -1,5 +1,5 @@
 
-import { IProductInventory } from '../interfaces/interfaces';
+import { IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
 import { timestamp_format } from './momentFormat';
 
 
@@ -201,7 +201,11 @@ export function getListSectionTicket(productList:IProductInventory[], messageNoM
 export function getTicketSale(
   productsDevolution:IProductInventory[],
   productsReposition:IProductInventory[],
-  productsSale: IProductInventory[]):string {
+  productsSale: IProductInventory[],
+  routeTransacion?:IRouteTransaction,
+  storeTransaction?:IStore,
+  vendorTransaction?:IUser
+):string {
   // Variable used to containt the ticket to print
   let ticket = '\n';
 
@@ -213,12 +217,20 @@ export function getTicketSale(
   let greatTotal = '$0';
 
   /*
-  Variables for setting the format of the ticket.
+    Variables for setting the format of the ticket.
     Note: The anchor of the printer that is used for the application is 58mm equivalent to 32
     characters
   */
 
   let showTotalPosition:number = 26; // 32 - 26 = $99999 (maximum possible number to print)
+
+  /*
+    Variables for retrieving headers information related to the route
+  */
+  let vendor:string = '';
+  let status:string = '';
+  let store:string = '';
+  let date:string = '';
 
   if (subtotalProductReposition - subtotalProductDevolution < 0) {
     productDevolutionBalance = '-$' + ((subtotalProductReposition - subtotalProductDevolution) * -1).toString();
@@ -232,13 +244,35 @@ export function getTicketSale(
     greatTotal = '$' + (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution).toString();
   }
 
+  /*
+    Of having the information related to the transaction, retrieve the information to complete
+    the ticket.
+  */
+
+  if (routeTransacion !== undefined) {
+    if (routeTransacion.state === 1) {
+      status = 'Completada';
+    } else {
+      status = 'Cancelada';
+    }
+
+    date = routeTransacion.date;
+  }
+
+  if (storeTransaction !== undefined) {
+    store = storeTransaction.store_name;
+  }
+
+  if (vendorTransaction !== undefined) {
+    vendor = vendorTransaction.name;
+  }
 
   // Header of the ticket
   ticket += getTicketLine('Ferdis', true, 13);
-  ticket += getTicketLine(`Fecha: ${timestamp_format()}`, true);
-  ticket += getTicketLine('Vendedor: ', true);
-  ticket += getTicketLine('Estatus: Completado', true);
-  ticket += getTicketLine('Cliente: Tienda', true);
+  ticket += getTicketLine(`Fecha: ${date}`, true);
+  ticket += getTicketLine(`Vendedor: ${vendor}`, true);
+  ticket += getTicketLine(`Estatus: ${status}`, true);
+  ticket += getTicketLine(`Cliente: ${store}`, true);
   ticket += getTicketLine('', true);
 
   // Body of the ticket

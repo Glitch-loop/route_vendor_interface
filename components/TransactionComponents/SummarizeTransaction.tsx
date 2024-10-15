@@ -6,6 +6,7 @@ import {
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
+  IStore,
 } from '../../interfaces/interfaces';
 
 // Redux context.
@@ -26,6 +27,8 @@ import { getTicketSale } from '../../utils/saleFunction';
 import DangerButton from '../generalComponents/DangerButton';
 import { updateTransation } from '../../queries/SQLite/sqlLiteQueries';
 import ActionDialog from '../ActionDialog';
+import VendorConfirmation from '../VendorConfirmation';
+import ConfirmationBand from '../ConfirmationBand';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -108,6 +111,8 @@ const SummarizeTransaction = ({
 }) => {
   /* Declaring redux context */
   const productInventory = useSelector((state: RootState) => state.productsInventory);
+  const stores = useSelector((state: RootState) => state.stores);
+  const vendor = useSelector((state: RootState) => state.user);
   /*
     Declaring states to store the movements for each operations.
     At the moment there are only 3 type of operations that a transaction can contain.
@@ -147,14 +152,26 @@ const SummarizeTransaction = ({
         .get(getConceptTransactionOperation(DAYS_OPERATIONS.sales, routeTransactionOperations)),
         productInventory)
       );
-  
+
   // States regarded to the logic of the component
   const [showDialog, setShowDialog] = useState<boolean>(false);
 
   // Handlers
   const handleOnPrint = async () => {
     try {
-      await printTicketBluetooth(getTicketSale(productsDevolution, productsReposition, productsSale));
+      console.log("print")
+      const foundStore:IStore|undefined =
+        stores.find((store) => {return store.id_store === routeTransaction.id_store;});
+
+      await printTicketBluetooth(
+        getTicketSale(
+          productsDevolution,
+          productsReposition,
+          productsSale,
+          routeTransaction,
+          foundStore,
+          vendor
+        ));
     } catch(error) {
       await getPrinterBluetoothConnction();
     }
@@ -247,13 +264,14 @@ const SummarizeTransaction = ({
                 productsReposition={productsReposition}
                 productsSale={productsSale}
             />
-            <View style={tw`w-full flex flex-row justify-start ml-3`}>
-              <Pressable style={
-                tw`bg-blue-500 h-14 max-w-32 border border-solid rounded
-                flex flex-row basis-1/2 justify-center items-center`}
-                onPress={() => {handleOnPrint();}}>
-                <Text style={tw`text-center text-black`}>Imprimir</Text>
-              </Pressable>
+            <View style={tw`w-full flex flex-row`}>
+              <ConfirmationBand
+                textOnAccept={'Iniciar venta a partir de esta'}
+                textOnCancel={'Imprimr'}
+                handleOnAccept={() => {handleOnStartASale();}}
+                handleOnCancel={() => {handleOnPrint();}}
+                styleOnCancel={'bg-blue-500'}
+                />
             </View>
           </View>
         </View>
