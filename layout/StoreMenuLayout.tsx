@@ -163,6 +163,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
       /* Getting all the transaciton of the store of today. */
       (await getRouteTransactionByStore(store.id_store))
       .forEach((transaction:IRouteTransaction) => {
+        console.log(transaction)
         arrTransactions.push(transaction);
       });
 
@@ -185,6 +186,11 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           );
         }
       }
+
+      console.log(arrTransactions)
+      console.log(mapTransactionOperations)
+      console.log(mapTransactionOperationDescriptions)
+      console.log(true)
 
       setRouteTransactions(arrTransactions);
       setRouteTransactionOperations(mapTransactionOperations);
@@ -222,7 +228,9 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
             <Text style={tw`text-black`}>{buildAddress(store)}</Text>
           </View>
           <View style={tw`flex flex-col basis-1/2 justify-around`}>
-            <Text style={[tw`text-black text-xl`, { lineHeight: 20! }]}>Información del cliente</Text>
+            <Text style={[tw`text-black text-xl`, { lineHeight: 20! }]}>
+              Información del cliente
+            </Text>
             <Text style={tw`text-black`}> {displayingClientInformation(store)} </Text>
           </View>
         </View>
@@ -267,8 +275,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
         { routeTransactions.length > 0 ?
-          <ScrollView
-            showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false}>
             { routeTransactions.map(current_transaction => {
               const id_current_transaction = current_transaction.id_route_transaction;
               const current_transaction_operations:IRouteTransactionOperation[] = [];
@@ -305,22 +312,22 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
               }
 
               return (
-                  <SummarizeTransaction
-                    key={id_current_transaction}
-                    routeTransaction={current_transaction}
-                    routeTransactionOperations={current_transaction_operations}
-                    routeTransactionOperationDescriptions={current_transaction_operation_descriptions}/>
+                <SummarizeTransaction
+                  key={id_current_transaction}
+                  routeTransaction={current_transaction}
+                  routeTransactionOperations={current_transaction_operations}
+                  routeTransactionOperationDescriptions={current_transaction_operation_descriptions}
+                  />
               );
             })};
+            <Text>HA</Text>
           </ScrollView>
           :
           <View style={tw`h-full flex flex-col items-center justify-center`}>
-            <Text style={tw`text-xl font-bold mb-20`}>La tienda no tiene ventas para mostrar</Text>
+            <Text style={tw`text-xl font-bold mb-20`}>Aún no hay ventas realizadas para esta tienda</Text>
           </View>
-
         }
         <View style={tw`h-32`}/>
-      
     </View>
   );
 };

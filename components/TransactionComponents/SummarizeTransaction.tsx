@@ -109,6 +109,11 @@ const SummarizeTransaction = ({
   routeTransactionOperations:IRouteTransactionOperation[],
   routeTransactionOperationDescriptions: Map<string,IRouteTransactionOperationDescription[]>,
 }) => {
+  console.log("Inside")
+  console.log("Route transaction: ", routeTransaction)
+  console.log("Route transaction B: ", routeTransactionOperations)
+  console.log("Route transaction C: ", routeTransactionOperationDescriptions)
+
   /* Declaring redux context */
   const productInventory = useSelector((state: RootState) => state.productsInventory);
   const stores = useSelector((state: RootState) => state.stores);
