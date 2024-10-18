@@ -320,6 +320,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
                   />
               );
             })}
+          <View style={tw`h-32`}/>
           </ScrollView>
         ) : (
           <View style={tw`h-full flex flex-col items-center justify-center`}>
@@ -328,8 +329,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
             </Text>
           </View>
         )
-        }
-        <View style={tw`h-32`}/>
+      }
     </View>
   );
 };
