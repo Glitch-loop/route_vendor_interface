@@ -274,7 +274,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
           <View style={tw`${contextOfStore(store, currentOperation)}`} />
       </View>
-        { routeTransactions.length > 0 ?
+        { routeTransactions.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             { routeTransactions.map(current_transaction => {
               const id_current_transaction = current_transaction.id_route_transaction;
@@ -319,13 +319,15 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
                   routeTransactionOperationDescriptions={current_transaction_operation_descriptions}
                   />
               );
-            })};
-            <Text>HA</Text>
+            })}
           </ScrollView>
-          :
+        ) : (
           <View style={tw`h-full flex flex-col items-center justify-center`}>
-            <Text style={tw`text-xl font-bold mb-20`}>Aún no hay ventas realizadas para esta tienda</Text>
+            <Text style={tw`text-xl font-bold mb-20`}>
+              Aún no hay ventas realizadas para esta tienda
+            </Text>
           </View>
+        )
         }
         <View style={tw`h-32`}/>
     </View>
