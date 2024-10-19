@@ -38,6 +38,11 @@ function convertOperationDescriptionToProductInventoryInterface(
     return [];
   } else {
     return routeTransactionOperationDescription.map((transactionDescription) => {
+      /*
+        Extracting infomration from the transaction:
+        - Amount.
+        - Price at moment of the operation.
+      */
       const product:IProductInventory = {
         id_product: transactionDescription.id_product,
         product_name: '',
@@ -48,9 +53,14 @@ function convertOperationDescriptionToProductInventoryInterface(
         price: transactionDescription.price_at_moment,
         product_status: 1,
         order_to_show: 0,
-        amount: transactionDescription.price_at_moment,
+        amount: transactionDescription.amount,
       };
 
+      /*
+        Extracting information from the product itself.
+
+        Information regarded to the description of the product.
+      */
       const foundProduct = productInventory
         .find(currentProduct => { return currentProduct.id_product === transactionDescription.id_product;});
 
