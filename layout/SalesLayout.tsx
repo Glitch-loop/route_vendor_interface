@@ -66,6 +66,14 @@ import {
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
 
+function getInitialInventoryParametersFromRoute(params:any, inventoryName:string) {
+  console.log("Initializing states")
+  if (params === undefined) {
+    return [];
+  } else {
+    return avoidingUndefinedItem(params[inventoryName], []);
+  }
+}
 
 
 // Axiliar funciton
@@ -76,7 +84,7 @@ const SalesLayout = ({
     initialProductReposition,
     initialProductSale,
   }:{
-    route,
+    route:any,
     navigation:any,
     initialProductDevolution?: IProductInventory[],
     initialProductReposition?: IProductInventory[],
@@ -91,23 +99,21 @@ const SalesLayout = ({
 
   const stores = useSelector((state: RootState) => state.stores);
   const productInventory = useSelector((state: RootState) => state.productsInventory);
-  
-  console.log(route.params)
-  console.log("Initial params: ", 
-    avoidingUndefinedItem(route.params.initialProductDevolution, []))
+
   // Use states
   /* States to store the current product according with their context. */
+
   const [productDevolution, setProductDevolution]
-    = useState<IProductInventory[]>(avoidingUndefinedItem(
-      route.params.initialProductDevolution, []));
+    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
+        route.params, 'initialProductDevolution'));
 
   const [productReposition, setProductReposition]
-    = useState<IProductInventory[]>(avoidingUndefinedItem(
-      route.params.initialProductReposition, []));
+    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
+        route.params, 'initialProductReposition'));
 
   const [productSale, setProductSale]
-    = useState<IProductInventory[]>(avoidingUndefinedItem(
-      route.params.initialProductSale, []));
+    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
+      route.params, 'initialProductSale'));
 
   /* States used to store the payment methods. */
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);

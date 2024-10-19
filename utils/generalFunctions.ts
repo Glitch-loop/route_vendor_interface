@@ -8,6 +8,7 @@ export function capitalizeFirstLetter(input: string|undefined|null): string {
 }
 
 export function avoidingUndefinedItem(item: any, itemUndefinedCase: any) {
+  console.log("avoidingUndefinedItem")
   if (item === undefined) {
     return itemUndefinedCase;
   } else {

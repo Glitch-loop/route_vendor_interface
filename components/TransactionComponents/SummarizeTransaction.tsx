@@ -205,7 +205,7 @@ const SummarizeTransaction = ({
   };
 
   const handleOnStartASale = async () => {
-    navigation.navigate('sales', {
+    navigation.replace('sales', {
       initialProductDevolution: productsDevolution,
       initialProductReposition: productsReposition,
       initialProductSale: productsSale,
@@ -282,7 +282,7 @@ const SummarizeTransaction = ({
             />
             <View style={tw`w-full flex flex-row`}>
               <ConfirmationBand
-                textOnAccept={'Iniciar venta a partir de esta'}
+                textOnAccept={'Iniciar venta apartir de esta'}
                 textOnCancel={'Imprimr'}
                 handleOnAccept={() => {handleOnStartASale();}}
                 handleOnCancel={() => {handleOnPrint();}}
