@@ -131,6 +131,7 @@ const SalesLayout = ({
 
   const handleConfirmPaymentMethod = () => {
     setConfirmedPaymentMethod(true);
+
   };
 
   const handlerDeclineDialog = () => {
@@ -147,22 +148,16 @@ const SalesLayout = ({
     navigation.navigate('storeMenu');
   };
 
-  const handlePaySale = () => {
-    /*In this handlers is where the sale is inserted in the database*/
-    setFinishedSale(true);
-
-    try {
-      setResultSaleState(true); // The sale was completed successfully.
-    } catch (error) {
-      setResultSaleState(false); // Something was wrong during the sale.
-    }
-  };
-
   /*
-    This function is in charge of updating the redux states and embedded database.
-    This database is in the case on which the sale was completed successfully.
+    According with the workflow of the application, it is not until the vendor confirms
+    the payment method (and the extra steps that each payment method requires are done)
+    that the sale is closed.
   */
-  const handlerOnSuccessfullCompletionSale = async () => {
+
+  const handlePaySale = async () => {
+    /*This handler inserts the sale in the database*/
+    setFinishedSale(true);
+    try {
     /*
       When a vendor vistis a store, a transaction is created.
 
@@ -396,6 +391,18 @@ const SalesLayout = ({
 
       }
     }
+      setResultSaleState(true); // The sale was completed successfully.
+    } catch (error) {
+      setResultSaleState(false); // Something was wrong during the sale.
+    }
+  };
+
+  /*
+    This function is in charge of updating the redux states and embedded database.
+    This database is in the case on which the sale was completed successfully.
+  */
+  const handlerOnSuccessfullCompletionSale = async () => {
+
 
     console.log("Go to route menu")
     navigation.navigate('routeOperationMenu');
