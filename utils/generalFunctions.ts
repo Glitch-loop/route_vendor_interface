@@ -6,3 +6,11 @@ export function capitalizeFirstLetter(input: string|undefined|null): string {
     return input.charAt(0).toUpperCase() + input.slice(1);
   }
 }
+
+export function avoidingUndefinedItem(item: any, itemUndefinedCase: any) {
+  if (item === undefined) {
+    return itemUndefinedCase;
+  } else {
+    return item;
+  }
+};

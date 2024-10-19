@@ -60,8 +60,23 @@ import {
 import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
 import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
 
+import { avoidingUndefinedItem } from '../utils/generalFunctions';
+
 // Axiliar funciton
-const SalesLayout = ({navigation}:{navigation:any}) => {
+const SalesLayout = ({
+    route,
+    navigation,
+    initialProductDevolution,
+    initialProductReposition,
+    initialProductSale,
+  }:{
+    route,
+    navigation:any,
+    initialProductDevolution?: IProductInventory[],
+    initialProductReposition?: IProductInventory[],
+    initialProductSale?: IProductInventory[],
+  }) => {
+
   // Redux context definitions
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
@@ -70,13 +85,28 @@ const SalesLayout = ({navigation}:{navigation:any}) => {
 
   const stores = useSelector((state: RootState) => state.stores);
   const productInventory = useSelector((state: RootState) => state.productsInventory);
-
+  
+  console.log(route.params)
+  console.log("Initial params: ", 
+    avoidingUndefinedItem(route.params.initialProductDevolution, []))
   // Use states
-  const [productDevolution, setProductDevolution] = useState<IProductInventory[]>([]);
-  const [productReposition, setProductReposition] = useState<IProductInventory[]>([]);
-  const [productSale, setProductSale] = useState<IProductInventory[]>([]);
+  /* States to store the current product according with their context. */
+  const [productDevolution, setProductDevolution]
+    = useState<IProductInventory[]>(avoidingUndefinedItem(
+      route.params.initialProductDevolution, []));
+
+  const [productReposition, setProductReposition]
+    = useState<IProductInventory[]>(avoidingUndefinedItem(
+      route.params.initialProductReposition, []));
+
+  const [productSale, setProductSale]
+    = useState<IProductInventory[]>(avoidingUndefinedItem(
+      route.params.initialProductSale, []));
+
+  /* States used to store the payment methods. */
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
 
+  /* States used in the logic of the layout. */
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);

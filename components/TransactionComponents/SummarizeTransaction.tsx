@@ -111,18 +111,16 @@ function getConceptTransactionOperation(idTransactionOperationType:string,
   }
 
 const SummarizeTransaction = ({
+  navigation,
   routeTransaction,
   routeTransactionOperations,
   routeTransactionOperationDescriptions,
 }:{
+  navigation:any,
   routeTransaction:IRouteTransaction,
   routeTransactionOperations:IRouteTransactionOperation[],
   routeTransactionOperationDescriptions: Map<string,IRouteTransactionOperationDescription[]>,
 }) => {
-  console.log("Inside")
-  console.log("Route transaction: ", routeTransaction)
-  console.log("Route transaction B: ", routeTransactionOperations)
-  console.log("Route transaction C: ", routeTransactionOperationDescriptions)
 
   /* Declaring redux context */
   const productInventory = useSelector((state: RootState) => state.productsInventory);
@@ -174,7 +172,6 @@ const SummarizeTransaction = ({
   // Handlers
   const handleOnPrint = async () => {
     try {
-      console.log("print")
       const foundStore:IStore|undefined =
         stores.find((store) => {return store.id_store === routeTransaction.id_store;});
 
@@ -208,7 +205,11 @@ const SummarizeTransaction = ({
   };
 
   const handleOnStartASale = async () => {
-
+    navigation.navigate('sales', {
+      initialProductDevolution: productsDevolution,
+      initialProductReposition: productsReposition,
+      initialProductSale: productsSale,
+    });
   };
 
   const handleOnShowDialog = () => {

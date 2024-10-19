@@ -314,6 +314,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
               return (
                 <SummarizeTransaction
                   key={id_current_transaction}
+                  navigation={navigation}
                   routeTransaction={current_transaction}
                   routeTransactionOperations={current_transaction_operations}
                   routeTransactionOperationDescriptions={current_transaction_operation_descriptions}
