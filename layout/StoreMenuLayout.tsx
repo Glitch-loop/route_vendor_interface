@@ -163,7 +163,6 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
       /* Getting all the transaciton of the store of today. */
       (await getRouteTransactionByStore(store.id_store))
       .forEach((transaction:IRouteTransaction) => {
-        console.log(transaction)
         arrTransactions.push(transaction);
       });
 
@@ -186,11 +185,6 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           );
         }
       }
-
-      console.log(arrTransactions)
-      console.log(mapTransactionOperations)
-      console.log(mapTransactionOperationDescriptions)
-      console.log(true)
 
       setRouteTransactions(arrTransactions);
       setRouteTransactionOperations(mapTransactionOperations);

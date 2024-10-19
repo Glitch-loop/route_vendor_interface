@@ -41,13 +41,22 @@ import PaymentMethod from '../components/SalesLayout/PaymentMethod';
 import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 import StoreHeader from '../components/SalesLayout/StoreHeader';
 import ResultSale from '../components/ResultSale';
-
-// Moocks for testign
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
+
+// Utils
+import { timestamp_format } from '../utils/momentFormat';
+import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
+import { avoidingUndefinedItem } from '../utils/generalFunctions';
+
+// Services
+import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
+
+// Redux context
 import { updateStores } from '../redux/slices/storesSlice';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
-import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
-import { timestamp_format } from '../utils/momentFormat';
+import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
+
+// Database
 import {
   insertRouteTransaction,
   insertRouteTransactionOperation,
@@ -57,10 +66,7 @@ import {
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
 
-import { updateProductsInventory } from '../redux/slices/productsInventorySlice';
-import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
 
-import { avoidingUndefinedItem } from '../utils/generalFunctions';
 
 // Axiliar funciton
 const SalesLayout = ({
