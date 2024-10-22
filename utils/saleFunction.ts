@@ -1,10 +1,8 @@
-
-import { stringify } from 'uuid';
-import { IProductInventory, IRouteDay, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
+import { IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
 import { time_posix_format } from './momentFormat';
 
 
-// Related to get total amounts
+// Related to selling calculations
 export function getProductDevolutionBalance(productDevolution:IProductInventory[], productReposition:IProductInventory[]):number {
   const totalProductDevolution = productDevolution.reduce((acc,item) =>
     {return acc + item.price * item.amount;}, 0);
@@ -41,17 +39,33 @@ export function getGreatTotal(
   let subtotalProductDevolution = getProductDevolutionBalance(productsDevolution,[]);
   let subtotalProductReposition = getProductDevolutionBalance(productsReposition,[]);
   let subtotalSaleProduct = getProductDevolutionBalance(salesProduct,[]);
-  let greatTotal = 0;
 
-
-  if (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution < 0) {
-    greatTotal = ((subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution) * -1);
-  } else {
-    greatTotal = subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution;
-  }
-
-  return greatTotal;
+  return subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution;
 }
+
+export function calculateChange(total:number, received:number){
+  let difference:number = 0;
+  if (total < 0) {
+    /*
+      It means that the vendor has to give money to the client, this probably
+      becuase of a product devolution.
+    */
+    if (total + received < 0) {
+      difference = 0;
+    } else {
+      difference = (total + received);
+    }
+  } else {
+    /* Do nothing; It is a normal selling (vendor has to receive money)*/
+    if (total - received < 0) {
+      difference = (total - received) * -1;
+    } else {
+      difference = 0;
+    }
+  }
+  return difference;
+}
+
 
 // Related to tickets for selling.
 export function getAmountSpacesNextSection(titleSection:number|string, wordSection:number|string):string {

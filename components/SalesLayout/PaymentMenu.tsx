@@ -3,16 +3,10 @@ import { View, Text } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import tw from 'twrnc';
 
-import { IPaymentMethod, IRouteDay } from '../../interfaces/interfaces';
-import { getTransactionIdentifier } from '../../utils/saleFunction';
+import { IPaymentMethod } from '../../interfaces/interfaces';
+import { getTransactionIdentifier, calculateChange } from '../../utils/saleFunction';
 
-function calculateChange(total:number, received:number){
-  if (total - received < 0) {
-    return (total - received) * -1;
-  } else {
-    return 0;
-  }
-}
+
 
 const PaymentMenu = ({
   transactionIdentifier,
@@ -35,25 +29,25 @@ const PaymentMenu = ({
     }
   };
 
-
-
   return (
     <View style={tw`w-full flex flex-col justify-center items-center`}>
-      <Text style={tw`text-center text-black text-2xl my-2`}>Total a pagar</Text>
+      <Text style={tw`text-center text-black text-2xl my-2`}>
+        Total a { total > 0 ? 'cobrar' : 'reembolsar' }
+      </Text>
       <View style={tw`flex flex-row justify-end my-1`}>
         <Text
           style={tw`mr-3 text-xl text-black text-right flex flex-row basis-1/2 justify-end`}>
           Total:
         </Text>
         <Text style={tw`text-xl text-black text-left flex flex-row basis-1/2`}>
-          ${total}
+          ${total > 0 ? total : total * -1 }
         </Text>
       </View>
       {/* Section for cash method */}
       { paymentMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f' &&
         <View style={tw`flex flex-row justify-end items-center my-1`}>
           <Text style={tw`mr-3 text-xl text-black text-right flex flex-row basis-1/2 justify-end `}>
-            Recibido:
+            {total > 0 ? 'Recibido:' : 'Entregado:' }
           </Text>
           <View style={tw`text-xl text-black flex flex-row basis-1/2 items-center`}>
             <Text style={tw`text-xl text-black`}>$</Text>
@@ -68,9 +62,9 @@ const PaymentMenu = ({
       }
       {/* Section for cash method */}
       { paymentMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f' &&
-        <View style={tw`flex flex-row justify-end my-1`}>
+        <View style={tw`flex flex-row justify-end items-center my-1`}>
           <Text style={tw`mr-3 text-black text-xl text-right flex flex-row basis-1/2 justify-end`}>
-            Cambio:
+            Cambio { total < 0 ? '(a recibir)' : '(a entregar)'}:
           </Text>
           <Text style={tw`text-black text-xl text-left flex flex-row basis-1/2`}>
             ${calculateChange(total, moneyReceived)}
