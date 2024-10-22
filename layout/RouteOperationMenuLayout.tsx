@@ -47,15 +47,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       backAction
     );
 
-    console.log("--------------------------------")
-    dayOperations.forEach(operation => {
-      console.log(operation.current_operation)
-    })
-
-
-    console.log("--------------------------------")
-
-
     return () => backHandler.remove();
 
   }, []);

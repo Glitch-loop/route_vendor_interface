@@ -362,12 +362,8 @@ const SalesLayout = ({
         */
        /* Moving to the next operation. */
 
-       console.log("Current operation: ", currentOperation.id_item)
-       console.log("Current store: ", foundStore.id_store)
-       console.log("Current operation full data: ", currentOperation)
         if (currentOperation.current_operation) {
           /* Moving to the next operation */
-          console.log("MOVING TO THE NEXT STORE")
           // Updating redux state for the current operation
           dispatch(setNextOperation());
 

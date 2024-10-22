@@ -231,11 +231,13 @@ const SummarizeTransaction = ({
           </Text>
       </ActionDialog>
       <View style={tw`w-full flex flex-row justify-center pt-7`}>
-        <View style={tw`absolute -top-0 -right-3 z-10 mr-3 mb-6`}>
-          <DangerButton
-            iconName={'trash'}
-            onPressButton={() => {handleOnShowDialog();}}/>
-        </View>
+        { currentTransaction.state === 1 &&
+          <View style={tw`absolute -top-0 -right-3 z-10 mr-3 mb-6`}>
+            <DangerButton
+              iconName={'trash'}
+              onPressButton={() => {handleOnShowDialog();}}/>
+          </View>
+        }
         <View style={tw`w-11/12 
           ${currentTransaction.state ? 'bg-amber-300' : 'bg-amber-200'} 
           border p-2 flex flex-col justify-center items-center rounded-md`}>
