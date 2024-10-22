@@ -15,7 +15,7 @@ const PaymentMethod = ({
   }) => {
   /*By default, cash method is selected*/
   const [selectedMethod, setSelectedMethod] = useState<IPaymentMethod>(currentPaymentMethod);
-  
+
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>(PAYMENT_METHODS);
 
   return (

@@ -3,8 +3,8 @@ import { View, Text } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import tw from 'twrnc';
 
-import { IPaymentMethod } from '../../interfaces/interfaces';
-
+import { IPaymentMethod, IRouteDay } from '../../interfaces/interfaces';
+import { getTransactionIdentifier } from '../../utils/saleFunction';
 
 function calculateChange(total:number, received:number){
   if (total - received < 0) {
@@ -15,9 +15,11 @@ function calculateChange(total:number, received:number){
 }
 
 const PaymentMenu = ({
+  transactionIdentifier,
   paymentMethod,
   total,
 }:{
+  transactionIdentifier:string
   paymentMethod:IPaymentMethod
   total:number
 }) => {
@@ -32,6 +34,8 @@ const PaymentMenu = ({
       setMoneyReceived(parsedInput);
     }
   };
+
+
 
   return (
     <View style={tw`w-full flex flex-col justify-center items-center`}>
@@ -80,7 +84,7 @@ const PaymentMenu = ({
             Referencia:
           </Text>
           <Text style={tw`text-black text-xl text-left flex flex-row basis-1/2`}>
-            Pendiente crear referencia
+          {getTransactionIdentifier(transactionIdentifier)}
           </Text>
       </View>
       }

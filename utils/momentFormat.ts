@@ -15,3 +15,8 @@ export function current_day_name() {
   moment.locale('es-mx');
   return moment().format('dddd');
 }
+
+export function time_posix_format() {
+  moment.locale('es');
+  return moment().unix();
+}

@@ -1,9 +1,10 @@
 
-import { IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
-import { timestamp_format } from './momentFormat';
+import { stringify } from 'uuid';
+import { IProductInventory, IRouteDay, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
+import { time_posix_format } from './momentFormat';
 
 
-// Auxiliar functuion
+// Related to get total amounts
 export function getProductDevolutionBalance(productDevolution:IProductInventory[], productReposition:IProductInventory[]):number {
   const totalProductDevolution = productDevolution.reduce((acc,item) =>
     {return acc + item.price * item.amount;}, 0);
@@ -329,4 +330,17 @@ export function getTicketSale(
   return ticket;
 }
 
+export function getTransactionIdentifier(transactionIdentifier:string) {
+  let finalTransactionIdentifier = '';
+  if (transactionIdentifier === undefined) {
+    finalTransactionIdentifier = time_posix_format().toString() + time_posix_format().toString().slice(0,3);
+  } else {
+    if (transactionIdentifier.length > 5) {
+      finalTransactionIdentifier = time_posix_format().toString() + transactionIdentifier.slice(0,3);
+    } else {
+      finalTransactionIdentifier = time_posix_format().toString() + time_posix_format().toString().slice(0,3);
+    }
+  }
 
+  return finalTransactionIdentifier;
+}

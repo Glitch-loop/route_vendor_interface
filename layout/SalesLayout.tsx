@@ -462,6 +462,7 @@ const SalesLayout = ({
         >
           { confirmedPaymentMethod === true ?
             <PaymentMenu
+              transactionIdentifier={routeDay.id_route_day}
               total={getGreatTotal(productDevolution, productReposition, productSale)}
               paymentMethod={paymnetMethod}/>
               :
