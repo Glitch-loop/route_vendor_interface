@@ -23,7 +23,7 @@ const PaymentMethod = ({
       <Text style={tw`text-lg text-black text-center mb-2`}>Selecciona una opción</Text>
       { paymentMethods.map(paymentMethod => {
         return (
-          <View 
+          <View
           key={paymentMethod.id_payment_method}
           style={tw`flex flex-row items-center`}>
             <RadioButton

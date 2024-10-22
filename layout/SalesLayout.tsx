@@ -42,6 +42,7 @@ import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 import StoreHeader from '../components/SalesLayout/StoreHeader';
 import ResultSale from '../components/ResultSale';
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
+import PaymentProcess from '../components/SalesLayout/PaymentProcess';
 
 // Utils
 import { timestamp_format } from '../utils/momentFormat';
@@ -122,29 +123,30 @@ const SalesLayout = ({
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
+  const [cashMovement, setCashMovement] = useState<number>(0);
 
   // Handlers
-  const handleStartSalePayment = () => {
-    setShowDialog(true);
-  };
-
-  const handleConfirmPaymentMethod = () => {
-    setConfirmedPaymentMethod(true);
-
-  };
-
-  const handlerDeclineDialog = () => {
-    setShowDialog(false);
-    setPaymentMethod(PAYMENT_METHODS[0]);
-    setConfirmedPaymentMethod(false);
-  };
-
   const handleCancelSale = () => {
     navigation.navigate('storeMenu');
   };
 
   const handleOnGoBack = () => {
     navigation.navigate('storeMenu');
+  };
+
+  const handleStartSalePayment = () => {
+    setShowDialog(true);
+  };
+
+  const handleConfirmPaymentMethod = () => {
+    setConfirmedPaymentMethod(true);
+  };
+
+  const handlerDeclineDialog = () => {
+    console.log(cashMovement)
+    setShowDialog(false);
+    setPaymentMethod(PAYMENT_METHODS[0]);
+    setConfirmedPaymentMethod(false);
   };
 
   /*
@@ -155,6 +157,8 @@ const SalesLayout = ({
 
   const handlePaySale = async () => {
     /*This handler inserts the sale in the database*/
+    /* Validating that the payment a correct state for the payment method*/
+    console.log("Received money: ", cashMovement)
     setFinishedSale(true);
     try {
     /*
@@ -458,18 +462,26 @@ const SalesLayout = ({
         <ActionDialog
           visible={showDialog}
           onAcceptDialog={confirmedPaymentMethod === true ? handlePaySale : handleConfirmPaymentMethod}
-          onDeclinedialog={handlerDeclineDialog}
-        >
-          { confirmedPaymentMethod === true ?
+          onDeclinedialog={handlerDeclineDialog}>
+          <PaymentProcess
+            transactionIdentifier={routeDay.id_route_day}
+            totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
+            confirmedPaymentMethod={confirmedPaymentMethod}
+            handleOnSelectPaymentMethod={setPaymentMethod}
+            handleOnCashMovement={setCashMovement}
+          />
+          {/* { confirmedPaymentMethod === true ?
             <PaymentMenu
               transactionIdentifier={routeDay.id_route_day}
               total={getGreatTotal(productDevolution, productReposition, productSale)}
-              paymentMethod={paymnetMethod}/>
+              paymentMethod={paymnetMethod}
+              handleOnRecieveCash={setCashMovement}
+              />
               :
             <PaymentMethod
               currentPaymentMethod={paymnetMethod}
               onSelectPaymentMethod={setPaymentMethod}/>
-          }
+          } */}
         </ActionDialog>
         <View style={tw`w-full flex flex-1 flex-col items-center`}>
           <View style={tw`my-3 ml-10 w-full flex flex-row justify-center items-center`}>

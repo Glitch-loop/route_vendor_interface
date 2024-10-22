@@ -18,8 +18,6 @@ const ActionDialog = (
     onAcceptDialog:any,
     onDeclinedialog:any,
   }) => {
-
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

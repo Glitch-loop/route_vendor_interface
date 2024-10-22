@@ -6,26 +6,49 @@ import tw from 'twrnc';
 import { IPaymentMethod } from '../../interfaces/interfaces';
 import { getTransactionIdentifier, calculateChange } from '../../utils/saleFunction';
 
+function initializeState(total:number, paymentMethod: IPaymentMethod, setSuperiorState:any) {
+  let result:number = 0;
+  if (paymentMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f') {
+    // Cash method
+    result = 0;
+  } else if (paymentMethod.id_payment_method === 'b68e6be3-8919-41dd-9d09-6527884e162e') {
+    // Transference
+    result = total;
+  } else {
+    // By default is cash method
+    result = 0;
+  }
+
+  setSuperiorState(result);
+
+  return result;
+}
 
 
 const PaymentMenu = ({
   transactionIdentifier,
   paymentMethod,
   total,
+  handleOnRecieveCash,
 }:{
   transactionIdentifier:string
   paymentMethod:IPaymentMethod
-  total:number
+  total:number,
+  handleOnRecieveCash:any,
 }) => {
   /*By default, cash method is selected*/
-  const [moneyReceived, setMoneyReceived] = useState<number>(0);
+  const [moneyReceived, setMoneyReceived]
+    = useState<number>(initializeState(total, paymentMethod, handleOnRecieveCash));
 
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);
     if (isNaN(parsedInput)) {
       setMoneyReceived(0);
+      handleOnRecieveCash(0);
     } else {
+      console.log("money: ", parsedInput)
       setMoneyReceived(parsedInput);
+      handleOnRecieveCash(parsedInput);
     }
   };
 
