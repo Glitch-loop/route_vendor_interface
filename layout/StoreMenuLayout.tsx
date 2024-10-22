@@ -318,8 +318,8 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           <View style={tw`h-32`}/>
           </ScrollView>
         ) : (
-          <View style={tw`h-full flex flex-col items-center justify-center`}>
-            <Text style={tw`text-xl font-bold mb-20`}>
+          <View style={tw`w-10/12 h-full flex flex-col items-center justify-center`}>
+            <Text style={tw`text-xl font-bold mb-20 text-center`}>
               Aún no hay ventas realizadas para esta tienda
             </Text>
           </View>
