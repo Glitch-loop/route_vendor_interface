@@ -17,6 +17,7 @@ import RouteCard from '../components/RouteCard';
 import TypeOperationItem from '../components/TypeOperationItem';
 import { IDayOperation } from '../interfaces/interfaces';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import { updateDayOperation } from '../queries/SQLite/sqlLiteQueries';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -46,7 +47,17 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       backAction
     );
 
+    console.log("--------------------------------")
+    dayOperations.forEach(operation => {
+      console.log(operation.current_operation)
+    })
+
+
+    console.log("--------------------------------")
+
+
     return () => backHandler.remove();
+
   }, []);
 
   // Handlers
@@ -93,7 +104,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             const index = stores.findIndex(store => store.id_store === dayOperation.id_item);
             if (index === -1) {
               /*
-                If an index was not found, it means that the operation is not related to a client 
+                If an index was not found, it means that the operation is not related to a client.
               */
 
               // Style for inventory operation card

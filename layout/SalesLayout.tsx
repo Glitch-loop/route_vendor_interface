@@ -67,7 +67,6 @@ import {
 } from '../queries/SQLite/sqlLiteQueries';
 
 function getInitialInventoryParametersFromRoute(params:any, inventoryName:string) {
-  console.log("Initializing states")
   if (params === undefined) {
     return [];
   } else {
@@ -313,12 +312,15 @@ const SalesLayout = ({
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
+
     if (foundStore !== undefined) {
+      console.log("Store in the list")
       /*
         It means, the store is already plannified for this day, but we don't know if the client
         asked to be visited or if it is a client that belongs to today.
       */
       if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
+        console.log("Store that asked to be visited")
         /* This store doesn't belong to this day, but it was requested to be visited. */
         // Update redux context
         dispatch(updateStores([{
@@ -333,19 +335,71 @@ const SalesLayout = ({
           route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
         });
       } else {
-
-        /* This store belongs to the route of today*/
+        console.log("Store of the route")
+        /* This store belongs to the route of the today*/
         // Update redux context.
         dispatch(updateStores([{
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         }]));
-        console.log("Planified client")
+
+
         // Update embedded context.
         await updateStore({
           ...foundStore,
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         });
+
+        /*
+          Verifying the vendor is not making a second sale to a store that has already
+          sold (in the route).
+
+          If the current store is the current operation to do (it is the turn of the store
+          to be visited) then it means that after this sale, the vendor has to go to the "next store"
+          (it is needed to update the current operation).
+
+          Otherwise, it means that the vendor is visiting other route that is not the current one.
+        */
+       /* Moving to the next operation. */
+
+       console.log("Current operation: ", currentOperation.id_item)
+       console.log("Current store: ", foundStore.id_store)
+       console.log("Current operation full data: ", currentOperation)
+        if (currentOperation.current_operation) {
+          /* Moving to the next operation */
+          console.log("MOVING TO THE NEXT STORE")
+          // Updating redux state for the current operation
+          dispatch(setNextOperation());
+
+          // Updating embedded database
+          const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
+
+          if (index > -1) { // The operation is in the list of day operations to do.
+            if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
+              const currentDayOperation = dayOperations[index];
+              const nextDayOperation = dayOperations[index + 1];
+
+              // Updating in database that the current operation is not longer the current one
+              currentDayOperation.current_operation = 0;
+              nextDayOperation.current_operation = 1;
+
+              // Update embedded database.
+              await updateDayOperation({
+                ...currentDayOperation,
+                current_operation: 0,
+              });
+              await updateDayOperation({
+                ...nextDayOperation,
+                current_operation: 1,
+              });
+            }
+          }
+        } else {
+          /*
+            Do nothing (the vendor is making a sale for a previous or next store from the current one)
+          */
+        }
+
       }
     } else {
       /*
@@ -355,42 +409,6 @@ const SalesLayout = ({
       /*To do*/
     }
 
-    /*
-      Moving to the next operation.
-    */
-
-    console.log("Next operation")
-    // Updating redux state
-    dispatch(setNextOperation());
-
-    // Updating embedded database
-    const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
-    console.log("INDEX TO UPDATE: ", index, "+++++++++++++++++++++++++++++++++++++++++++")
-    if (index > -1) { // The operations is the list of day operations to do.
-      if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
-        console.log("UPDATING+++++++++++++++++++++++++++++++++++++++++++++")
-        const currentDayOperation = dayOperations[index];
-        const nextDayOperation = dayOperations[index + 1];
-
-        // Updating in database that the current operation is not longer the current one
-        currentDayOperation.current_operation = 0;
-        nextDayOperation.current_operation = 1;
-
-        console.log("currentDayOperation: ", {currentDayOperation})
-        console.log("nextDayOperation: ", nextDayOperation)
-
-        // Update embedded database.
-        await updateDayOperation({
-          ...currentDayOperation,
-          current_operation: 0,
-        });
-        await updateDayOperation({
-          ...nextDayOperation,
-          current_operation: 1,
-        });
-
-      }
-    }
       setResultSaleState(true); // The sale was completed successfully.
     } catch (error) {
       setResultSaleState(false); // Something was wrong during the sale.
