@@ -120,7 +120,7 @@ const SalesLayout = ({
 
   /* States used in the logic of the layout. */
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
-  const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [startPaymentProcess, setStartPaymentProcess] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
   const [cashMovement, setCashMovement] = useState<number>(0);
@@ -135,7 +135,8 @@ const SalesLayout = ({
   };
 
   const handleStartSalePayment = () => {
-    setShowDialog(true);
+    console.log("Iniciar proceso")
+    setStartPaymentProcess(true);
   };
 
   const handleConfirmPaymentMethod = () => {
@@ -459,30 +460,15 @@ const SalesLayout = ({
             1- Choose a payment method.
             2- Client pays according to its selection.
         */}
-        <ActionDialog
-          visible={showDialog}
-          onAcceptDialog={confirmedPaymentMethod === true ? handlePaySale : handleConfirmPaymentMethod}
-          onDeclinedialog={handlerDeclineDialog}>
+          
           <PaymentProcess
             transactionIdentifier={routeDay.id_route_day}
+            paymentProcess={startPaymentProcess}
+            handleOnPaymentProcess={setStartPaymentProcess}
             totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
-            confirmedPaymentMethod={confirmedPaymentMethod}
             handleOnSelectPaymentMethod={setPaymentMethod}
-            handleOnCashMovement={setCashMovement}
-          />
-          {/* { confirmedPaymentMethod === true ?
-            <PaymentMenu
-              transactionIdentifier={routeDay.id_route_day}
-              total={getGreatTotal(productDevolution, productReposition, productSale)}
-              paymentMethod={paymnetMethod}
-              handleOnRecieveCash={setCashMovement}
-              />
-              :
-            <PaymentMethod
-              currentPaymentMethod={paymnetMethod}
-              onSelectPaymentMethod={setPaymentMethod}/>
-          } */}
-        </ActionDialog>
+            handleOnCashMovement={setCashMovement}/>
+          
         <View style={tw`w-full flex flex-1 flex-col items-center`}>
           <View style={tw`my-3 ml-10 w-full flex flex-row justify-center items-center`}>
             <StoreHeader onGoBack={handleOnGoBack} />

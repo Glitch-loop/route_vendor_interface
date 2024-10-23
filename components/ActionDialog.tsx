@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, KeyboardAvoidingView, Platform } from 'react-native';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome6';
-import { Dialog, Portal, Provider } from 'react-native-paper';
+import { Dialog, Portal } from 'react-native-paper';
 import ConfirmationBand from './ConfirmationBand';
 
 
@@ -24,8 +24,7 @@ const ActionDialog = (
       <Portal>
         <Dialog
           visible={visible}
-          onDismiss={onDeclinedialog}
-          >
+          onDismiss={onDeclinedialog}>
             <View style={tw`flex flex-row justify-center`}>
               {children}
             </View>

@@ -12,17 +12,20 @@ import PAYMENT_METHODS from '../../utils/paymentMethod';
 // Components
 import PaymentMenu from './PaymentMenu';
 import PaymentMethod from './PaymentMethod';
+import ActionDialog from '../ActionDialog';
 
 const PaymentProcess = ({
   transactionIdentifier,
   totalToPay,
-  confirmedPaymentMethod,
+  paymentProcess,
+  handleOnPaymentProcess,
   handleOnSelectPaymentMethod,
   handleOnCashMovement,
 }:{
   transactionIdentifier:string,
   totalToPay:number,
-  confirmedPaymentMethod:boolean,
+  paymentProcess:boolean,
+  handleOnPaymentProcess:any,
   handleOnSelectPaymentMethod:any,
   handleOnCashMovement:any,
 }) => {
@@ -30,6 +33,22 @@ const PaymentProcess = ({
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
   const [cashMovement, setCashMovement] = useState<number>(0);
 
+  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
+
+  const handleConfirmPaymentMethod = () => {
+    setConfirmedPaymentMethod(true);
+  };
+
+
+  const handlePaySale = () => {
+    console.log("Closing sale")
+  }
+
+  const handlerDeclineDialog = () => {
+    handleOnPaymentProcess(false);
+    setPaymentMethod(PAYMENT_METHODS[0]);
+    setConfirmedPaymentMethod(false);
+  };
 
   const onSelectPaymentMethod = (selectedPaymentMethod:IPaymentMethod) => {
     handleOnSelectPaymentMethod(selectedPaymentMethod);
@@ -37,28 +56,28 @@ const PaymentProcess = ({
   };
 
   const onCashMovement = (cashMovementDone:number) => {
-    console.log("On process: ", cashMovementDone)
-    handleOnCashMovement(cashMovementDone);
     setCashMovement(cashMovementDone);
+    handleOnCashMovement(cashMovementDone);
   };
 
   return (
-    <View style={tw`flex flex-row`}>
+    <ActionDialog
+    visible={paymentProcess}
+    onAcceptDialog={confirmedPaymentMethod === true ? handlePaySale : handleConfirmPaymentMethod}
+    onDeclinedialog={handlerDeclineDialog}>
       { confirmedPaymentMethod === true ?
         <PaymentMenu
           transactionIdentifier={transactionIdentifier}
           total={totalToPay}
           paymentMethod={paymnetMethod}
-          handleOnRecieveCash={
-            (cashMovementDone:number) => onCashMovement(cashMovementDone)}
-          />
+          handleOnRecieveCash={(cashMovementDone:number) => onCashMovement(cashMovementDone)}/>
           :
         <PaymentMethod
           currentPaymentMethod={paymnetMethod}
           onSelectPaymentMethod={
             (selectedPaymentMethod:IPaymentMethod) => onSelectPaymentMethod(selectedPaymentMethod)}/>
       }
-    </View>
+    </ActionDialog>
   );
 };
 
