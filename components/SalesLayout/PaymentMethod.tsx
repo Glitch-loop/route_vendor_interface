@@ -16,12 +16,10 @@ const PaymentMethod = ({
   /*By default, cash method is selected*/
   const [selectedMethod, setSelectedMethod] = useState<IPaymentMethod>(currentPaymentMethod);
 
-  const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>(PAYMENT_METHODS);
-
   return (
     <View>
       <Text style={tw`text-lg text-black text-center mb-2`}>Selecciona una opción</Text>
-      { paymentMethods.map(paymentMethod => {
+      { PAYMENT_METHODS.map((paymentMethod:IPaymentMethod) => {
         return (
           <View
           key={paymentMethod.id_payment_method}

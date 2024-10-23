@@ -36,9 +36,6 @@ import DAYS_OPERATIONS from '../lib/day_operations';
 import TableProduct from '../components/SalesLayout/TableProduct';
 import SaleSummarize from '../components/SalesLayout/SaleSummarize';
 import ConfirmationBand from '../components/ConfirmationBand';
-import ActionDialog from '../components/ActionDialog';
-import PaymentMethod from '../components/SalesLayout/PaymentMethod';
-import PaymentMenu from '../components/SalesLayout/PaymentMenu';
 import StoreHeader from '../components/SalesLayout/StoreHeader';
 import ResultSale from '../components/ResultSale';
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
@@ -119,7 +116,6 @@ const SalesLayout = ({
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
 
   /* States used in the logic of the layout. */
-  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
   const [startPaymentProcess, setStartPaymentProcess] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
@@ -134,20 +130,9 @@ const SalesLayout = ({
     navigation.navigate('storeMenu');
   };
 
-  const handleStartSalePayment = () => {
+  const handleSalePaymentProces = () => {
     console.log("Iniciar proceso")
     setStartPaymentProcess(true);
-  };
-
-  const handleConfirmPaymentMethod = () => {
-    setConfirmedPaymentMethod(true);
-  };
-
-  const handlerDeclineDialog = () => {
-    console.log(cashMovement)
-    setShowDialog(false);
-    setPaymentMethod(PAYMENT_METHODS[0]);
-    setConfirmedPaymentMethod(false);
   };
 
   /*
@@ -460,15 +445,13 @@ const SalesLayout = ({
             1- Choose a payment method.
             2- Client pays according to its selection.
         */}
-          
           <PaymentProcess
             transactionIdentifier={routeDay.id_route_day}
             paymentProcess={startPaymentProcess}
-            handleOnPaymentProcess={setStartPaymentProcess}
+            onCancelPaymentProcess={setStartPaymentProcess}
             totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
-            handleOnSelectPaymentMethod={setPaymentMethod}
-            handleOnCashMovement={setCashMovement}/>
-          
+            onSelectPaymentMethod={setPaymentMethod}
+            onCashReception={setCashMovement}/>
         <View style={tw`w-full flex flex-1 flex-col items-center`}>
           <View style={tw`my-3 ml-10 w-full flex flex-row justify-center items-center`}>
             <StoreHeader onGoBack={handleOnGoBack} />
@@ -521,7 +504,7 @@ const SalesLayout = ({
         <ConfirmationBand
           textOnAccept={'Continuar'}
           textOnCancel={'Cancelar operación'}
-          handleOnAccept={handleStartSalePayment}
+          handleOnAccept={handleSalePaymentProces}
           handleOnCancel={handleCancelSale}/>
         <View style={tw`flex flex-row mt-10`} />
       </ScrollView>

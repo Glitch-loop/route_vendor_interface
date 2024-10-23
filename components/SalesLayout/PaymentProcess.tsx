@@ -1,7 +1,6 @@
 // Libraries
 import React, { useState } from 'react';
-import { View } from 'react-native';
-import tw from 'twrnc';
+import { Alert, ToastAndroid } from 'react-native';
 
 // Interfaces
 import { IPaymentMethod } from '../../interfaces/interfaces';
@@ -18,64 +17,83 @@ const PaymentProcess = ({
   transactionIdentifier,
   totalToPay,
   paymentProcess,
-  handleOnPaymentProcess,
-  handleOnSelectPaymentMethod,
-  handleOnCashMovement,
+  onCancelPaymentProcess,
+  onSelectPaymentMethod,
+  onCashReceived,
 }:{
   transactionIdentifier:string,
   totalToPay:number,
   paymentProcess:boolean,
-  handleOnPaymentProcess:any,
-  handleOnSelectPaymentMethod:any,
-  handleOnCashMovement:any,
+  onCancelPaymentProcess:any,
+  onSelectPaymentMethod:any,
+  onCashReception:any,
 }) => {
 
   const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
-  const [cashMovement, setCashMovement] = useState<number>(0);
-
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
+
+  const [cashReceived, setCashReceived] = useState<number>(0);
 
   const handleConfirmPaymentMethod = () => {
     setConfirmedPaymentMethod(true);
   };
 
 
-  const handlePaySale = () => {
-    console.log("Closing sale")
-  }
+  const handlerPaySale = () => {
+    let resultCashMovement = 0;
+    let messageToShow = '';
+
+    if (paymnetMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f') {
+      /*
+        If the vendor selected the cash payment method, it has to be validated.
+      */
+      if (totalToPay >= 0) {
+          /* It means the vendor will receive money, product of a sale or due to a product devolution with positive balance */
+        resultCashMovement = cashReceived - totalToPay;
+        messageToShow = 'El dinero a recibir tiene que ser igual o mayor al total.';
+      } else {
+        /* It means the vendor will give money, product of a product devolution with negative balance */
+        resultCashMovement = totalToPay + cashReceived;
+        messageToShow = 'El dinero a entregar tiene que cubrir el monto a reponer.';
+      }
+
+      if (resultCashMovement >= 0) {
+        // Call to the function to register the sale
+        console.log("Closing sale")
+      } else {
+        ToastAndroid.show(messageToShow, 1500);
+      }
+    }
+  };
 
   const handlerDeclineDialog = () => {
-    handleOnPaymentProcess(false);
+    setCashReceived(0);
+    onCancelPaymentProcess(false);
     setPaymentMethod(PAYMENT_METHODS[0]);
     setConfirmedPaymentMethod(false);
   };
 
-  const onSelectPaymentMethod = (selectedPaymentMethod:IPaymentMethod) => {
-    handleOnSelectPaymentMethod(selectedPaymentMethod);
+  const handlerSelectPaymentMethod = (selectedPaymentMethod:IPaymentMethod) => {
+    onSelectPaymentMethod(selectedPaymentMethod);
     setPaymentMethod(selectedPaymentMethod);
-  };
-
-  const onCashMovement = (cashMovementDone:number) => {
-    setCashMovement(cashMovementDone);
-    handleOnCashMovement(cashMovementDone);
   };
 
   return (
     <ActionDialog
     visible={paymentProcess}
-    onAcceptDialog={confirmedPaymentMethod === true ? handlePaySale : handleConfirmPaymentMethod}
+    onAcceptDialog={confirmedPaymentMethod === true ? handlerPaySale : handleConfirmPaymentMethod}
     onDeclinedialog={handlerDeclineDialog}>
       { confirmedPaymentMethod === true ?
         <PaymentMenu
           transactionIdentifier={transactionIdentifier}
           total={totalToPay}
           paymentMethod={paymnetMethod}
-          handleOnRecieveCash={(cashMovementDone:number) => onCashMovement(cashMovementDone)}/>
+          onCashReceived={setCashReceived}/>
           :
         <PaymentMethod
           currentPaymentMethod={paymnetMethod}
           onSelectPaymentMethod={
-            (selectedPaymentMethod:IPaymentMethod) => onSelectPaymentMethod(selectedPaymentMethod)}/>
+            (selectedPaymentMethod:IPaymentMethod) => handlerSelectPaymentMethod(selectedPaymentMethod)}/>
       }
     </ActionDialog>
   );

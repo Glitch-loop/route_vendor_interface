@@ -1,12 +1,16 @@
+// Libraries
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import tw from 'twrnc';
 
+// Interfaces
 import { IPaymentMethod } from '../../interfaces/interfaces';
+
+// Utils
 import { getTransactionIdentifier, calculateChange } from '../../utils/saleFunction';
 
-function initializeState(total:number, paymentMethod: IPaymentMethod, setSuperiorState:any) {
+function initializeState(total:number, paymentMethod: IPaymentMethod) {
   let result:number = 0;
   if (paymentMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f') {
     // Cash method
@@ -19,36 +23,31 @@ function initializeState(total:number, paymentMethod: IPaymentMethod, setSuperio
     result = 0;
   }
 
-  setSuperiorState(result);
-
   return result;
 }
-
 
 const PaymentMenu = ({
   transactionIdentifier,
   paymentMethod,
   total,
-  handleOnRecieveCash,
+  onCashReceived,
 }:{
   transactionIdentifier:string
   paymentMethod:IPaymentMethod
   total:number,
-  handleOnRecieveCash:any,
+  onCashReceived:any,
 }) => {
   /*By default, cash method is selected*/
-  const [moneyReceived, setMoneyReceived]
-    = useState<number>(initializeState(total, paymentMethod, handleOnRecieveCash));
+  const [cashReceived, setCashReceived] = useState<number>(initializeState(total, paymentMethod, onCashReceived));
 
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);
     if (isNaN(parsedInput)) {
-      setMoneyReceived(0);
-      handleOnRecieveCash(0);
+      onCashReceived(0);
+      setCashReceived(0);
     } else {
-      console.log("money: ", parsedInput)
-      setMoneyReceived(parsedInput);
-      handleOnRecieveCash(parsedInput);
+      onCashReceived(parsedInput);
+      setCashReceived(parsedInput);
     }
   };
 
@@ -77,9 +76,7 @@ const PaymentMenu = ({
             <TextInput
               keyboardType={'numeric'}
               style={tw`border border-solid bg-white rounded-md h-5 text-center`}
-              onChangeText={(text) => {
-                handleTextChange(text);
-              }}/>
+              onChangeText={(text) => { handleTextChange(text); }}/>
           </View>
         </View>
       }
@@ -87,10 +84,10 @@ const PaymentMenu = ({
       { paymentMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f' &&
         <View style={tw`flex flex-row justify-end items-center my-1`}>
           <Text style={tw`mr-3 text-black text-xl text-right flex flex-row basis-1/2 justify-end`}>
-            Cambio { total < 0 ? '(a recibir)' : '(a entregar)'}:
+            Cambio { total > 0 ? '(a entregar)' : '(a recibir)'}:
           </Text>
           <Text style={tw`text-black text-xl text-left flex flex-row basis-1/2`}>
-            ${calculateChange(total, moneyReceived)}
+            ${calculateChange(total, cashReceived)}
           </Text>
         </View>
       }
