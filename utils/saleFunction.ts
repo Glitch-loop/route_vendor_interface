@@ -348,14 +348,13 @@ export function getTicketSale(
   ticket += getTicketLine(`${greatTotal}`,true, (showTotalPosition - 11));
 
   if (routeTransacion !== undefined) {
-    ticket += getTicketLine(`Metodo de pago (${getPaymentMethod(routeTransacion, PAYMENT_METHODS).payment_method_name}):`,false); // 11-lenght characters string
+    ticket += getTicketLine(`Metodo de pago (${getPaymentMethod(routeTransacion, PAYMENT_METHODS).payment_method_name}):`,false);
     ticket += getTicketLine(`${cashReceived}`,true, (showTotalPosition - 32));
-    ticket += getTicketLine(`Cambio ${greatTotalNumber < 0 ? '(a recibir)' : '(a entregar)'}:`,false); // 11-lenght characters string
-    ticket += getTicketLine(`$${calculateChange(greatTotalNumber, routeTransacion.cash_received)}`,true, (showTotalPosition - (greatTotalNumber < 0 ? 19 : 20)));
+    ticket += getTicketLine('Cambio:',false);
+    ticket += getTicketLine(`$${calculateChange(greatTotalNumber, routeTransacion.cash_received)}`,true, (showTotalPosition - 7));
   }
 
   // Finishing ticket
-  // ticket += '\n\n\n';
   ticket += '\n\n';
 
   return ticket;
