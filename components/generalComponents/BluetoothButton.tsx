@@ -5,7 +5,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-// 
+
 import { getPrinterBluetoothConnction, printTicketBluetooth } from '../../services/printerService';
 
 const BluetoothButton = ({}:{}) => {

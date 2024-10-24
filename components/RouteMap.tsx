@@ -1,91 +1,39 @@
+// Librarires
 import React, { useState, useEffect } from 'react';
-import { View, PermissionsAndroid, Platform } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
 import tw from 'twrnc';
 
+// Services
+import {
+  getCurrentLocation,
+} from '../services/geolocationService';
+
+import { ICoordinates } from '../interfaces/interfaces';
+
+
 const RouteMap = ({latitude, longitude}:{latitude:number, longitude:number}) => {
-  const [location, setLocation] = useState({
-    latitude: latitude,
-    longitude: longitude,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
-
-  const [permissionGranted, setPermissionGranted] = useState(false);
-
-  // Request location permission for Android (iOS handles this automatically with the plist)
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: "Location Access Permission",
-            message: "We need access to your location to show it on the map.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK"
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          setPermissionGranted(true);
-        } else {
-          console.log("Location permission denied");
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    } else {
-      setPermissionGranted(true); // Assume permission granted on iOS
-    }
-  };
-
-  // Get the current location
-  const getCurrentLocation = () => {
-    if (permissionGranted) {
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          // setLocation({
-          //   ...location,
-          //   latitude,
-          //   longitude,
-          // });
-        },
-        (error) => {
-          console.log(error.code, error.message);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    } else {
-      console.log('Ask permissions');
-    }
-  };
-
-  useEffect(() => {
-    requestLocationPermission();
-    if (permissionGranted) {
-      getCurrentLocation();
-    }
-  }, [permissionGranted]);
+  const [location, setLocation] = useState(
+    {
+      latitude: latitude,
+      longitude: longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
 
   return (
-    // <View style={tw`flex-1 w-full`}>
-      <MapView
-        style={tw`flex-1 w-full`}
-        region={location}
-        showsUserLocation={true}  // Show the user's current location
-        showsMyLocationButton={true}  // Button to return to user's location
-      >
-        {/* Add a marker at the user's current position */}
-        <Marker
-          coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-          title="You are here"
-          description="This is your current location"
-        />
-      </MapView>
-    // </View>
+    <MapView
+      style={tw`flex-1 w-full`}
+      region={location} // Initial perspective of the map
+      showsUserLocation={true}  // Show the user's current location
+      showsMyLocationButton={true}  // Button to return to user's location
+    >
+      {/* Add a marker at the user's current position */}
+      <Marker
+        coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+        title="You are here"
+        description="This is your current location"
+      />
+    </MapView>
   );
 };
 

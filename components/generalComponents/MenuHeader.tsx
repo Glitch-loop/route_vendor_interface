@@ -1,5 +1,5 @@
 // Libraries
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import tw from 'twrnc';
 
@@ -73,7 +73,8 @@ const MenuHeader = ({
   const stores = useSelector((state: RootState) => state.stores);
 
 
-  const [store, setStore] = useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation, stores));
+  // Read-only variables
+  let store:IStore&IStoreStatusDay = getStoreFromContext(currentOperation, stores);
 
   return (
     <View style={tw`flex flex-row items-center ${getJustifyContentConfiguration(showGoBackButton,

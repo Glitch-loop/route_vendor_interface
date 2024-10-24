@@ -5,7 +5,7 @@ import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces and enums
-import { enumStoreStates } from '../interfaces/enumStoreStates';
+import { IDayOperation } from '../interfaces/interfaces';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,12 +18,12 @@ import MenuHeader from '../components/generalComponents/MenuHeader';
 import TypeOperationItem from '../components/TypeOperationItem';
 
 // Utils
-import { IDayOperation } from '../interfaces/interfaces';
+import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 
 // Embedded database
 import { updateDayOperation } from '../queries/SQLite/sqlLiteQueries';
-import { getColorContextOfStore } from '../utils/routesFunctions';
+import { getGeolocationStatus } from '../services/geolocationService';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)

@@ -40,6 +40,11 @@ export interface IStore {
   status_store: string;
 }
 
+export interface ICoordinates {
+  latitude: number;
+  longitude: number;
+}
+
 
 export interface IUser {
   id_vendor: string;

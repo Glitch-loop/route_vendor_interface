@@ -132,7 +132,7 @@ const SalesLayout = ({
   const handlerPaySale = async (receivedCash:number, paymnetMethod:IPaymentMethod) => {
     /*This handler inserts the sale in the database*/
     /* Validating that the payment a correct state for the payment method*/
-    setFinishedSale(true); // Finishing sale payment process 
+    setFinishedSale(true); // Finishing sale payment process.
     try {
     /*
       When a vendor vistis a store, a transaction is created.
@@ -389,21 +389,12 @@ const SalesLayout = ({
     }
   };
 
-  /*
-    This function is in charge of updating the redux states and embedded database.
-    This database is in the case on which the sale was completed successfully.
-  */
   const handlerOnSuccessfullCompletionSale = async () => {
-
-
-    console.log("Go to route menu")
     navigation.navigate('routeOperationMenu');
   };
 
   const handlerOnFailedCompletionSale = () => {
-    // Updating the status of the store
-
-    // Moving to the next operation
+    // Updating the status of the store and moving to the next operation.
     dispatch(setNextOperation());
     navigation.navigate('routeOperationMenu');
   };

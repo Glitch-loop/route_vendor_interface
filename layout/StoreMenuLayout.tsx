@@ -1,10 +1,9 @@
 // Libraries
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import tw from 'twrnc';
 
 // Interface and enums
-import { enumStoreStates } from '../interfaces/enumStoreStates';
 import {
   IRouteTransaction,
   IRouteTransactionOperation,
@@ -85,18 +84,17 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   const stores = useSelector((state: RootState) => state.stores);
 
   // Defining state
-  const [store, setStore] =
-    useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation, stores));
   const [isConsultTransaction, setIsConsultTransaction] = useState<boolean>(false);
   const [routeTransactions, setRouteTransactions] = useState<IRouteTransaction[]>([]);
-  const [
-    routeTransactionOperations,
-    setRouteTransactionOperations,
-  ] = useState<Map<string, IRouteTransactionOperation[]>>(new Map());
+  const [ routeTransactionOperations, setRouteTransactionOperations]
+    = useState<Map<string, IRouteTransactionOperation[]>>(new Map());
   const [
     routeTransactionOperationDescriptions,
     setRouteTransactionOperationDescriptions,
   ] = useState<Map<string, IRouteTransactionOperationDescription[]>>(new Map());
+
+  // Definig only-read variables
+  let store:IStore&IStoreStatusDay = getStoreFromContext(currentOperation, stores);
 
   // handlres
   const handlerGoBackToMainOperationMenu = () => {

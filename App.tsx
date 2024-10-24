@@ -34,6 +34,8 @@ import {
 // Services
 import { getPrinterBluetoothConnction } from './services/printerService';
 
+import { requestGeolocalizationPermissionsProcess } from './services/geolocationService';
+
 export type RootStackParamList = {
   routeSelection: undefined;
   selectionRouteOperation: undefined;
@@ -57,8 +59,12 @@ async function databaseInitialization() {
     await createEmbeddedDatabase();
 
 
+    // Verifying permissions
     // Connecting to the printer
     //await getPrinterBluetoothConnction();
+
+    // Geolocalization permissions
+    await requestGeolocalizationPermissionsProcess();
 
   } catch (error) {
     console.log('Error: ', error);
