@@ -14,7 +14,7 @@ import { RootState } from '../redux/store';
 
 // Components
 import GoButton from './generalComponents/GoButton';
-
+import BluetoothButton from './generalComponents/BluetoothButton';
 
 const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
   // Redux (context definitions)
@@ -33,6 +33,10 @@ const RouteHeader = ({onGoBack}:{onGoBack:any}) => {
         </Text>
         <Text style={tw`text-base text-black text-center`}>{DAYS[routeDay.id_day].day_name}</Text>
       </View>
+      <BluetoothButton
+      iconName={'printer'}
+      onPressButton={() => {}}
+      />
     </View>
   );
 };

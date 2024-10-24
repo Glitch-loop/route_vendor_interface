@@ -66,7 +66,12 @@ import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
-import { setArrayDayOperations, setDayOperation, setDayOperationBeforeCurrentOpeation, setNextOperation } from '../redux/slices/dayOperationsSlice';
+import {
+  setArrayDayOperations,
+  setDayOperation,
+  setDayOperationBeforeCurrentOpeation,
+  setNextOperation,
+} from '../redux/slices/dayOperationsSlice';
 
 // Moocks
 import {

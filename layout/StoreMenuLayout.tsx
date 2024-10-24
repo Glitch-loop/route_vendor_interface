@@ -10,6 +10,9 @@ import { enumStoreStates } from '../interfaces/enumStoreStates';
 import RouteMap from '../components/RouteMap';
 import SummarizeTransaction from '../components/TransactionComponents/SummarizeTransaction';
 
+// Utils
+import { getColorContextOfStore } from '../utils/routesFunctions';
+
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
@@ -17,6 +20,7 @@ import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
 import { IDayOperation, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription, IStore, IStoreStatusDay } from '../interfaces/interfaces';
 import GoButton from '../components/generalComponents/GoButton';
 import { getRouteTransactionByStore, getRouteTransactionOperationDescriptions, getRouteTransactionOperations } from '../queries/SQLite/sqlLiteQueries';
+import MenuHeader from '../components/generalComponents/MenuHeader';
 
 const defaultStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -91,28 +95,7 @@ function displayingClientInformation(store:IStore) {
   return ownerStoreInformation;
 }
 
-function contextOfStore(store:IStore&IStoreStatusDay, currentOperation:IDayOperation) {
-  let style = '';
 
-
-  if (currentOperation.current_operation === 1) {
-    style = 'flex flex-row h-6 w-6 bg-indigo-500 rounded-full';
-  } else {
-    if (store.route_day_state === enumStoreStates.NEW_CLIENT) {
-      style = 'flex flex-row h-6 w-6 bg-green-400 rounded-full';
-    } else if (store.route_day_state === enumStoreStates.SPECIAL_SALE) {
-      style = 'flex flex-row h-6 w-6 bg-green-600 rounded-full';
-    } else if (store.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
-      style = 'flex flex-row h-6 w-6 bg-amber-500 rounded-full';
-    } else if (store.route_day_state === enumStoreStates.SERVED) {
-      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
-    } else {
-      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
-    }
-  }
-
-  return style;
-}
 
 const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
 
@@ -201,19 +184,12 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
     // Main menu of store
     <View style={tw`w-full flex-1 justify-center items-center`}>
       <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
-        <GoButton
-          iconName={'chevron-left'}
-          onPressButton={handlerGoBackToMainOperationMenu}/>
-          <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
-          <Text style={tw`text-2xl text-black mx-1`}>|</Text>
-          <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
-          <View style={tw`${contextOfStore(store, currentOperation)}`} />
+        <MenuHeader onGoBack={handlerGoBackToMainOperationMenu}/>
       </View>
       <View style={tw`h-1/2 w-11/12 flex-1 border-solid border-2 rounded-sm`}>
         <RouteMap
           latitude={parseFloat(store.latitude)}
-          longitude={parseFloat(store.longuitude)}
-        />
+          longitude={parseFloat(store.longuitude)}/>
       </View>
       <View style={tw`flex-1 w-11/12 flex-col`}>
         <View style={tw`flex flex-row basis-1/3 justify-around items-center`}>
@@ -260,13 +236,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
     // Transaction visualization
     <View style={tw`w-full flex-1 justify-start items-center`}>
       <View style={tw`w-full flex my-5 flex-row justify-around items-center`}>
-        <GoButton
-          iconName={'chevron-left'}
-          onPressButton={handlerGoBackToStoreMenu}/>
-          <Text style={tw`text-3xl text-black`}>Ruta 1</Text>
-          <Text style={tw`text-2xl text-black mx-1`}>|</Text>
-          <Text style={tw`text-xl  text-black max-w-1/2`}>{store.store_name}</Text>
-          <View style={tw`${contextOfStore(store, currentOperation)}`} />
+        <MenuHeader onGoBack={handlerGoBackToStoreMenu}/>
       </View>
         { routeTransactions.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>

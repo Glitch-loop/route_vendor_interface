@@ -28,7 +28,6 @@ import {
   getProductDevolutionBalanceWithoutNegativeNumber,
   getTicketSale,
 } from '../utils/saleFunction';
-import PAYMENT_METHODS from '../utils/paymentMethod';
 import DAYS_OPERATIONS from '../lib/day_operations';
 
 // Components
@@ -36,7 +35,6 @@ import DAYS_OPERATIONS from '../lib/day_operations';
 import TableProduct from '../components/SalesLayout/TableProduct';
 import SaleSummarize from '../components/SalesLayout/SaleSummarize';
 import ConfirmationBand from '../components/ConfirmationBand';
-import StoreHeader from '../components/SalesLayout/StoreHeader';
 import ResultSale from '../components/ResultSale';
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import PaymentProcess from '../components/SalesLayout/PaymentProcess';
@@ -63,6 +61,7 @@ import {
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
+import MenuHeader from '../components/generalComponents/MenuHeader';
 
 function getInitialInventoryParametersFromRoute(params:any, inventoryName:string) {
   if (params === undefined) {
@@ -71,7 +70,6 @@ function getInitialInventoryParametersFromRoute(params:any, inventoryName:string
     return avoidingUndefinedItem(params[inventoryName], []);
   }
 }
-
 
 // Axiliar funciton
 const SalesLayout = ({
@@ -442,8 +440,8 @@ const SalesLayout = ({
             onCancelPaymentProcess={setStartPaymentProcess}
             onPaySale={(receivedCash:number, paymnetMethod:IPaymentMethod) => handlerPaySale(receivedCash, paymnetMethod)}/>
         <View style={tw`w-full flex flex-1 flex-col items-center`}>
-          <View style={tw`my-3 ml-10 w-full flex flex-row justify-center items-center`}>
-            <StoreHeader onGoBack={handleOnGoBack} />
+          <View style={tw`my-3 w-full flex flex-row justify-center items-center`}>
+            <MenuHeader onGoBack={handleOnGoBack}/>
           </View>
           <View style={tw`w-full flex flex-row`}>
             <TableProduct

@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect } from 'react';
-import { BackHandler, ScrollView, View, Pressable, Alert } from 'react-native';
+import { BackHandler, ScrollView, View, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
@@ -14,9 +14,14 @@ import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 // Components
 import RouteCard from '../components/RouteCard';
+import MenuHeader from '../components/generalComponents/MenuHeader';
 import TypeOperationItem from '../components/TypeOperationItem';
+
+// Utils
 import { IDayOperation } from '../interfaces/interfaces';
 import DAYS_OPERATIONS from '../lib/day_operations';
+
+// Embedded database
 import { updateDayOperation } from '../queries/SQLite/sqlLiteQueries';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
@@ -76,9 +81,16 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   return (
     <View style={tw`flex-1`}>
       <ScrollView
-      style={tw`w-full h-full flex flex-col`}
-      scrollEventThrottle={16}>
-        <Text style={tw`w-full ml-3 my-3 text-4xl`}>{routeDay.route_name}</Text>
+        style={tw`w-full h-full flex flex-col`}
+        scrollEventThrottle={16}>
+        <View style={tw`my-5`}>
+          <MenuHeader
+            showGoBackButton={false}
+            showStoreName={false}
+            showPrinterButton={false}
+            onGoBack={() => {}}/>
+        </View>
+        {/* <Text style={tw`w-full ml-3 my-3 text-4xl`}>{routeDay.route_name}</Text> */}
         <View style={tw`w-full flex flex-row justify-center`}>
           <View style={tw`w-11/12 flex flex-row justify-start`}>
             <TypeOperationItem />
@@ -94,9 +106,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             let typeOperation = true; /*true = client, false = inventory operation*/
             const index = stores.findIndex(store => store.id_store === dayOperation.id_item);
             if (index === -1) {
-              /*
-                If an index was not found, it means that the operation is not related to a client.
-              */
+              /* If an index was not found, it means that the operation is not related to a client. */
 
               // Style for inventory operation card
               style = 'my-2 bg-red-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';

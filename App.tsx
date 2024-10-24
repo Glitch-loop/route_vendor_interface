@@ -58,7 +58,7 @@ async function databaseInitialization() {
 
 
     // Connecting to the printer
-    await getPrinterBluetoothConnction();
+    //await getPrinterBluetoothConnction();
 
   } catch (error) {
     console.log('Error: ', error);
