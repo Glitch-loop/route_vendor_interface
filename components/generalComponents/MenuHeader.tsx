@@ -1,10 +1,10 @@
 // Libraries
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import tw from 'twrnc';
 
 // Interfaces
-import { IDayOperation, IStore, IStoreStatusDay } from '../../interfaces/interfaces';
+import { IStore, IStoreStatusDay } from '../../interfaces/interfaces';
 
 // Redux context
 import { useSelector } from 'react-redux';
@@ -13,38 +13,10 @@ import { RootState } from '../../redux/store';
 // Components
 import GoButton from '../generalComponents/GoButton';
 import BluetoothButton from '../generalComponents/BluetoothButton';
-import { getColorContextOfStore } from '../../utils/routesFunctions';
+import { getColorContextOfStore, getNameOfTheStore } from '../../utils/routesFunctions';
 
 // Auxiliar function
-function getNameOfTheStore(currentOperation:IDayOperation, stores:(IStore&IStoreStatusDay)[]):IStore&IStoreStatusDay {
-  const emptyStore:IStore&IStoreStatusDay = {
-    id_store: '',
-    street: '',
-    ext_number: '',
-    colony: '',
-    postal_code: '',
-    address_reference: '',
-    store_name: '',
-    owner_name: '',
-    cellphone: '',
-    latitude: '',
-    longuitude: '',
-    id_creator: 0,
-    creation_date: '',
-    creation_context: '',
-    status_store: '',
-    route_day_state: 0,
-  };
 
-  const foundStore: (IStore & IStoreStatusDay) |undefined = stores
-    .find(store => store.id_store === currentOperation.id_item);
-
-  if(foundStore === undefined) {
-    return emptyStore;
-  } else {
-    return foundStore;
-  }
-}
 
 function getJustifyContentConfiguration(showGoBackButton:boolean, showRouteName:boolean, showStoreName:boolean, showPrinterButton:boolean):string {
   let justifyConent = 'justify-around w-full';
@@ -123,7 +95,7 @@ const MenuHeader = ({
         <Text style={tw`max-w-25 ml-3 text-lg text-black text-center align-middle`}> { store.store_name } </Text>
       }
       { showStoreName &&
-        <View style={tw`${ getColorContextOfStore(store, currentOperation) }`} />
+        <View style={tw`${ getColorContextOfStore(store, currentOperation) } rounded-full flex flex-row h-6 w-6`} />
       }
       { showPrinterButton &&
         <View style={tw`mr-0`}>

@@ -5,22 +5,30 @@ import tw from 'twrnc';
 
 // Interface and enums
 import { enumStoreStates } from '../interfaces/enumStoreStates';
+import { 
+  IRouteTransaction,
+  IRouteTransactionOperation,
+  IRouteTransactionOperationDescription,
+  IStore,
+  IStoreStatusDay,
+} from '../interfaces/interfaces';
 
 // Components
 import RouteMap from '../components/RouteMap';
 import SummarizeTransaction from '../components/TransactionComponents/SummarizeTransaction';
-
-// Utils
-import { getColorContextOfStore } from '../utils/routesFunctions';
+import MenuHeader from '../components/generalComponents/MenuHeader';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
-import { IDayOperation, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription, IStore, IStoreStatusDay } from '../interfaces/interfaces';
-import GoButton from '../components/generalComponents/GoButton';
-import { getRouteTransactionByStore, getRouteTransactionOperationDescriptions, getRouteTransactionOperations } from '../queries/SQLite/sqlLiteQueries';
-import MenuHeader from '../components/generalComponents/MenuHeader';
+
+// Embedded database
+import {
+  getRouteTransactionByStore,
+  getRouteTransactionOperationDescriptions,
+  getRouteTransactionOperations,
+} from '../queries/SQLite/sqlLiteQueries';
 
 const defaultStore:IStore&IStoreStatusDay = {
   id_store: '',

@@ -36,20 +36,51 @@ export function getColorContextOfStore(store:IStore&IStoreStatusDay, currentOper
   let style = '';
 
   if (currentOperation.current_operation === 1) {
-    style = 'flex flex-row h-6 w-6 bg-indigo-500 rounded-full';
+    style = 'bg-indigo-500'; // Current store (client of the route)
   } else {
     if (store.route_day_state === enumStoreStates.NEW_CLIENT) {
-      style = 'flex flex-row h-6 w-6 bg-green-400 rounded-full';
+      style = 'bg-green-400'; // New client
     } else if (store.route_day_state === enumStoreStates.SPECIAL_SALE) {
-      style = 'flex flex-row h-6 w-6 bg-green-600 rounded-full';
+      style = 'bg-orange-600'; // Selling for a client that is outside of the route.
     } else if (store.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
-      style = 'flex flex-row h-6 w-6 bg-amber-500 rounded-full';
+      // Client that asked to be visited (he doesn't belong to the current route)
+      style = 'bg-amber-500';
     } else if (store.route_day_state === enumStoreStates.SERVED) {
-      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
+      style = 'bg-amber-200/75'; // Client of the route that has been visited.
     } else {
-      style = 'flex flex-row h-6 w-6 bg-amber-200/75 rounded-full';
+      style = 'bg-amber-300'; // Client of the current route that is pending to visit. 
     }
   }
 
   return style;
+}
+
+export function getNameOfTheStore(currentOperation:IDayOperation, stores:(IStore&IStoreStatusDay)[]):IStore&IStoreStatusDay {
+  const emptyStore:IStore&IStoreStatusDay = {
+    id_store: '',
+    street: '',
+    ext_number: '',
+    colony: '',
+    postal_code: '',
+    address_reference: '',
+    store_name: '',
+    owner_name: '',
+    cellphone: '',
+    latitude: '',
+    longuitude: '',
+    id_creator: 0,
+    creation_date: '',
+    creation_context: '',
+    status_store: '',
+    route_day_state: 0,
+  };
+
+  const foundStore: (IStore & IStoreStatusDay) |undefined = stores
+    .find(store => store.id_store === currentOperation.id_item);
+
+  if(foundStore === undefined) {
+    return emptyStore;
+  } else {
+    return foundStore;
+  }
 }
