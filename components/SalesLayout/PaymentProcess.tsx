@@ -57,7 +57,6 @@ const PaymentProcess = ({
 
       if (resultCashMovement >= 0) {
         // Call to the function to register the sale
-        console.log("Closing sale")
         await onPaySale(cashReceived, paymnetMethod);
       } else {
         ToastAndroid.show(messageToShow, 1500);

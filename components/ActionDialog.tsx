@@ -1,8 +1,10 @@
+// Libraries
 import React from 'react';
 import { View, KeyboardAvoidingView, Platform } from 'react-native';
 import tw from 'twrnc';
-import Icon from 'react-native-vector-icons/FontAwesome6';
 import { Dialog, Portal } from 'react-native-paper';
+
+// Components
 import ConfirmationBand from './ConfirmationBand';
 
 

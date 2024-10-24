@@ -1,10 +1,14 @@
+// Libraries
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import tw from 'twrnc';
 
-import PAYMENT_METHODS from '../../utils/paymentMethod';
+// Utils
 import { IPaymentMethod } from '../../interfaces/interfaces';
+
+// Utils
+import PAYMENT_METHODS from '../../utils/paymentMethod';
 
 const PaymentMethod = ({
     currentPaymentMethod,
