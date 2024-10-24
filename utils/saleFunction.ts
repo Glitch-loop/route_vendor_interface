@@ -1,5 +1,6 @@
 import { IPaymentMethod, IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
 import { time_posix_format } from './momentFormat';
+import PAYMENT_METHODS from './paymentMethod';
 
 
 // Related to selling calculations
@@ -230,6 +231,8 @@ export function getTicketSale(
   let subtotalSaleProduct = getProductDevolutionBalance(productsSale,[]);
   let productDevolutionBalance = '$0';
   let greatTotal = '$0';
+  let cashReceived = '$0';
+  let greatTotalNumber = (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution);
 
   /*
     Variables for setting the format of the ticket.
@@ -272,6 +275,12 @@ export function getTicketSale(
     }
 
     date = routeTransacion.date;
+
+    if (routeTransacion.cash_received < 0) {
+      cashReceived = '$' + (routeTransacion.cash_received * -1).toString();
+    } else {
+      cashReceived = '$' + (routeTransacion.cash_received).toString();
+    }
   }
 
   if (storeTransaction !== undefined) {
@@ -282,6 +291,8 @@ export function getTicketSale(
     vendor = vendorTransaction.name;
   }
 
+
+  
   // Header of the ticket
   ticket += getTicketLine('Ferdis', true, 13);
   ticket += getTicketLine(`Fecha: ${date}`, true);
@@ -337,6 +348,13 @@ export function getTicketSale(
 
   ticket += getTicketLine('Gran total:',false); // 11-lenght characters string
   ticket += getTicketLine(`${greatTotal}`,true, (showTotalPosition - 11));
+
+  if (routeTransacion !== undefined) {
+    ticket += getTicketLine(`Metodo de pago (${getPaymentMethod(routeTransacion, PAYMENT_METHODS).payment_method_name}):`,false); // 11-lenght characters string
+    ticket += getTicketLine(`${cashReceived}`,true, (showTotalPosition - 11));
+    ticket += getTicketLine('Cambio:',false); // 11-lenght characters string
+    ticket += getTicketLine(`$${calculateChange(greatTotalNumber, routeTransacion.cash_received)}`,true, (showTotalPosition - 11));
+  }
 
   // Finishing ticket
   ticket += '\n\n\n';
