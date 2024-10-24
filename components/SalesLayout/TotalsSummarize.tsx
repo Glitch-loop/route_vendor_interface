@@ -120,7 +120,7 @@ const TotalsSummarize = ({
       { routeTransaction !== undefined &&
         <View style={tw`w-full flex flex-row`}>
           <Text style={tw`flex basis-4/6 italic text-base text-black text-right font-bold italic`}>
-            Cambio { greatTotalNumber < 0 ? '(a recibir)' : '(a entregar)'}:
+            Cambio:
           </Text>
           <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle font-bold italic`}>
             ${ calculateChange(greatTotalNumber, routeTransaction.cash_received) }
