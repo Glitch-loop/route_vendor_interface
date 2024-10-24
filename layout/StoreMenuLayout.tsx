@@ -5,7 +5,7 @@ import tw from 'twrnc';
 
 // Interface and enums
 import { enumStoreStates } from '../interfaces/enumStoreStates';
-import { 
+import {
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
@@ -30,35 +30,9 @@ import {
   getRouteTransactionOperations,
 } from '../queries/SQLite/sqlLiteQueries';
 
-const defaultStore:IStore&IStoreStatusDay = {
-  id_store: '',
-  street: '',
-  ext_number: '',
-  colony: '',
-  postal_code: '',
-  address_reference: '',
-  store_name: '',
-  owner_name: '',
-  cellphone: '',
-  latitude: '',
-  longuitude: '',
-  id_creator: 0,
-  creation_date: '',
-  creation_context: '',
-  status_store: '',
-  route_day_state: enumStoreStates.NUETRAL_STATE,
-};
+// Utils
+import { getStoreFromContext } from '../utils/routesFunctions';
 
-function getStoreFromContext(idStore:string, stores:(IStore&IStoreStatusDay)[]) {
-  const foundStore:IStore&IStoreStatusDay|undefined = stores
-  .find((store) => { return store.id_store === idStore; });
-
-  if (foundStore === undefined) {
-    return defaultStore;
-  } else {
-    return foundStore;
-  }
-}
 
 function buildAddress(store:IStore) {
   let address = '';
@@ -103,8 +77,6 @@ function displayingClientInformation(store:IStore) {
   return ownerStoreInformation;
 }
 
-
-
 const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
 
   //Defining redux context
@@ -114,7 +86,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
 
   // Defining state
   const [store, setStore] =
-    useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation.id_item, stores));
+    useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation, stores));
   const [isConsultTransaction, setIsConsultTransaction] = useState<boolean>(false);
   const [routeTransactions, setRouteTransactions] = useState<IRouteTransaction[]>([]);
   const [
@@ -125,10 +97,6 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
     routeTransactionOperationDescriptions,
     setRouteTransactionOperationDescriptions,
   ] = useState<Map<string, IRouteTransactionOperationDescription[]>>(new Map());
-
-  useEffect(() => {
-    setStore(getStoreFromContext(currentOperation.id_item, stores));
-  },[currentOperation]);
 
   // handlres
   const handlerGoBackToMainOperationMenu = () => {

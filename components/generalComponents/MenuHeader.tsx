@@ -13,7 +13,7 @@ import { RootState } from '../../redux/store';
 // Components
 import GoButton from '../generalComponents/GoButton';
 import BluetoothButton from '../generalComponents/BluetoothButton';
-import { getColorContextOfStore, getNameOfTheStore } from '../../utils/routesFunctions';
+import { getColorContextOfStore, getStoreFromContext } from '../../utils/routesFunctions';
 
 // Auxiliar function
 
@@ -73,7 +73,7 @@ const MenuHeader = ({
   const stores = useSelector((state: RootState) => state.stores);
 
 
-  const [store, setStore] = useState<IStore&IStoreStatusDay>(getNameOfTheStore(currentOperation, stores));
+  const [store, setStore] = useState<IStore&IStoreStatusDay>(getStoreFromContext(currentOperation, stores));
 
   return (
     <View style={tw`flex flex-row items-center ${getJustifyContentConfiguration(showGoBackButton,

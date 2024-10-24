@@ -55,7 +55,7 @@ export function getColorContextOfStore(store:IStore&IStoreStatusDay, currentOper
   return style;
 }
 
-export function getNameOfTheStore(currentOperation:IDayOperation, stores:(IStore&IStoreStatusDay)[]):IStore&IStoreStatusDay {
+export function getStoreFromContext(currentOperation:IDayOperation, stores:(IStore&IStoreStatusDay)[]):IStore&IStoreStatusDay {
   const emptyStore:IStore&IStoreStatusDay = {
     id_store: '',
     street: '',
