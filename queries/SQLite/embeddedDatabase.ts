@@ -92,6 +92,7 @@ export const routeTransactionsEmbeddedTable = `
     id_route_transaction    TEXT NOT NULL UNIQUE,
     date                    TEXT NOT NULL,
     state                   INT NOT NULL,
+    cash_received           INT NOT NULL,
     id_work_day             TEXT NOT NULL,
     id_payment_method       TEXT NOT NULL,
     id_store                TEXT NOT NULL

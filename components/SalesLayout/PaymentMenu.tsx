@@ -38,7 +38,7 @@ const PaymentMenu = ({
   onCashReceived:any,
 }) => {
   /*By default, cash method is selected*/
-  const [cashReceived, setCashReceived] = useState<number>(initializeState(total, paymentMethod, onCashReceived));
+  const [cashReceived, setCashReceived] = useState<number>(initializeState(total, paymentMethod));
 
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);

@@ -77,15 +77,9 @@ function getInitialInventoryParametersFromRoute(params:any, inventoryName:string
 const SalesLayout = ({
     route,
     navigation,
-    initialProductDevolution,
-    initialProductReposition,
-    initialProductSale,
   }:{
     route:any,
     navigation:any,
-    initialProductDevolution?: IProductInventory[],
-    initialProductReposition?: IProductInventory[],
-    initialProductSale?: IProductInventory[],
   }) => {
 
   // Redux context definitions
@@ -99,7 +93,6 @@ const SalesLayout = ({
 
   // Use states
   /* States to store the current product according with their context. */
-
   const [productDevolution, setProductDevolution]
     = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
         route.params, 'initialProductDevolution'));
@@ -112,14 +105,11 @@ const SalesLayout = ({
     = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
       route.params, 'initialProductSale'));
 
-  /* States used to store the payment methods. */
-  const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
 
   /* States used in the logic of the layout. */
   const [startPaymentProcess, setStartPaymentProcess] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
-  const [cashMovement, setCashMovement] = useState<number>(0);
 
   // Handlers
   const handleCancelSale = () => {
@@ -141,11 +131,10 @@ const SalesLayout = ({
     that the sale is closed.
   */
 
-  const handlePaySale = async () => {
+  const handlerPaySale = async (receivedCash:number, paymnetMethod:IPaymentMethod) => {
     /*This handler inserts the sale in the database*/
     /* Validating that the payment a correct state for the payment method*/
-    console.log("Received money: ", cashMovement)
-    setFinishedSale(true);
+    setFinishedSale(true); // Finishing sale payment process 
     try {
     /*
       When a vendor vistis a store, a transaction is created.
@@ -167,6 +156,7 @@ const SalesLayout = ({
       id_route_transaction: uuidv4(),
       date: timestamp_format(),
       state: 1, // Indicating "active transaction"
+      cash_received: receivedCash,
       id_work_day: routeDay.id_work_day,
       id_payment_method: paymnetMethod.id_payment_method,
       id_store: currentOperation.id_item, // Item will be the id of the store in question.
@@ -447,11 +437,10 @@ const SalesLayout = ({
         */}
           <PaymentProcess
             transactionIdentifier={routeDay.id_route_day}
+            totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
             paymentProcess={startPaymentProcess}
             onCancelPaymentProcess={setStartPaymentProcess}
-            totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
-            onSelectPaymentMethod={setPaymentMethod}
-            onCashReception={setCashMovement}/>
+            onPaySale={(receivedCash:number, paymnetMethod:IPaymentMethod) => handlerPaySale(receivedCash, paymnetMethod)}/>
         <View style={tw`w-full flex flex-1 flex-col items-center`}>
           <View style={tw`my-3 ml-10 w-full flex flex-row justify-center items-center`}>
             <StoreHeader onGoBack={handleOnGoBack} />

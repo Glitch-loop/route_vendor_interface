@@ -1,6 +1,6 @@
 // Libraries
 import React, { useState } from 'react';
-import { Alert, ToastAndroid } from 'react-native';
+import { ToastAndroid } from 'react-native';
 
 // Interfaces
 import { IPaymentMethod } from '../../interfaces/interfaces';
@@ -18,20 +18,18 @@ const PaymentProcess = ({
   totalToPay,
   paymentProcess,
   onCancelPaymentProcess,
-  onSelectPaymentMethod,
-  onCashReceived,
+  onPaySale,
 }:{
   transactionIdentifier:string,
   totalToPay:number,
   paymentProcess:boolean,
   onCancelPaymentProcess:any,
-  onSelectPaymentMethod:any,
-  onCashReception:any,
+  onPaySale:any,
 }) => {
 
-  const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<boolean>(false);
 
+  const [paymnetMethod, setPaymentMethod] = useState<IPaymentMethod>(PAYMENT_METHODS[0]);
   const [cashReceived, setCashReceived] = useState<number>(0);
 
   const handleConfirmPaymentMethod = () => {
@@ -39,7 +37,7 @@ const PaymentProcess = ({
   };
 
 
-  const handlerPaySale = () => {
+  const handlerPaySale = async () => {
     let resultCashMovement = 0;
     let messageToShow = '';
 
@@ -60,6 +58,7 @@ const PaymentProcess = ({
       if (resultCashMovement >= 0) {
         // Call to the function to register the sale
         console.log("Closing sale")
+        await onPaySale(cashReceived, paymnetMethod);
       } else {
         ToastAndroid.show(messageToShow, 1500);
       }
@@ -74,7 +73,6 @@ const PaymentProcess = ({
   };
 
   const handlerSelectPaymentMethod = (selectedPaymentMethod:IPaymentMethod) => {
-    onSelectPaymentMethod(selectedPaymentMethod);
     setPaymentMethod(selectedPaymentMethod);
   };
 

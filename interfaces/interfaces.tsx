@@ -133,6 +133,7 @@ export interface IRouteTransaction {
   id_route_transaction: string;
   date: string;
   state: number;
+  cash_received: number;
   id_work_day: string;
   id_payment_method: string;
   id_store: string;
