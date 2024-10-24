@@ -6,7 +6,7 @@
  */
 // Libraries
 import React, {useEffect} from 'react';
-import { View } from 'react-native';
+import { AppRegistry, View } from 'react-native';
 import tw from 'twrnc';
 import { PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
@@ -44,6 +44,7 @@ export type RootStackParamList = {
   storeMenu: undefined;
   sales: undefined;
 };
+
 
 /*
   TODO: Place the database initilization at the beginning of the program

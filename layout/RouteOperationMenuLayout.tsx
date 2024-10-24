@@ -88,7 +88,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
           <MenuHeader
             showGoBackButton={false}
             showStoreName={false}
-            showPrinterButton={false}
+            showPrinterButton={true}
             onGoBack={() => {}}/>
         </View>
         {/* <Text style={tw`w-full ml-3 my-3 text-4xl`}>{routeDay.route_name}</Text> */}

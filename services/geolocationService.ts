@@ -17,7 +17,7 @@ export async function requestGeolocationPermission () {
       } else {
         grantedPermission = false;
         Alert.alert('Permisos necesarios',
-          'Para utilizar la aplicación, debes otorgar el permiso de geolocalización.', [{
+          'Para utilizar la aplicación, debes otorgar el permiso de geolocalización.\n\nSi anteriormente denegaste el sistema y le pusiste: no mostrar de nuevo al cuadro para otorgar permiso. Sigue la siguiente ruta para poder otorgar el permiso manualmente:\n\nConfiguración>Apps>App permissions>Ubicación>Busca la aplicación.', [{
               onPress:() => BackHandler.exitApp()}]);
       }
       return grantedPermission;
