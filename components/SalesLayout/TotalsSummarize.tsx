@@ -4,16 +4,21 @@ import { View, Text } from 'react-native';
 import tw from 'twrnc';
 
 // Interfaces
-import { IProductInventory } from '../../interfaces/interfaces';
+import { IProductInventory, IRouteTransaction } from '../../interfaces/interfaces';
 
 // Utils
-import { getProductDevolutionBalance } from '../../utils/saleFunction';
+import { getProductDevolutionBalance, getPaymentMethod, calculateChange } from '../../utils/saleFunction';
+import PAYMENT_METHODS from '../../utils/paymentMethod';
+
+
 
 const TotalsSummarize = ({
+  routeTransaction,
   productsDevolution,
   productsReposition,
   productsSale,
   }:{
+  routeTransaction?:IRouteTransaction
   productsDevolution:IProductInventory[],
   productsReposition:IProductInventory[],
   productsSale:IProductInventory[]
@@ -23,17 +28,31 @@ const TotalsSummarize = ({
   let subtotalSaleProduct = getProductDevolutionBalance(productsSale,[]);
   let productDevolutionBalance = '$0';
   let greatTotal = '$0';
+  let cashReceived = '$0';
+  let greatTotalNumber = (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution);
 
+  // Getting product devolution balance
   if (subtotalProductReposition - subtotalProductDevolution < 0) {
     productDevolutionBalance = '-$' + ((subtotalProductReposition - subtotalProductDevolution) * -1).toString();
   } else {
     productDevolutionBalance = '$' + (subtotalProductReposition - subtotalProductDevolution).toString();
   }
 
+  // Getting great total of the operation
   if (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution < 0) {
     greatTotal = '-$' + ((subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution) * -1).toString();
   } else {
-    greatTotal = '$' + (subtotalSaleProduct + subtotalProductReposition - subtotalProductDevolution).toString();
+    greatTotal = '$' + greatTotalNumber.toString();
+  }
+
+  if (routeTransaction === undefined) {
+    /* Do nothing */
+  } else {
+    if (routeTransaction.cash_received < 0) {
+      cashReceived = '$' + (routeTransaction.cash_received * -1).toString();
+    } else {
+      cashReceived = '$' + (routeTransaction.cash_received).toString();
+    }
   }
 
   return (
@@ -88,6 +107,26 @@ const TotalsSummarize = ({
           { greatTotal }
         </Text>
       </View>
+      { routeTransaction !== undefined &&
+        <View style={tw`w-full flex flex-row`}>
+          <Text style={tw`flex basis-4/6 italic text-base text-black text-right font-bold italic`}>
+            Metodo de pago {`(${getPaymentMethod(routeTransaction,PAYMENT_METHODS).payment_method_name})`}:
+          </Text>
+          <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle font-bold italic`}>
+            { cashReceived }
+          </Text>
+        </View>
+      }
+      { routeTransaction !== undefined &&
+        <View style={tw`w-full flex flex-row`}>
+          <Text style={tw`flex basis-4/6 italic text-base text-black text-right font-bold italic`}>
+            Cambio { greatTotalNumber < 0 ? '(a recibir)' : '(a entregar)'}:
+          </Text>
+          <Text style={tw`flex basis-2/6 italic text-base text-black text-center align-middle font-bold italic`}>
+            ${ calculateChange(greatTotalNumber, routeTransaction.cash_received) }
+          </Text>
+        </View>
+      }
     </View>
   );
 };

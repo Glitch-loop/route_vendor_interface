@@ -820,8 +820,8 @@ export async function insertRouteTransaction(transactionOperation: IRouteTransac
           id_route_transaction,
           date,
           state,
-          id_work_day,
           cash_received,
+          id_work_day,
           id_payment_method,
           id_store,
         ]);

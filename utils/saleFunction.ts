@@ -1,4 +1,4 @@
-import { IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
+import { IPaymentMethod, IProductInventory, IRouteTransaction, IStore, IUser } from '../interfaces/interfaces';
 import { time_posix_format } from './momentFormat';
 
 
@@ -357,4 +357,26 @@ export function getTransactionIdentifier(transactionIdentifier:string) {
   }
 
   return finalTransactionIdentifier;
+}
+
+
+// Related to payment method
+export function getPaymentMethod(routeTransaction: IRouteTransaction, paymentMethods: any[]) {
+  const foundPaymentMethod:IPaymentMethod = {
+    id_payment_method: '',
+    payment_method_name: '',
+  };
+
+  const searchResult:IPaymentMethod|undefined = paymentMethods.find((paymentMethod:IPaymentMethod) => {
+    return paymentMethod.id_payment_method === routeTransaction.id_payment_method;
+  });
+
+  if (searchResult === undefined) {
+    /* No hay instrucciones */
+  } else {
+    foundPaymentMethod.id_payment_method = searchResult.id_payment_method;
+    foundPaymentMethod.payment_method_name = searchResult.payment_method_name;
+  }
+
+  return foundPaymentMethod;
 }

@@ -278,6 +278,7 @@ const SummarizeTransaction = ({
             <View style={tw`w-full border`}/>
             {/* Totals sections */}
             <TotalsSummarize
+                routeTransaction={currentTransaction}
                 productsDevolution={productsDevolution}
                 productsReposition={productsReposition}
                 productsSale={productsSale}
