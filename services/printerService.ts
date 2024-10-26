@@ -39,7 +39,6 @@ export async function requestBluetoothPermissions():Promise<boolean> {
         text2: 'Para poder conectar una impresora via bluetooth tienes que otorgar este permiso'});
       return false;
     }
-
   } catch (error) {
     Toast.show({type: 'error', text1:'Error al pedir permisos',
       text2: 'Algo salio mal. Intenta nuevamente.'});
@@ -127,7 +126,7 @@ export async function getBluetoothPrinterConnection():Promise<boolean> {
 
     return connectionResult;
   } catch(error) {
-    Toast.show({type: 'error', text1:'Error al pedir permisos', text2: 'Algo salio mal. Intenta nuevamente.'});
+    Toast.show({type: 'error', text1:'Error', text2: 'Algo salio mal. Intenta nuevamente.'});
 
     return false;
   }
