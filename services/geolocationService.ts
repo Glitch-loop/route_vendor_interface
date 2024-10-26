@@ -1,7 +1,11 @@
+// Libraries
 import { PermissionsAndroid, Platform, Alert, BackHandler } from 'react-native';
+
+// Services
 import Geolocation from 'react-native-geolocation-service';
+
+// Interfaces
 import { ICoordinates } from '../interfaces/interfaces';
-import { coreModule } from '@reduxjs/toolkit/query';
 
 
 // Request location permission for Android (iOS handles this automatically with the plist)

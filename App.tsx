@@ -32,7 +32,7 @@ import {
  } from './queries/SQLite/sqlLiteQueries';
 
 // Services
-import { getPrinterBluetoothConnction } from './services/printerService';
+import { getPrinterBluetoothConnection } from './services/printerService';
 
 import { requestGeolocalizationPermissionsProcess } from './services/geolocationService';
 
@@ -62,7 +62,7 @@ async function databaseInitialization() {
 
     // Verifying permissions
     // Connecting to the printer
-    //await getPrinterBluetoothConnction();
+    //await getPrinterBluetoothConnection();
 
     // Geolocalization permissions
     await requestGeolocalizationPermissionsProcess();
