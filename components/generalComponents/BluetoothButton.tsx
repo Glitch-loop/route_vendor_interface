@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import Toast, { BaseToast } from 'react-native-toast-message';
 
 // Services
 import {
@@ -43,12 +43,13 @@ const toastConfig = {
 
 const BluetoothButton = ({}:{}) => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isBeingConnected, setIsBeingConnected] = useState<boolean>(false);
+  const [isBeingConnected, setIsBeingConnected] = useState<boolean>(true);
   const [showDialog, setShowDialog] = useState<boolean>(false);
 
 
   useEffect(() => {
     const intervalAction = setInterval(async () => {
+      setIsBeingConnected(false);
       setIsConnected(await getPrinterConnectionStatus());
     }, 10000);
 
