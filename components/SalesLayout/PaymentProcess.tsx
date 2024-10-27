@@ -42,9 +42,7 @@ const PaymentProcess = ({
     let messageToShow = '';
 
     if (paymnetMethod.id_payment_method === '52757755-1471-44c3-b6d5-07f7f83a0f6f') {
-      /*
-        If the vendor selected the cash payment method, it has to be validated.
-      */
+      // Cash payment method
       if (totalToPay >= 0) {
           /* It means the vendor will receive money, product of a sale or due to a product devolution with positive balance */
         resultCashMovement = cashReceived - totalToPay;
@@ -61,6 +59,11 @@ const PaymentProcess = ({
       } else {
         ToastAndroid.show(messageToShow, 1500);
       }
+    } else if (paymnetMethod.id_payment_method === 'b68e6be3-8919-41dd-9d09-6527884e162e'){ 
+      // Transference method
+      /* Since transference is a digital method, the vendor doesn't recieve cash, so
+      according with the flow of the application, cashReceived should be zero. */
+      await onPaySale(cashReceived, paymnetMethod);
     }
   };
 

@@ -1,5 +1,5 @@
 // Libraries
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
@@ -76,16 +76,14 @@ function productCommitedValidation(
   productInventory:IProductInventory[],
   productsToCommit:IProductInventory[],
   productSharingInventory:IProductInventory[],
-  isProductReposition:boolean,
-  onUpdateAction:any
-) {
+  isProductReposition:boolean) {
+
   let isNewAmountAllowed:boolean = true;
   let errorTitle:string = 'Cantidad a vender excede el inventario.';
   let errorCaption:string = '';
 
   // Verify the amount between salling and repositing don't be grater that the current inventory
   productInventory.forEach((product:IProductInventory) => {
-
     // Find the product in the inventory after adding product
     let productToCommitFound:IProductInventory|undefined =
     productsToCommit.find((productRepositionToCommit:IProductInventory) =>
@@ -96,26 +94,47 @@ function productCommitedValidation(
       return currentProductSale.id_product === product.id_product;
     });
 
+    // Starting distribution of product between concepts
     if (productSharingFound !== undefined && productToCommitFound !== undefined) {
       /*
-        It means, both arrays are outflowing the same product, so it is needed to verify that
-        both amounts (each one in its own context) combined don't be grater than what is current
-        in the sotck.
+        It means, both concepts are outflowing the same product, so it is needed to verify that
+        both amounts (product reposition and sale) combined don't be grater than what is currently
+        in stock.
       */
 
-      if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
-        /* Do nothng; It's a valid input */
-      } else {
-        productToCommitFound.amount = product.amount - productSharingFound.amount;
-        isNewAmountAllowed = false; // Not possible amount.
-        errorCaption = 'La suma entre la reposición del producto, y producto a vender, excede la cantidad de producto en el inventario.';
+      if(product.amount === 0) { /* There is not product in inventory */
+        isNewAmountAllowed = false;
+        productToCommitFound.amount = 0; // Beacuse it is not product to fullfill
+        errorCaption = 'Actualmente no hay suficiente inventario disponible para completar toda la solicitud correctamente';
+      } else if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
+        /* Product enough to supply both requests */
+        /* No instrucciones; It's a valid input */
+      } else { /* There is not product enough to fullfill both requests */
+        if (productToCommitFound.amount <= productSharingFound.amount) {
+         /* The "concept" with less product will receive the remaining product. */
+         productToCommitFound.amount = product.amount - productSharingFound.amount;
+         isNewAmountAllowed = false; // Not possible amount.
+         errorCaption = 'No hay suficiente inventario para completar la reposición y venta.';
+        } else {
+          /*
+            The "concept" (product reposition or product sale) with more amount of product
+            will be respected since it has a more important amount of product.
+
+            It might be considered as a valid input since it is product enough to fullfill one
+            of the concepts.
+          */
+         console.log("contexta: ", isProductReposition, " - amunt: ", productToCommitFound.amount)
+        }
       }
     } else if (productToCommitFound !== undefined) {
+      /*
+        It means that only one concept (product reposition or sale) is outflowing product.
+      */
       if (productToCommitFound.amount <= product.amount) {
-        /* Do nothing */
+        /* No instructions; valid input */
       } else {
         productToCommitFound.amount = product.amount;
-        isNewAmountAllowed = false; // Not possible amount.
+        isNewAmountAllowed = false; // There is not product enough to fullfill the requeriment.
         if (isProductReposition) {
           errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
         } else {
@@ -127,24 +146,16 @@ function productCommitedValidation(
     }
   });
 
-  onUpdateAction(productsToCommit);
-
   if (isNewAmountAllowed) {
     /* No instrucctions */
   } else {
     Toast.show({type: 'error', text1:errorTitle, text2: errorCaption});
   }
+
+  return productsToCommit;
 }
 
-// Axiliar funciton
-const SalesLayout = ({
-    route,
-    navigation,
-  }:{
-    route:any,
-    navigation:any,
-  }) => {
-
+const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
   // Redux context definitions
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
@@ -157,22 +168,48 @@ const SalesLayout = ({
   // Use states
   /* States to store the current product according with their context. */
   const [productDevolution, setProductDevolution]
-    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
-        route.params, 'initialProductDevolution'));
+    = useState<IProductInventory[]>([]);
 
   const [productReposition, setProductReposition]
-    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
-        route.params, 'initialProductReposition'));
+    = useState<IProductInventory[]>([]);
 
   const [productSale, setProductSale]
-    = useState<IProductInventory[]>(getInitialInventoryParametersFromRoute(
-      route.params, 'initialProductSale'));
+    = useState<IProductInventory[]>([]);
 
 
   /* States used in the logic of the layout. */
   const [startPaymentProcess, setStartPaymentProcess] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
+
+  // Initializing states in case of rendering with data.
+  useEffect(() => {
+    // Getting information from parameters
+    let initialProductDevolution:IProductInventory[]
+      = getInitialInventoryParametersFromRoute(route.params, 'initialProductDevolution');
+
+    let initialProductResposition:IProductInventory[]
+      = getInitialInventoryParametersFromRoute(route.params, 'initialProductReposition');
+
+    let initialSaleProduct:IProductInventory[]
+      = getInitialInventoryParametersFromRoute(route.params, 'initialProductSale');
+
+
+    // Set information in states
+    setProductDevolution(initialProductDevolution);
+
+    setProductReposition(productCommitedValidation(
+      productInventory,
+      initialProductResposition,
+      initialSaleProduct,
+      true));
+
+    setProductSale(productCommitedValidation(
+      productInventory,
+      initialSaleProduct,
+      initialProductResposition,
+      false));
+  }, []);
 
   // Handlers
   const handleCancelSale = () => {
@@ -484,13 +521,14 @@ const SalesLayout = ({
     It is not possible to sell product that you don't have
   */
   const handlerSetProductReposition = (productsToCommit:IProductInventory[]) => {
-    productCommitedValidation(productInventory,
-      productsToCommit, productSale, true, setProductReposition);
+    setProductReposition(
+      productCommitedValidation(productInventory, productsToCommit, productSale, true));
   };
 
   const handlerSetSaleProduct = (productsToCommit:IProductInventory[]) => {
-    productCommitedValidation(productInventory,
-      productsToCommit, productReposition, false, setProductSale);
+    setProductSale(
+      productCommitedValidation(productInventory,
+        productsToCommit, productReposition, false))
   };
 
   return (

@@ -29,17 +29,6 @@ const CardProduct = ({
       setInputValue(amount.toString());
     },[amount]);
 
-    // useEffect(() => {
-    //   // Add an event listener for when the keyboard hides
-    //   const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
-    //     handleTextChange(inputValue);
-    //   });
-    //   // Clean up the event listener when the component unmounts
-    //   return () => {
-    //     keyboardHideListener.remove();
-    //   };
-    // }, [inputValue]);
-    
   // Handlers
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);
