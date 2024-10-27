@@ -32,7 +32,6 @@ const CardProduct = ({
   // Handlers
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);
-    console.log("text updation")
     setInputValue(input);
     if (isNaN(parsedInput)) {
       onChangeAmount(item, 0);
@@ -78,9 +77,7 @@ const CardProduct = ({
         <TextInput
           style={tw`mx-1 border border-solid bg-white rounded-md h-10 text-center`}
           value={inputValue}
-          onChangeText={(text) => {
-            handleTextChange(text);
-          }}
+          onChangeText={(text) => { handleTextChange(text); }}
           keyboardType={'numeric'}/>
         <ActionButton
           style={'bg-blue-700'}
@@ -94,14 +91,14 @@ const CardProduct = ({
       <View style={tw`w-full h-full absolute bottom-2 left-2 flex flex-row justify-end items-start`}>
         <View>
           <Pressable
-            onPress={() => {handleOnDeleteItem()}}
+            onPress={() => { handleOnDeleteItem(); }}
             style={tw`bg-red-400 p-2 rounded-full`}>
             <Icon name={'remove'} style={tw`text-white`}/>
           </Pressable>
         </View>
       </View>
     </View>
-  )
+  );
 };
 
 export default CardProduct;
