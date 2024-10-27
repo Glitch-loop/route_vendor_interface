@@ -72,6 +72,70 @@ function getInitialInventoryParametersFromRoute(params:any, inventoryName:string
   }
 }
 
+function productCommitedValidation(
+  productInventory:IProductInventory[],
+  productsToCommit:IProductInventory[],
+  productSharingInventory:IProductInventory[],
+  isProductReposition:boolean,
+  onUpdateAction:any
+) {
+  let isNewAmountAllowed:boolean = true;
+  let errorTitle:string = 'Cantidad a vender excede el inventario.';
+  let errorCaption:string = '';
+
+  // Verify the amount between salling and repositing don't be grater that the current inventory
+  productInventory.forEach((product:IProductInventory) => {
+
+    // Find the product in the inventory after adding product
+    let productToCommitFound:IProductInventory|undefined =
+    productsToCommit.find((productRepositionToCommit:IProductInventory) =>
+        { return productRepositionToCommit.id_product === product.id_product; });
+
+    // Find product in product commited for sale.
+    let productSharingFound:IProductInventory|undefined = productSharingInventory.find((currentProductSale:IProductInventory) => {
+      return currentProductSale.id_product === product.id_product;
+    });
+
+    if (productSharingFound !== undefined && productToCommitFound !== undefined) {
+      /*
+        It means, both arrays are outflowing the same product, so it is needed to verify that
+        both amounts (each one in its own context) combined don't be grater than what is current
+        in the sotck.
+       */
+
+      if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
+        /* Do nothng; It's a valid input */
+      } else {
+        productToCommitFound.amount = product.amount - productSharingFound.amount;
+        isNewAmountAllowed = false; // Not possible amount.
+        errorCaption = 'La suma entre la reposición del producto, y producto a vender, excede la cantidad de producto en el inventario.';
+      }
+    } else if (productToCommitFound !== undefined) {
+      if (productToCommitFound.amount <= product.amount) {
+        /* Do nothing */
+      } else {
+        productToCommitFound.amount = product.amount;
+        isNewAmountAllowed = false; // Not possible amount.
+        if (isProductReposition) {
+          errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
+        } else {
+          errorCaption = 'Estas intentando vender mas producto del que tienes en el inventario.';
+        }
+      }
+    } else {
+      /* Not instructions for this if-else block in this particular function */
+    }
+  });
+
+  onUpdateAction(productsToCommit);
+
+  if (isNewAmountAllowed) {
+    /* No instrucctions */
+  } else {
+    Toast.show({type: 'error', text1:errorTitle, text2: errorCaption});
+  }
+}
+
 // Axiliar funciton
 const SalesLayout = ({
     route,
@@ -420,95 +484,13 @@ const SalesLayout = ({
     It is not possible to sell product that you don't have
   */
   const handlerSetProductReposition = (productsToCommit:IProductInventory[]) => {
-    let isNewAmountAllowed:boolean = true;
-    let errorTitle:string = 'Cantidad a vender excede el inventario.';
-    let errorCaption:string = '';
-
-    // Verify the amount between salling and repositing don't be grater that the current inventory
-    productInventory.forEach((product:IProductInventory) => {
-
-      // Find the product in the inventory after adding product
-      let productToCommitFound:IProductInventory|undefined =
-      productsToCommit.find((productRepositionToCommit:IProductInventory) =>
-          { return productRepositionToCommit.id_product === product.id_product; });
-
-      // Find product in product commited for sale.
-      let productSaleFound:IProductInventory|undefined = productSale.find((currentProductSale:IProductInventory) => {
-        return currentProductSale.id_product === product.id_product;
-      });
-
-      if (productSaleFound !== undefined && productToCommitFound !== undefined) {
-        /*
-          It means, both arrays are outflowing the same product, so it is needed to verify that
-          both amounts (each one in its own context) combined don't be grater than what is current
-          in the sotck.
-         */
-        if ((productSaleFound.amount + productToCommitFound.amount) > product.amount) {
-          isNewAmountAllowed = false; // Not possible amount.
-          errorCaption = 'La suma entre la reposición del producto y producto a vender excede el producto en el inventario.';
-        }
-      } else if (productToCommitFound !== undefined) {
-        if (productToCommitFound.amount > product.amount) {
-          isNewAmountAllowed = false; // Not possible amount.
-          errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
-        }
-      } else {
-        /* Not instructions for this if-else block in this particular function */
-      }
-    });
-
-    if (isNewAmountAllowed) {
-      setProductReposition(productsToCommit);
-    } else {
-      Toast.show({type: 'error', text1:errorTitle,
-        text2: errorCaption});
-    }
+    productCommitedValidation(productInventory,
+      productsToCommit, productSale, true, setProductReposition);
   };
 
-  const handlerSetSaleProduct = (productToCommit:IProductInventory[]) => {
-    let isNewAmountAllowed:boolean = true;
-    let errorTitle:string = 'Cantidad a vender excede el inventario.';
-    let errorCaption:string = '';
-
-    // Verify the amount between salling and repositing don't be grater that the current inventory
-    productInventory.forEach((product:IProductInventory) => {
-
-      // Find the product in the inventory after adding product
-      let productToCommitFound:IProductInventory|undefined =
-      productToCommit.find((productSaleToCommit:IProductInventory) =>
-          { return productSaleToCommit.id_product === product.id_product; });
-
-      // Find product in product commited for sale.
-      let productSaleFound:IProductInventory|undefined = productSale.find((currentProductSale:IProductInventory) => {
-        return currentProductSale.id_product === product.id_product;
-      });
-
-      if (productSaleFound !== undefined && productToCommitFound !== undefined) {
-        /*
-          It means, both arrays are outflowing the same product, so it is needed to verify that
-          both amounts (each one in its own context) combined don't be grater than what is current
-          in the sotck.
-         */
-        if ((productSaleFound.amount + productToCommitFound.amount) > product.amount) {
-          isNewAmountAllowed = false; // Not possible amount.
-          errorCaption = 'La suma entre la reposición del producto y producto a vender excede el producto en el inventario.';
-        }
-      } else if (productToCommitFound !== undefined) {
-        if (productToCommitFound.amount > product.amount) {
-          isNewAmountAllowed = false; // Not possible amount.
-          errorCaption = 'Estas intentando vender mas producto del que tienes en el inventario.';
-        }
-      } else {
-        /* Not instructions for this if-else block in this particular function */
-      }
-    });
-
-    if (isNewAmountAllowed) {
-      setProductSale(productToCommit);
-    } else {
-      Toast.show({type: 'error', text1:errorTitle,
-        text2: errorCaption});
-    }
+  const handlerSetSaleProduct = (productsToCommit:IProductInventory[]) => {
+    productCommitedValidation(productInventory,
+      productsToCommit, productReposition, false, setProductSale);
   };
 
   return (

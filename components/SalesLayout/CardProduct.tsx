@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import tw from 'twrnc';
 import ActionButton from './ActionButton';
@@ -24,6 +24,10 @@ const CardProduct = ({
   }) => {
 
     const [inputValue, setInputValue] = useState(amount.toString());
+
+    useEffect(() => {
+      setInputValue(amount.toString());
+    },[amount]);
 
     // useEffect(() => {
     //   // Add an event listener for when the keyboard hides
