@@ -4,7 +4,6 @@ import { Pressable, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import tw from 'twrnc';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Toast, { BaseToast } from 'react-native-toast-message';
 
 // Services
 import {
@@ -13,33 +12,6 @@ import {
   disconnectPrinter,
 } from '../../services/printerService';
 import ActionDialog from '../ActionDialog';
-
-/*
-  1. Create the config
-*/
-const toastConfig = {
-  /*
-    Overwrite 'success' type,
-    by modifying the existing `BaseToast` component
-  */
-  success: (props:any) => (
-    <BaseToast
-      {...props}
-      style={{ opacity: 0 }}
-      // contentContainerStyle={{ paddingHorizontal: 15 }}
-      // text1Style={{
-      //   fontSize: 15,
-      //   fontWeight: '400'
-      // }}
-    />
-  ),
-  /*
-    Overwrite 'error' type,
-    by modifying the existing `ErrorToast` component
-  */
-};
-
-
 
 const BluetoothButton = ({}:{}) => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -120,9 +92,6 @@ const BluetoothButton = ({}:{}) => {
           style={tw`absolute top-0 right-8 ${isConnected ? 'bg-green-500' : 'bg-red-700'} py-3 px-3 
           rounded-full`}/>
       }
-      <View style={tw`absolute w-full right-25 z-10`}>
-        <Toast config={toastConfig}/>
-      </View>
     </View>
   );
 };

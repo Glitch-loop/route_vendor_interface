@@ -4,6 +4,7 @@ import { View, ScrollView } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
+import Toast from 'react-native-toast-message';
 
 // Redux context.
 import { useDispatch, useSelector } from 'react-redux';
@@ -38,6 +39,7 @@ import ConfirmationBand from '../components/ConfirmationBand';
 import ResultSale from '../components/ResultSale';
 import SubtotalLine from '../components/SalesLayout/SubtotalLine';
 import PaymentProcess from '../components/SalesLayout/PaymentProcess';
+import MenuHeader from '../components/generalComponents/MenuHeader';
 
 // Utils
 import { timestamp_format } from '../utils/momentFormat';
@@ -45,7 +47,7 @@ import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
 import { avoidingUndefinedItem } from '../utils/generalFunctions';
 
 // Services
-import { getPrinterBluetoothConnction, printTicketBluetooth } from '../services/printerService';
+import { printTicketBluetooth } from '../services/printerService';
 
 // Redux context
 import { updateStores } from '../redux/slices/storesSlice';
@@ -61,7 +63,6 @@ import {
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
-import MenuHeader from '../components/generalComponents/MenuHeader';
 
 function getInitialInventoryParametersFromRoute(params:any, inventoryName:string) {
   if (params === undefined) {
@@ -118,7 +119,7 @@ const SalesLayout = ({
     navigation.navigate('storeMenu');
   };
 
-  const handleSalePaymentProces = () => {
+  const handleSalePaymentProcess = () => {
     console.log("Iniciar proceso")
     setStartPaymentProcess(true);
   };
@@ -413,17 +414,114 @@ const SalesLayout = ({
     setResultSaleState(false);
   };
 
+  // Related to add product
+  /*
+    Handler that cares the outflow of product.
+    It is not possible to sell product that you don't have
+  */
+  const handlerSetProductReposition = (productsToCommit:IProductInventory[]) => {
+    let isNewAmountAllowed:boolean = true;
+    let errorTitle:string = 'Cantidad a vender excede el inventario.';
+    let errorCaption:string = '';
+
+    // Verify the amount between salling and repositing don't be grater that the current inventory
+    productInventory.forEach((product:IProductInventory) => {
+
+      // Find the product in the inventory after adding product
+      let productToCommitFound:IProductInventory|undefined =
+      productsToCommit.find((productRepositionToCommit:IProductInventory) =>
+          { return productRepositionToCommit.id_product === product.id_product; });
+
+      // Find product in product commited for sale.
+      let productSaleFound:IProductInventory|undefined = productSale.find((currentProductSale:IProductInventory) => {
+        return currentProductSale.id_product === product.id_product;
+      });
+
+      if (productSaleFound !== undefined && productToCommitFound !== undefined) {
+        /*
+          It means, both arrays are outflowing the same product, so it is needed to verify that
+          both amounts (each one in its own context) combined don't be grater than what is current
+          in the sotck.
+         */
+        if ((productSaleFound.amount + productToCommitFound.amount) > product.amount) {
+          isNewAmountAllowed = false; // Not possible amount.
+          errorCaption = 'La suma entre la reposición del producto y producto a vender excede el producto en el inventario.';
+        }
+      } else if (productToCommitFound !== undefined) {
+        if (productToCommitFound.amount > product.amount) {
+          isNewAmountAllowed = false; // Not possible amount.
+          errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
+        }
+      } else {
+        /* Not instructions for this if-else block in this particular function */
+      }
+    });
+
+    if (isNewAmountAllowed) {
+      setProductReposition(productsToCommit);
+    } else {
+      Toast.show({type: 'error', text1:errorTitle,
+        text2: errorCaption});
+    }
+  };
+
+  const handlerSetSaleProduct = (productToCommit:IProductInventory[]) => {
+    let isNewAmountAllowed:boolean = true;
+    let errorTitle:string = 'Cantidad a vender excede el inventario.';
+    let errorCaption:string = '';
+
+    // Verify the amount between salling and repositing don't be grater that the current inventory
+    productInventory.forEach((product:IProductInventory) => {
+
+      // Find the product in the inventory after adding product
+      let productToCommitFound:IProductInventory|undefined =
+      productToCommit.find((productSaleToCommit:IProductInventory) =>
+          { return productSaleToCommit.id_product === product.id_product; });
+
+      // Find product in product commited for sale.
+      let productSaleFound:IProductInventory|undefined = productSale.find((currentProductSale:IProductInventory) => {
+        return currentProductSale.id_product === product.id_product;
+      });
+
+      if (productSaleFound !== undefined && productToCommitFound !== undefined) {
+        /*
+          It means, both arrays are outflowing the same product, so it is needed to verify that
+          both amounts (each one in its own context) combined don't be grater than what is current
+          in the sotck.
+         */
+        if ((productSaleFound.amount + productToCommitFound.amount) > product.amount) {
+          isNewAmountAllowed = false; // Not possible amount.
+          errorCaption = 'La suma entre la reposición del producto y producto a vender excede el producto en el inventario.';
+        }
+      } else if (productToCommitFound !== undefined) {
+        if (productToCommitFound.amount > product.amount) {
+          isNewAmountAllowed = false; // Not possible amount.
+          errorCaption = 'Estas intentando vender mas producto del que tienes en el inventario.';
+        }
+      } else {
+        /* Not instructions for this if-else block in this particular function */
+      }
+    });
+
+    if (isNewAmountAllowed) {
+      setProductSale(productToCommit);
+    } else {
+      Toast.show({type: 'error', text1:errorTitle,
+        text2: errorCaption});
+    }
+  };
+
   return (
     finishedSale === false ?
       <ScrollView
         nestedScrollEnabled={true}
         style={tw`w-full flex flex-col`}>
-        {/*
-          This dialog contais the process for finishing a sale.
-          Steps:
-            1- Choose a payment method.
-            2- Client pays according to its selection.
-        */}
+          {/*
+            This dialog contais the process for finishing a sale.
+            Steps:
+              1- Choose a payment method.
+              2- Client pays according to its selection.
+          */}
           <PaymentProcess
             transactionIdentifier={routeDay.id_route_day}
             totalToPay={getGreatTotal(productDevolution, productReposition, productSale)}
@@ -448,7 +546,7 @@ const SalesLayout = ({
             <TableProduct
               catalog={productInventory}
               commitedProducts={productReposition}
-              setCommitedProduct={setProductReposition}
+              setCommitedProduct={handlerSetProductReposition}
               sectionTitle={'Reposición de producto'}
               sectionCaption={'(Precios actuales tomados para la reposición)'}
               totalMessage={'Total de valor de la reposición:'}
@@ -466,7 +564,7 @@ const SalesLayout = ({
             <TableProduct
               catalog={productInventory}
               commitedProducts={productSale}
-              setCommitedProduct={setProductSale}
+              setCommitedProduct={handlerSetSaleProduct}
               sectionTitle={'Productos para vender'}
               sectionCaption={'(Venta sugerida: Última venta)'}
               totalMessage={'Total de la venta:'}
@@ -482,7 +580,7 @@ const SalesLayout = ({
         <ConfirmationBand
           textOnAccept={'Continuar'}
           textOnCancel={'Cancelar operación'}
-          handleOnAccept={handleSalePaymentProces}
+          handleOnAccept={handleSalePaymentProcess}
           handleOnCancel={handleCancelSale}/>
         <View style={tw`flex flex-row mt-10`} />
       </ScrollView>

@@ -23,6 +23,8 @@ import InventoryOperationLayout from './layout/InventoryOperationLayout';
 import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 import StoreMenuLayout from './layout/StoreMenuLayout';
 import SalesLayout from './layout/SalesLayout';
+import ToastMessage from './components/generalComponents/ToastMessage';
+
 
 // Embedded database
 // Queries
@@ -86,6 +88,7 @@ function App(): React.JSX.Element {
       <NavigationContainer>
         <PaperProvider>
           <View style={tw`w-full h-full`}>
+            <ToastMessage />
             {/* <Stack.Navigator initialRouteName="inventoryOperation"> */}
             <Stack.Navigator initialRouteName="routeSelection">
               <Stack.Screen

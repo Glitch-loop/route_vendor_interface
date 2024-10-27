@@ -190,6 +190,10 @@ const SummarizeTransaction = ({
   };
 
   const handleOnCancelASale = async () => {
+    /*
+      To do: update the inventory (10/26/24 )
+    */
+    
     try {
       const updateTransaction:IRouteTransaction = {
         ...currentTransaction,
