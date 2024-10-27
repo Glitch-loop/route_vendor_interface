@@ -1,5 +1,5 @@
 // Libraries
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
@@ -141,6 +141,18 @@ function productCommitedValidation(
 }
 
 const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
+  // Auxiliar variables
+  // Getting information from parameters
+  let initialProductDevolution:IProductInventory[]
+  = getInitialInventoryParametersFromRoute(route.params, 'initialProductDevolution');
+
+  let initialProductResposition:IProductInventory[]
+    = getInitialInventoryParametersFromRoute(route.params, 'initialProductReposition');
+
+  let initialSaleProduct:IProductInventory[]
+    = getInitialInventoryParametersFromRoute(route.params, 'initialProductSale');
+
+
   // Redux context definitions
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
@@ -153,48 +165,27 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
   // Use states
   /* States to store the current product according with their context. */
   const [productDevolution, setProductDevolution]
-    = useState<IProductInventory[]>([]);
+    = useState<IProductInventory[]>(initialProductDevolution);
 
   const [productReposition, setProductReposition]
-    = useState<IProductInventory[]>([]);
+    = useState<IProductInventory[]>(productCommitedValidation(
+      productInventory,
+      initialProductResposition,
+      initialSaleProduct,
+      true));
 
   const [productSale, setProductSale]
-    = useState<IProductInventory[]>([]);
+    = useState<IProductInventory[]>(productCommitedValidation(
+      productInventory,
+      initialSaleProduct,
+      initialProductResposition,
+      false));
 
 
   /* States used in the logic of the layout. */
   const [startPaymentProcess, setStartPaymentProcess] = useState<boolean>(false);
   const [finishedSale, setFinishedSale] = useState<boolean>(false);
   const [resultSaleState, setResultSaleState] = useState<boolean>(true);
-
-  // Initializing states in case of rendering with data.
-  useEffect(() => {
-    // Getting information from parameters
-    let initialProductDevolution:IProductInventory[]
-      = getInitialInventoryParametersFromRoute(route.params, 'initialProductDevolution');
-
-    let initialProductResposition:IProductInventory[]
-      = getInitialInventoryParametersFromRoute(route.params, 'initialProductReposition');
-
-    let initialSaleProduct:IProductInventory[]
-      = getInitialInventoryParametersFromRoute(route.params, 'initialProductSale');
-
-
-    // Set information in states
-    setProductDevolution(initialProductDevolution);
-
-    setProductReposition(productCommitedValidation(
-      productInventory,
-      initialProductResposition,
-      initialSaleProduct,
-      true));
-
-    setProductSale(productCommitedValidation(
-      productInventory,
-      initialSaleProduct,
-      initialProductResposition,
-      false));
-  }, []);
 
   // Handlers
   const handleCancelSale = () => {
@@ -511,8 +502,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
   const handlerSetSaleProduct = (productsToCommit:IProductInventory[]) => {
     setProductSale(
-      productCommitedValidation(productInventory,
-        productsToCommit, productReposition, false))
+      productCommitedValidation(productInventory, productsToCommit, productReposition, false));
   };
 
   return (
