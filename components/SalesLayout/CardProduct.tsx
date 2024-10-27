@@ -27,7 +27,7 @@ const CardProduct = ({
 
     useEffect(() => {
       setInputValue(amount.toString());
-    },[amount]);
+    },[amount, inputValue]);
 
   // Handlers
   const handleTextChange = (input:string) => {
@@ -57,8 +57,7 @@ const CardProduct = ({
   };
 
   return (
-    <View style={tw`
-      w-11/12 h-16
+    <View style={tw`w-11/12 h-16
       bg-amber-200/75 border-solid border rounded-md
       flex flex-row justify-center items-center
       `}>

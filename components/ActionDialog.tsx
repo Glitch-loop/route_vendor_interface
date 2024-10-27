@@ -34,7 +34,7 @@ const ActionDialog = (
               style={tw`flex flex-row justify-center my-5`}>
               <ConfirmationBand
                   textOnAccept={'Aceptar'}
-                  textOnCancel={'Cancelar operación'}
+                  textOnCancel={'Cancelar'}
                   handleOnAccept={onAcceptDialog}
                   handleOnCancel={onDeclinedialog}/>
             </View>

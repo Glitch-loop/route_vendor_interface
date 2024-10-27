@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, VirtualizedList } from 'react-native';
+import { View, Text } from 'react-native';
 import tw from 'twrnc';
+
+// Redux context.
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { updateProductsInventory } from '../../redux/slices/productsInventorySlice';
+
+// Interfaces
 import {
   IProductInventory,
   IRouteTransaction,
@@ -9,26 +16,26 @@ import {
   IStore,
 } from '../../interfaces/interfaces';
 
-// Redux context.
-import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/store';
-
 // Utils
 import DAYS_OPERATIONS from '../../lib/day_operations';
+import { getTicketSale } from '../../utils/saleFunction';
 
 // Components
 import SectionTitle from '../SalesLayout/SectionTitle';
 import SummarizeFormat from './SummarizeFormat';
 import TotalsSummarize from '../SalesLayout/TotalsSummarize';
+import DangerButton from '../generalComponents/DangerButton';
+import ActionDialog from '../ActionDialog';
+import ConfirmationBand from '../ConfirmationBand';
+
+// Embedded Database
+import {
+  updateProducts,
+  updateTransation,
+} from '../../queries/SQLite/sqlLiteQueries';
 
 // Services
-import { printTicketBluetooth, getPrinterBluetoothConnction } from '../../services/printerService';
-import { getTicketSale } from '../../utils/saleFunction';
-import DangerButton from '../generalComponents/DangerButton';
-import { updateTransation } from '../../queries/SQLite/sqlLiteQueries';
-import ActionDialog from '../ActionDialog';
-import VendorConfirmation from '../VendorConfirmation';
-import ConfirmationBand from '../ConfirmationBand';
+import { printTicketBluetooth } from '../../services/printerService';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -123,6 +130,7 @@ const SummarizeTransaction = ({
 }) => {
 
   /* Declaring redux context */
+  const dispatch: AppDispatch = useDispatch();
   const productInventory = useSelector((state: RootState) => state.productsInventory);
   const stores = useSelector((state: RootState) => state.stores);
   const vendor = useSelector((state: RootState) => state.user);
@@ -185,25 +193,73 @@ const SummarizeTransaction = ({
           vendor
         ));
     } catch(error) {
-      await getPrinterBluetoothConnction();
+      /* There are no actions */
     }
   };
 
   const handleOnCancelASale = async () => {
-    /*
-      To do: update the inventory (10/26/24 )
-    */
-    
     try {
-      const updateTransaction:IRouteTransaction = {
-        ...currentTransaction,
-        state: 0,
-      };
-      await updateTransation(updateTransaction);
-      setCurrentTransaction(updateTransaction);
+      if (currentTransaction.state === 1) {
+        /* The process for canceling a sale only is available for active transactions */
+        const newInventory:IProductInventory[] = productInventory
+          .map((product:IProductInventory) => { return product; });
+
+        /*
+          Adding the product reposition and product for sale of the transaction to be cancelled.
+        */
+
+        productsReposition.forEach((product:IProductInventory) => {
+          const index = newInventory.findIndex((newInventoryProduct:IProductInventory) =>
+            { return product.id_product === newInventoryProduct.id_product; });
+
+          if (index === -1) {
+            /* The product doesn't exist in the inventory; No instructions */
+          } else {
+            newInventory[index] = {
+              ...newInventory[index],
+              amount: newInventory[index].amount + product.amount,
+            };
+            newInventory[index].amount = newInventory[index].amount + product.amount;
+          }
+        });
+
+        productsSale.forEach((product:IProductInventory) => {
+          const index = newInventory.findIndex((newInventoryProduct:IProductInventory) =>
+            { return product.id_product === newInventoryProduct.id_product; });
+
+          if (index === -1) {
+            /* The product doesn't exist in the inventory; No instructions */
+          } else {
+            newInventory[index] = {
+              ...newInventory[index],
+              amount: newInventory[index].amount + product.amount,
+            };
+          }
+        });
+
+        /* Desactivating state of transaciton */
+        const updateTransaction:IRouteTransaction = {
+          ...currentTransaction,
+          state: 0,
+        };
+
+        // Updating embedded database
+        await updateTransation(updateTransaction);
+
+        /* Updating inventory */
+        // Updating embedded database
+        await updateProducts(newInventory);
+
+        // Updating redux context
+        dispatch(updateProductsInventory(newInventory));
+
+        /* Updating state of transaction; This will activate the 'desactivate status in the card'*/
+        setCurrentTransaction(updateTransaction);
+      } else {
+        /* It is not possible to cancel a sale that is already cancelled */
+      }
       setShowDialog(false);
     } catch (error) {
-      setCurrentTransaction(currentTransaction);
       setShowDialog(false);
     }
   };
@@ -247,7 +303,7 @@ const SummarizeTransaction = ({
           border p-2 flex flex-col justify-center items-center rounded-md`}>
           <View style={tw`w-full flex flex-col`}>
             <SectionTitle
-              title={`Operation - ${routeTransaction.date}`}
+              title={`Transacción - ${routeTransaction.date}`}
               caption={currentTransaction.state ? '' : '(Cancelada)'}
               titlePositionStyle={'text-center w-full items-center justify-center'}/>
             {/* Product devolution section */}

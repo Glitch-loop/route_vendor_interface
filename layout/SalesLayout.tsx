@@ -123,7 +123,6 @@ function productCommitedValidation(
             It might be considered as a valid input since it is product enough to fullfill one
             of the concepts.
           */
-         console.log("contexta: ", isProductReposition, " - amunt: ", productToCommitFound.amount)
         }
       }
     } else if (productToCommitFound !== undefined) {
