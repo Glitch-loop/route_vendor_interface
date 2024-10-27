@@ -10,8 +10,6 @@ import { IProductInventory, IRouteTransaction } from '../../interfaces/interface
 import { getProductDevolutionBalance, getPaymentMethod, calculateChange } from '../../utils/saleFunction';
 import PAYMENT_METHODS from '../../utils/paymentMethod';
 
-
-
 const TotalsSummarize = ({
   routeTransaction,
   productsDevolution,

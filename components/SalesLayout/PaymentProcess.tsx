@@ -59,7 +59,7 @@ const PaymentProcess = ({
       } else {
         ToastAndroid.show(messageToShow, 1500);
       }
-    } else if (paymnetMethod.id_payment_method === 'b68e6be3-8919-41dd-9d09-6527884e162e'){ 
+    } else if (paymnetMethod.id_payment_method === 'b68e6be3-8919-41dd-9d09-6527884e162e'){
       // Transference method
       /* Since transference is a digital method, the vendor doesn't recieve cash, so
       according with the flow of the application, cashReceived should be zero. */

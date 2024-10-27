@@ -27,7 +27,7 @@ const BluetoothButton = ({}:{}) => {
     }, 10000);
 
     /* Clear action when unmount */
-    // return () => clearInterval(intervalAction);
+    return () => clearInterval(intervalAction);
   }, []);
 
   useEffect(() => {

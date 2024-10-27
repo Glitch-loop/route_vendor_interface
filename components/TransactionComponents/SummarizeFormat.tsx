@@ -1,19 +1,15 @@
 // Libraries
-import React, { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces and utils
 import { IProductInventory } from '../../interfaces/interfaces';
-import {
-    getProductDevolutionBalance,
-    getProductDevolutionBalanceWithoutNegativeNumber,
-} from '../../utils/saleFunction';
+import { getProductDevolutionBalanceWithoutNegativeNumber } from '../../utils/saleFunction';
 
 // Components
 import SubtotalLine from '../SalesLayout/SubtotalLine';
-
 
 /*
   Although this component is more related to "transaction summrizing",

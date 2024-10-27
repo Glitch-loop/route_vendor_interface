@@ -6,7 +6,7 @@ import tw from 'twrnc';
 
 // Interfaces and utils
 import { IProductInventory } from '../../interfaces/interfaces';
-import { getProductDevolutionBalance, getProductDevolutionBalanceWithoutNegativeNumber } from '../../utils/saleFunction';
+import { getProductDevolutionBalanceWithoutNegativeNumber } from '../../utils/saleFunction';
 
 // Components
 import SubtotalLine from './SubtotalLine';
