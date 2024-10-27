@@ -32,6 +32,8 @@ const CardProduct = ({
   // Handlers
   const handleTextChange = (input:string) => {
     let parsedInput = parseInt(input, 10);
+    console.log("text updation")
+    setInputValue(input);
     if (isNaN(parsedInput)) {
       onChangeAmount(item, 0);
     } else {
@@ -77,9 +79,7 @@ const CardProduct = ({
           style={tw`mx-1 border border-solid bg-white rounded-md h-10 text-center`}
           value={inputValue}
           onChangeText={(text) => {
-            setInputValue(text);
             handleTextChange(text);
-            // debouncedHandleTextChange(text,300);
           }}
           keyboardType={'numeric'}/>
         <ActionButton

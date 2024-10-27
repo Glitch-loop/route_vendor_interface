@@ -308,13 +308,15 @@ export async function insertProducts(products: IProductInventory[]) {
 }
 
 /*
-  This function is for when the vendor must update the information of the inventory.
+  This function is for when the vendor must update the information of the
+  inventory.
 
   This function updates records in the table "products", that conceptually, stores
   the information of the product (product available for selling) but also the
   inventory (amount of the product to sale).
 
-  This function receives the products to update, idoneally, all the product of the inventory.
+  This function receives the products to update, idoneally, all the product of the
+  inventory.
 */
 export async function updateProducts(products: IProductInventory[]) {
   try {

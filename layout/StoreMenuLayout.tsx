@@ -96,7 +96,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   // Definig only-read variables
   let store:IStore&IStoreStatusDay = getStoreFromContext(currentOperation, stores);
 
-  // handlres
+  // handlers
   const handlerGoBackToMainOperationMenu = () => {
     dispatch(clearCurrentOperation());
     navigation.navigate('routeOperationMenu');

@@ -150,29 +150,23 @@ const SummarizeTransaction = ({
   */
   const [currentTransaction, setCurrentTransaction] = useState<IRouteTransaction>(routeTransaction);
 
-  const [productsDevolution, setProductsDevolution] =
-    useState<IProductInventory[]>(
-      convertOperationDescriptionToProductInventoryInterface(
-        routeTransactionOperationDescriptions
-        .get(getConceptTransactionOperation(DAYS_OPERATIONS.product_devolution, routeTransactionOperations)),
-        productInventory)
-      );
 
-  const [productsReposition, setProductsReposition] =
-    useState<IProductInventory[]>(
-      convertOperationDescriptionToProductInventoryInterface(
-        routeTransactionOperationDescriptions
-        .get(getConceptTransactionOperation(DAYS_OPERATIONS.product_reposition, routeTransactionOperations)),
-        productInventory)
-    );
+  // Variables for displaying information
+  const productsDevolution:IProductInventory[] =
+    convertOperationDescriptionToProductInventoryInterface(
+      routeTransactionOperationDescriptions
+      .get(getConceptTransactionOperation(DAYS_OPERATIONS.product_devolution, routeTransactionOperations)), productInventory);
 
-  const [productsSale, setProductSale] =
-    useState<IProductInventory[]>(
-      convertOperationDescriptionToProductInventoryInterface(
-        routeTransactionOperationDescriptions
-        .get(getConceptTransactionOperation(DAYS_OPERATIONS.sales, routeTransactionOperations)),
-        productInventory)
-      );
+  const productsReposition:IProductInventory[] =
+    convertOperationDescriptionToProductInventoryInterface(
+      routeTransactionOperationDescriptions
+      .get(getConceptTransactionOperation(DAYS_OPERATIONS.product_reposition, routeTransactionOperations)), productInventory);
+
+  const productsSale:IProductInventory[] =
+    convertOperationDescriptionToProductInventoryInterface(
+      routeTransactionOperationDescriptions
+      .get(getConceptTransactionOperation(DAYS_OPERATIONS.sales, routeTransactionOperations)),
+      productInventory);
 
   // States regarded to the logic of the component
   const [showDialog, setShowDialog] = useState<boolean>(false);

@@ -77,7 +77,7 @@ function productCommitedValidation(
   productsToCommit:IProductInventory[],
   productSharingInventory:IProductInventory[],
   isProductReposition:boolean) {
-
+  console.log("validating info----")
   let isNewAmountAllowed:boolean = true;
   let errorTitle:string = 'Cantidad a vender excede el inventario.';
   let errorCaption:string = '';
@@ -101,7 +101,6 @@ function productCommitedValidation(
         both amounts (product reposition and sale) combined don't be grater than what is currently
         in stock.
       */
-
       if(product.amount === 0) { /* There is not product in inventory */
         isNewAmountAllowed = false;
         productToCommitFound.amount = 0; // Beacuse it is not product to fullfill
@@ -109,26 +108,13 @@ function productCommitedValidation(
       } else if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
         /* Product enough to supply both requests */
         /* No instrucciones; It's a valid input */
-      } else { /* There is not product enough to fullfill both requests */
-        if (productToCommitFound.amount <= productSharingFound.amount) {
-         /* The "concept" with less product will receive the remaining product. */
-         productToCommitFound.amount = product.amount - productSharingFound.amount;
-         isNewAmountAllowed = false; // Not possible amount.
-         errorCaption = 'No hay suficiente inventario para completar la reposición y venta.';
-        } else {
-          /*
-            The "concept" (product reposition or product sale) with more amount of product
-            will be respected since it has a more important amount of product.
-
-            It might be considered as a valid input since it is product enough to fullfill one
-            of the concepts.
-          */
-        }
+      } else { /* There is not product enough to fullfil both requests */
+        isNewAmountAllowed = false; // Not possible amount.
+        errorCaption = 'No hay suficiente inventario para completar la reposición y venta.';
+        productToCommitFound.amount = product.amount - productSharingFound.amount;
       }
     } else if (productToCommitFound !== undefined) {
-      /*
-        It means that only one concept (product reposition or sale) is outflowing product.
-      */
+      /* It means that only one concept (product reposition or sale) is outflowing product. */
       if (productToCommitFound.amount <= product.amount) {
         /* No instructions; valid input */
       } else {
@@ -220,7 +206,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
   };
 
   const handleSalePaymentProcess = () => {
-    console.log("Iniciar proceso")
     setStartPaymentProcess(true);
   };
 

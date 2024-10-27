@@ -40,7 +40,7 @@ const TableProduct = ({
       });
 
       if (foundItem === undefined) {
-        newItem.amount = 1;
+        newItem.amount = 0;
 
         setCommitedProduct([
           ...commitedProducts,

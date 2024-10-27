@@ -13,4 +13,4 @@ export function avoidingUndefinedItem(item: any, itemUndefinedCase: any) {
   } else {
     return item;
   }
-};
+}
