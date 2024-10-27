@@ -15,13 +15,14 @@ import ActionDialog from '../ActionDialog';
 
 const BluetoothButton = ({}:{}) => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isBeingConnected, setIsBeingConnected] = useState<boolean>(true);
+  const [isBeingConnected, setIsBeingConnected] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<boolean>(false);
 
+  const [renderingComponent, setRenderingComponent] = useState<boolean>(true);
 
   useEffect(() => {
     const intervalAction = setInterval(async () => {
-      setIsBeingConnected(false);
+      setRenderingComponent(false);
       setIsConnected(await getPrinterConnectionStatus());
     }, 10000);
 
@@ -86,7 +87,7 @@ const BluetoothButton = ({}:{}) => {
         <Icon name={'print'}
           style={tw`absolute inset-0 top-3 text-base text-center`} color="#fff" />
       </Pressable>
-      { isBeingConnected ?
+      { isBeingConnected || renderingComponent ?
         <ActivityIndicator style={tw`absolute top-0 right-8`}/> :
         <View
           style={tw`absolute top-0 right-8 ${isConnected ? 'bg-green-500' : 'bg-red-700'} py-3 px-3 

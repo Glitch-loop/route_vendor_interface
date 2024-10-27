@@ -101,7 +101,7 @@ function productCommitedValidation(
         It means, both arrays are outflowing the same product, so it is needed to verify that
         both amounts (each one in its own context) combined don't be grater than what is current
         in the sotck.
-       */
+      */
 
       if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
         /* Do nothng; It's a valid input */
