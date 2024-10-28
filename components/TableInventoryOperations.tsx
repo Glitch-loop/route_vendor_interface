@@ -78,31 +78,43 @@ const TableInventoryOperations = (
     setInventoryOperation:any,
   }) => {
 
+  // const [inputValue, setInputValue] = useState(amount.toString());
   /*
     This handler updates the amount that the vendor took to carry to the route.
   */
+  // Handlers
   const handleChangeInventory = (id_product:string, input: string) => {
-    const index:number|undefined = operationInventory
-      .findIndex((product:IProductInventory) => product.id_product === id_product);
+    // Parsing input
+    let parsedInput:number = parseInt(input, 10);
 
+    // Creating a copy og the inventory operation.
     const updatedInventory: IProductInventory[] = [...operationInventory];
 
-    if (index !== undefined || index !== -1) {
+    // Looking for the product to update.
+    const index:number = operationInventory
+      .findIndex((product:IProductInventory) => product.id_product === id_product);
+
+
+    if (index !== -1) { // The product exists in the inventory.
       const updatedProduct = { ...updatedInventory[index] };
 
-      if (input === '') {
+      if (isNaN(parsedInput)) { // The input to convert was invalid.
         updatedProduct.amount = 0;
       } else {
-        updatedProduct.amount = parseInt(input, 10) || 0;
+        if (parsedInput >= 0) { // Valid input
+          updatedProduct.amount = parsedInput;
+        } else { // Invalid input
+          updatedProduct.amount = 0;
+        }
       }
 
       updatedInventory[index] = updatedProduct;
 
       setInventoryOperation(updatedInventory);
+    } else {
+      /* The product is not in the inventory */
     }
   };
-
-
 
   return (
     <DataTable style={tw`w-full`}>

@@ -74,11 +74,6 @@ import {
 } from '../redux/slices/dayOperationsSlice';
 
 // Moocks
-import {
-  productInventoryMoock,
-  suggestedProductMoock,
-  currentProductMoock,
-} from '../moocks/productInventory';
 import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
 
 const initialProduct:IProductInventory = {

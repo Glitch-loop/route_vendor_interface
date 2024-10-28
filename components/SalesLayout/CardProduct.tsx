@@ -1,8 +1,14 @@
+// Librarires
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import tw from 'twrnc';
-import ActionButton from './ActionButton';
 import Icon from 'react-native-vector-icons/FontAwesome';
+
+// Components
+import ActionButton from './ActionButton';
+import AutomatedCorrectionNumberInput from '../generalComponents/AutomatedCorrectionInput';
+
+// Interfaces
 import { IProductInventory } from '../../interfaces/interfaces';
 
 const CardProduct = ({
@@ -30,14 +36,8 @@ const CardProduct = ({
     },[amount, inputValue]);
 
   // Handlers
-  const handleTextChange = (input:string) => {
-    let parsedInput = parseInt(input, 10);
-    setInputValue(input);
-    if (isNaN(parsedInput)) {
-      onChangeAmount(item, 0);
-    } else {
-      onChangeAmount(item, parsedInput);
-    }
+  const handlerManualTextChange = (input:number) => {
+    onChangeAmount(item, input);
   };
 
   const handleOnMinusOne = () => {
@@ -74,11 +74,10 @@ const CardProduct = ({
           onClick={handleOnMinusOne}>
           <Icon name="minus" style={tw`text-base text-center`} color="#000"/>
         </ActionButton>
-        <TextInput
-          style={tw`mx-1 border border-solid bg-white rounded-md h-10 text-center`}
-          value={inputValue}
-          onChangeText={(text) => { handleTextChange(text); }}
-          keyboardType={'numeric'}/>
+          <AutomatedCorrectionNumberInput
+            amount={amount}
+            onChangeAmount={handlerManualTextChange}
+          />
         <ActionButton
           style={'bg-blue-700'}
           onClick={handleOnPlusOne}>
