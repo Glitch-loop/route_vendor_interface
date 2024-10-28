@@ -9,42 +9,28 @@ import { IProductInventory } from '../interfaces/interfaces';
 import AutomatedCorrectionNumberInput from './generalComponents/AutomatedCorrectionInput';
 
 /*
-  An attempt was made to generelize as much as possible.
+  The intnetion of this component is to provide an interface to perform an inventory operation.
   At the moment of write this documentation there are 4 possible operations:
   - Start inventory
   - Restock inventory
   - Product inventory
   - Final inventory
 
-  Although each one impacts to the inventory in some way, all of them shares the same interface,
-  so it was decided that the component will work as follows.
+  All of them implies to receive/deliver product, depending on the context of how the inventory operation
+  is performed is how it is going to impact in the vendor's inventory.
 
-  The component recieves the following parameters:
-    - suggestedInventory
-    - currentInventory
-    - operationInventory
-    - enablingFinalInventory
-    - setInventoryOperation
+  This component recieves these parameters:
+    - suggestedInventory: Suggestion for the vendor to take product for the route (informative).
+    - currentInventory: The current vendor's inventory.
+    - operationInventory: The inventory that vendor's is taking for the route.
+    - enablingFinalInventory: The addition between the current inventory and what the vendor is currently taking.
+    - setInventoryOperation: Handler to update "inventory operation".
 
-  With the combination of all of them is that we can make all the possible inventory operations.
+  Note: If you pass "[]" (empty) array, it will be taking as there is not information (this option was preferred
+  over the "undefined" one).
 
-  It is important to know that the pivotal prop is "operationInventory" that is the "state" that will
-  store the input of the user, in this way "suggestedInventory", "currentInventoy" and
-  "enablingFinalInventory" are auxiliar props that complements the information for the user.
-
-  Another thing to take account is that to indicate that some prop is not needed (at least for
-  "suggestedInventory" and "currentInventoy") for the inventory operations, the prop has to recieve
-  an empty array, so in this way the component will know that that information is not needed.
-
-  For example if I want to make an "start inventory", I'm going to pass a prop the state on which I will
-  store the input of the user (in addition of its handler to manage the events) and in the other props
-  I will pass an empty array "[]" and in the case of enablingFinalInventory I will pass "false".
-
-  In the case of a "restock operation" on which I need all auxiliar oepration I will pass the array
-  with the information according to the prop.
-
-  Important note: Since productIventory is taken as the main array to display the table the other array
-  may not be completed with all the products and it will work without problems.
+  Note: The param on which the component build the table is "operationInventory" (the information of the other arrays
+  display its information around "operationInventory").
 */
 
 
@@ -108,20 +94,6 @@ const TableInventoryOperations = (
           </DataTable.Title>
       </DataTable.Header>
       {/* Body section */}
-      {/*
-        It was decided that all the table will depend on "operationInventory".
-        This array will contain all the products so it is just matter of searching in the other
-        array to get the "current product" in the actual iteration, if it was not found, that means
-        that product in that particular operation have any implication.
-
-        Due this component architecture is that it is considered as very expensive, this becuase of
-        we need to traverse the main array while we have to search if there is match in the other arrays.
-
-        A good new is that it is expected that in "production" the amount of products don't pass of houndred of
-        products (it implies many rows), at the same time the restocks (columns) it is expected that at maximum,
-        a vendor makes five restocks in a day.
-        In addition, the consult of inventories is expected that it won't be so common.
-      */}
       { operationInventory.length > 0 ?
         operationInventory.map((product) => {
           // Propierties that are always going to be present.
