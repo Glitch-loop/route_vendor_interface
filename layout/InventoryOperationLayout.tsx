@@ -514,6 +514,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         */
         dispatch(setNextOperation());
       } else {
+        /* The inventory operation doesn't correspond to a start inventory operation.*/
         if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
           // It is a re-stock operation
           // Creating the inventory operation (this inventory operation is tied to the "work day").
@@ -620,6 +621,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
           // Store information in embedded database.
           await insertDayOperations(dayOperationPlanification);
+        } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+          
         }
       }
 

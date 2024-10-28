@@ -40,7 +40,12 @@ const AutomatedCorrectionNumberInput = ({
     if (isNaN(parsedInput)) {
       resultInput = 0;
     } else {
-      resultInput = parsedInput;
+      /* Number range for this component >= 0 */
+      if (parsedInput < 0) {
+        resultInput = 0;
+      } else {
+        resultInput = parsedInput;
+      }
     }
     setInputValue(input);
     onChangeAmount(resultInput);
