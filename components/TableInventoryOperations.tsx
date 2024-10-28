@@ -1,11 +1,12 @@
 // Libraries
 import React from 'react';
-import { TextInput, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
 import { IProductInventory } from '../interfaces/interfaces';
+import AutomatedCorrectionNumberInput from './generalComponents/AutomatedCorrectionInput';
 
 /*
   An attempt was made to generelize as much as possible.
@@ -78,44 +79,6 @@ const TableInventoryOperations = (
     setInventoryOperation:any,
   }) => {
 
-  // const [inputValue, setInputValue] = useState(amount.toString());
-  /*
-    This handler updates the amount that the vendor took to carry to the route.
-  */
-  // Handlers
-  const handleChangeInventory = (id_product:string, input: string) => {
-    // Parsing input
-    let parsedInput:number = parseInt(input, 10);
-
-    // Creating a copy og the inventory operation.
-    const updatedInventory: IProductInventory[] = [...operationInventory];
-
-    // Looking for the product to update.
-    const index:number = operationInventory
-      .findIndex((product:IProductInventory) => product.id_product === id_product);
-
-
-    if (index !== -1) { // The product exists in the inventory.
-      const updatedProduct = { ...updatedInventory[index] };
-
-      if (isNaN(parsedInput)) { // The input to convert was invalid.
-        updatedProduct.amount = 0;
-      } else {
-        if (parsedInput >= 0) { // Valid input
-          updatedProduct.amount = parsedInput;
-        } else { // Invalid input
-          updatedProduct.amount = 0;
-        }
-      }
-
-      updatedInventory[index] = updatedProduct;
-
-      setInventoryOperation(updatedInventory);
-    } else {
-      /* The product is not in the inventory */
-    }
-  };
-
   return (
     <DataTable style={tw`w-full`}>
       {/* Header section */}
@@ -173,6 +136,26 @@ const TableInventoryOperations = (
           suggestedAmount = foundCurrentProductInArray(suggestedInventory, id_product);
           currentInventoryAmount = foundCurrentProductInArray(currentInventory, id_product);
 
+          // Handlers
+          const handlerChangeInventory = (input: number) => {
+            // Creating a copy og the inventory operation.
+            const updatedInventory: IProductInventory[] = [...operationInventory];
+
+            // Looking for the product to update.
+            const index:number = operationInventory
+              .findIndex((productOperationInventory:IProductInventory) => productOperationInventory.id_product === id_product);
+
+            if (index !== -1) { // The product exists in the inventory.
+              const updatedProduct = { ...updatedInventory[index], amount: input };
+
+              updatedInventory[index] = updatedProduct;
+
+              setInventoryOperation(updatedInventory);
+            } else {
+              /* The product is not in the inventory */
+            }
+          };
+
           return (
             <DataTable.Row key={product.id_product}>
               {/* This field is never empty since it is necessary anytime */}
@@ -189,18 +172,12 @@ const TableInventoryOperations = (
                   <Text style={tw`text-black`}>{currentInventoryAmount}</Text>
                 </DataTable.Cell>
               }
-              {/*
-                This field is never empty since it is the reason of this component (inventory operation)
-              */}
               <DataTable.Cell style={tw`w-28 flex flex-row justify-center`}>
-                <TextInput
-                  style={tw`h-10 w-full 
-                    border border-black rounded-lg px-4 bg-slate-100 
-                    text-xs text-black text-center`}
-                  onChangeText={(input:string) => handleChangeInventory(id_product, input)}
-                  placeholder={'Cantidad'}
-                  keyboardType={'numeric'}
-                  />
+                <View style={tw`w-8/12`}>
+                  <AutomatedCorrectionNumberInput
+                    amount={amount}
+                    onChangeAmount={handlerChangeInventory}/>
+                </View>
               </DataTable.Cell>
                 <DataTable.Cell style={tw`w-28 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{ amount + currentInventoryAmount }</Text>
