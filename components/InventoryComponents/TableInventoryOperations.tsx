@@ -5,8 +5,8 @@ import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
-import { IProductInventory } from '../interfaces/interfaces';
-import AutomatedCorrectionNumberInput from './generalComponents/AutomatedCorrectionInput';
+import { IProductInventory } from '../../interfaces/interfaces';
+import AutomatedCorrectionNumberInput from '../generalComponents/AutomatedCorrectionInput';
 
 /*
   The intnetion of this component is to provide an interface to perform an inventory operation.

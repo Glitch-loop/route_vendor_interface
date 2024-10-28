@@ -7,7 +7,7 @@ import tw from 'twrnc';
 
 // Components
 import RouteHeader from '../components/RouteHeader';
-import TableInventoryOperations from '../components/TableInventoryOperations';
+import TableInventoryOperations from '../components/InventoryComponents/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
 
 // Queries
@@ -54,7 +54,7 @@ import {
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
 import MXN_CURRENCY from '../lib/mxnCurrency';
-import TableCashReception from '../components/TableCashReception';
+import TableCashReception from '../components/InventoryComponents/TableCashReception';
 import { timestamp_format } from '../utils/momentFormat';
 import { planningRouteDayOperations } from '../utils/routesFunctions';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
@@ -281,6 +281,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     } else {
       navigation.navigate('routeOperationMenu');
     }
+  };
+
+  const handlerReturnToRouteMenu = async ():Promise<void> => {
+    navigation.navigate('routeOperationMenu');
   };
 
   const handleVendorConfirmation = async ():Promise<void> => {
@@ -622,7 +626,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           // Store information in embedded database.
           await insertDayOperations(dayOperationPlanification);
         } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-          
+
         }
       }
 
@@ -642,9 +646,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     navigation.navigate('selectionRouteOperation');
   };
 
-  const handlerReturnToRouteMenu = async ():Promise<void> => {
-    navigation.navigate('routeOperationMenu');
-  };
+
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>

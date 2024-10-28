@@ -5,7 +5,7 @@ import tw from 'twrnc';
 import { DataTable } from 'react-native-paper';
 
 // Interfaces
-import { ICurrency } from '../interfaces/interfaces';
+import { ICurrency } from '../../interfaces/interfaces';
 
 
 
