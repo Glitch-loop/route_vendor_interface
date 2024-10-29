@@ -134,17 +134,17 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
 
   // Setting the current operation 'start shift inventory' (first operation of the day).
-  // dispatch(setCurrentOperation({
-  //   id_day_operation: '', // Specifying that this operation belongs to this day.
-  //   id_item: '',          // It is still not an operation.
-  //   id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
-  //   operation_order: 0,
-  //   current_operation: 0,
-  // }));
+  dispatch(setCurrentOperation({
+    id_day_operation: '', // Specifying that this operation belongs to this day.
+    id_item: '',          // It is still not an operation.
+    id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
+    operation_order: 0,
+    current_operation: 0,
+  }));
 
   useEffect(() => {
     // Store information in state.
-    dispatch(setUser(testingUser));
+    // dispatch(setUser(testingUser));
     /*
       In the system can exist different routes (route 1, route 2, route 3), each
       route is made by "route day" this concept refers that each route will have

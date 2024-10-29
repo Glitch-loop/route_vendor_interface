@@ -79,7 +79,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     dispatch(setCurrentOperation({
       id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
       id_item: '', // It is still not an operation.
-      id_type_operation: DAYS_OPERATIONS.end_shift_inventory,
+      id_type_operation: DAYS_OPERATIONS.product_devolution_inventory,
       operation_order: 0,
       current_operation: 0,
     }));

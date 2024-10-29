@@ -88,6 +88,24 @@ const initialProduct:IProductInventory = {
   amount: 0,
 };
 
+function getTitleOfInventoryOperation(dayOperation: IDayOperation):string {
+  let title:string = 'Inventario';
+
+  if (dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+    title = 'Inventario inicial';
+  } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+    title = 'Re-sctok de inventario';
+  } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+    title = 'Inventario final';
+  } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+    title = 'Devolución de producto';
+  } else {
+    /* There is not instructions */
+  }
+
+  return title;
+}
+
 
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
@@ -314,11 +332,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       };
 
       const dayOperationPlanification:IDayOperation[] = [];
-
-      const startShiftInventory = dayOperations.findIndex(dayOperation => {
-        return dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory;
-      });
-
       const storesInTheRoute:IRouteDayStores[] = [];
       const stores:(IStore&IStoreStatusDay)[] = [];
 
@@ -496,7 +509,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           the route).
         */
         dispatch(setNextOperation());
+
+        navigation.reset({
+          index: 0, // Set the index of the new state (0 means first screen)
+          routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+        });
+
+        navigation.navigate('routeOperationMenu');
       } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+      } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
         // It is a re-stock operation
         // Creating the inventory operation (this inventory operation is tied to the "work day").
         inventoryOperation.id_inventory_operation = uuidv4();
@@ -602,14 +623,16 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         // Store information in embedded database.
         await insertDayOperations(dayOperationPlanification);
+        navigation.reset({
+          index: 0, // Set the index of the new state (0 means first screen)
+          routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+        });
+
+        navigation.navigate('routeOperationMenu');
       } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
       }
 
-      navigation.reset({
-        index: 0, // Set the index of the new state (0 means first screen)
-        routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
-      });
-      navigation.navigate('routeOperationMenu');
+
 
     } catch (error) {
       console.error('Something went wrong: ', error);
@@ -626,7 +649,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         In this case, the application must redirect to the route operation selection to
         make able to the vendor to select a route.
       */
-      navigation.navigate('selectionRouteOperation');
+     navigation.navigate('routeSelection');
     } else {
       /*
         Since it is not the start shift inventory, it means the vendor is already making a route.
@@ -641,7 +664,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         <RouteHeader onGoBack={handlerGoBack}/>
       </View>
       {/* Product inventory section. */}
-      <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
+      <Text style={tw`w-full text-center text-black text-2xl`}>
+        {getTitleOfInventoryOperation(currentOperation)}
+      </Text>
       {/* Depending on the action is that one menu or another one will be displayed. */}
       { isOperation ?
         <View style={tw`flex basis-3/6 w-full mt-3`}>
@@ -650,7 +675,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               suggestedInventory={suggestedProduct}
               currentInventory={currentInventory}
               operationInventory={inventory}
-              setInventoryOperation={setInventory}/>
+              setInventoryOperation={setInventory}
+              currentOperation={currentOperation}/>
           </ScrollView>
         </View>
         :
@@ -669,7 +695,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }
 
       {/* Cash reception section. */}
-      { currentOperation.id_type_operation !== DAYS_OPERATIONS.restock_inventory && isOperation &&
+      {((currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory)
+      && isOperation) &&
         /*
           The reception of money can only be possible in tow scenarios:
             1. Start shift inventory operation.

@@ -5,8 +5,9 @@ import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
-import { IProductInventory } from '../../interfaces/interfaces';
+import { IDayOperation, IProductInventory } from '../../interfaces/interfaces';
 import AutomatedCorrectionNumberInput from '../generalComponents/AutomatedCorrectionInput';
+import DAYS_OPERATIONS from '../../lib/day_operations';
 
 /*
   The intnetion of this component is to provide an interface to perform an inventory operation.
@@ -52,46 +53,75 @@ function foundCurrentProductInArray(arrProduct: IProductInventory[], current_id_
   return resultAmount;
 }
 
+function determineFlowOfProduct(operation:IDayOperation) {
+  let result:boolean = true;
+  if (operation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+    result = false; // It is an inflow of product from the factory
+  } else {
+    result = true; // It is an outflow of product from the factory
+  }
+
+  return result;
+}
+
 const TableInventoryOperations = (
   {
     suggestedInventory,
     currentInventory,
     operationInventory,
     setInventoryOperation,
+    currentOperation,
   }:{
     suggestedInventory:IProductInventory[],
     currentInventory:IProductInventory[],
     operationInventory:IProductInventory[],
     setInventoryOperation:any,
+    currentOperation:IDayOperation,
   }) => {
+
+    let outflowProductFromFactory:boolean = determineFlowOfProduct(currentOperation);
 
   return (
     <DataTable style={tw`w-full`}>
       {/* Header section */}
       <DataTable.Header>
         {/* This field is never empty since it is necessary anytime */}
-        <DataTable.Title style={tw`w-32 flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Producto</Text>
+        <DataTable.Title style={tw`w-32 flex flex-row justify-center`}>
+          <Text style={tw`text-black text-center`}>Producto</Text>
         </DataTable.Title>
         { suggestedInventory.length > 0 &&
-          <DataTable.Title style={tw`w-20 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Sugerido</Text>
+          <DataTable.Title style={tw`w-20 flex flex-row justify-center`}>
+            <Text style={tw`text-black text-center`}>Sugerido</Text>
           </DataTable.Title>
         }
         { currentInventory.length > 0 &&
-          <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Inventario Actual</Text>
+          <DataTable.Title style={tw`w-24 flex flex-row justify-center`}>
+            <Text style={tw`text-black text-center`}>Inventario Actual</Text>
           </DataTable.Title>
         }
         {/*
           This field is never empty since it is the reason of this component (inventory operation)
         */}
-        <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
-          <Text style={tw`text-black`}>Producto recibido</Text>
+        <DataTable.Title style={tw`w-28 flex flex-row justify-center`}>
+          <View style={tw`max-w-20`}>
+            <Text style={tw`text-black text-center`}>
+              { outflowProductFromFactory ?
+                'Producto a recibir' :
+                'Producto a entregar'
+              }
+            </Text>
+          </View>
         </DataTable.Title>
-          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
-            <Text style={tw`text-black`}>Inventario a llevar</Text>
-          </DataTable.Title>
+        <DataTable.Title style={tw`w-28 flex flex-row justify-center`}>
+          <View style={tw`max-w-20`}>
+            <Text style={tw`text-black text-center`}>
+              { outflowProductFromFactory ?
+                'Inventario a recibir' :
+                'Inventario a entregar'
+              }
+            </Text>
+          </View>
+        </DataTable.Title>
       </DataTable.Header>
       {/* Body section */}
       { operationInventory.length > 0 ?
