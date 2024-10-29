@@ -1,6 +1,6 @@
 // Librarries
 import React from 'react';
-import { TextInput, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import { DataTable } from 'react-native-paper';
 
@@ -20,28 +20,6 @@ const TableCashReception = (
     setCashInventoryOperation:any
   }) => {
 
-  // Inventory
-  const handleChangeAmountCash = (id_denomination:number, input: string) => {
-    const index:number|undefined = cashInventoryOperation.findIndex(
-    (product:ICurrency) => product.id_denomination === id_denomination);
-
-    const updatedCashInventory: ICurrency[] = [...cashInventoryOperation];
-
-    if (index !== undefined || index !== -1) {
-      const updatedCash = { ...updatedCashInventory[index] };
-
-      if (input === '') {
-        updatedCash.amount = 0;
-      } else {
-        updatedCash.amount = parseInt(input, 32) || 0;
-      }
-      updatedCashInventory[index] = updatedCash;
-
-      setCashInventoryOperation(updatedCashInventory);
-    }
-  };
-
-
   return (
     <DataTable style={tw`w-full`}>
       <DataTable.Header>
@@ -52,25 +30,38 @@ const TableCashReception = (
           <Text style={tw`text-black`}>Cantidad</Text>
         </DataTable.Title>
       </DataTable.Header>
-      {cashInventoryOperation.map((denomination:ICurrency) => (
-        <DataTable.Row
-        key={denomination.id_denomination}>
-          <DataTable.Cell style={tw`flex flex-row justify-center`}>
-            <Text style={tw`text-black`}>${denomination.value}</Text>
-          </DataTable.Cell>
-          <DataTable.Cell style={tw`flex flex-row justify-center`}>
-            <TextInput
-              style={tw`h-10 w-full 
-                border border-black rounded-lg px-4 bg-slate-100 
-                text-xs text-black text-center`}
-              onChangeText={(input:string) =>
-                handleChangeAmountCash(denomination.id_denomination, input)}
-              placeholder={'Cantidad'}
-              keyboardType={'numeric'}
-              />
-          </DataTable.Cell>
-        </DataTable.Row>
-      ))}
+      {cashInventoryOperation.map((cashInventoryDenomination:ICurrency) =>
+      {
+        const handlerChangeAmountCash = (input: number) => {
+          const index:number = cashInventoryOperation.findIndex(
+          (cashDenomination:ICurrency) => cashDenomination.id_denomination === cashInventoryDenomination.id_denomination);
+
+          const updatedCashInventory: ICurrency[] = [...cashInventoryOperation];
+
+          if (index === -1) {
+            /* The denomination is not in the operation */
+          } else {
+            /* The denomination exists */
+            const updatedCash:ICurrency = { ...updatedCashInventory[index], amount: input };
+            updatedCashInventory[index] = updatedCash;
+            setCashInventoryOperation(updatedCashInventory);
+          }
+        };
+        return (
+          <DataTable.Row
+          key={cashInventoryDenomination.id_denomination}>
+            <DataTable.Cell style={tw`flex flex-row justify-center`}>
+              <Text style={tw`text-black`}>${cashInventoryDenomination.value}</Text>
+            </DataTable.Cell>
+            <DataTable.Cell style={tw`flex flex-row justify-center`}>
+            <View style={tw`w-8/12`}>
+              <AutomatedCorrectionNumberInput
+                amount={cashInventoryDenomination.amount!}
+                onChangeAmount={handlerChangeAmountCash}/>
+            </View>
+            </DataTable.Cell>
+          </DataTable.Row>
+        );})}
     </DataTable>
   );
 };
