@@ -27,6 +27,7 @@ import {
 import DAYS from '../lib/days';
 import { current_day_name } from '../utils/momentFormat';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
+import DAYS_OPERATIONS from '../lib/day_operations';
 
 // Redux States and reducers
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,6 +40,7 @@ import {
   setRouteDay,
   setAllGeneralInformation,
 } from '../redux/slices/routeDaySlice';
+import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 // Interfaces
 import {
@@ -129,10 +131,20 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   /*
     TODO: This request is made at the beginning of the application (login)
   */
-  // Store information in state.
-  dispatch(setUser(testingUser));
+
+
+  // Setting the current operation 'start shift inventory' (first operation of the day).
+  // dispatch(setCurrentOperation({
+  //   id_day_operation: '', // Specifying that this operation belongs to this day.
+  //   id_item: '',          // It is still not an operation.
+  //   id_type_operation: DAYS_OPERATIONS.start_shift_inventory,
+  //   operation_order: 0,
+  //   current_operation: 0,
+  // }));
 
   useEffect(() => {
+    // Store information in state.
+    dispatch(setUser(testingUser));
     /*
       In the system can exist different routes (route 1, route 2, route 3), each
       route is made by "route day" this concept refers that each route will have
@@ -181,8 +193,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       } else {
         /* It is a new 'work' day. */
         // Getting all the routes assigned to a vendor
-        formattingDaysOfTheVendor(user)
-        .then((routesOfVendor:ICompleteRoute[]) => {setRoutes(routesOfVendor);});
+        formattingDaysOfTheVendor(testingUser)
+          .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); });
       }
     });
   },[]);
