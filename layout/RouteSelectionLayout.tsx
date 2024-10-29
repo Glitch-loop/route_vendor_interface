@@ -26,11 +26,11 @@ import {
 // Utils
 import DAYS from '../lib/days';
 import { current_day_name } from '../utils/momentFormat';
-
+import { capitalizeFirstLetter } from '../utils/generalFunctions';
 
 // Redux States and reducers
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
 import { setDayOperation, setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 import {
@@ -40,21 +40,83 @@ import {
   setAllGeneralInformation,
 } from '../redux/slices/routeDaySlice';
 
+// Interfaces
+import {
+  ICompleteRoute,
+  ICompleteRouteDay,
+  IDayOperation,
+  IProductInventory,
+  IRoute,
+  IRouteDay,
+  IUser 
+} from '../interfaces/interfaces';
+
 // Components
 import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
-import { ICompleteRoute, ICompleteRouteDay, IDayOperation, IProductInventory, IRoute, IRouteDay, IUser } from '../interfaces/interfaces';
 import ActionDialog from '../components/ActionDialog';
-import { capitalizeFirstLetter } from '../utils/generalFunctions';
+
 
 // Testing
 import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 
+async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
+  try {
+    let completeRoutes:ICompleteRoute[] = [];
+    let currentRoute: ICompleteRoute;
+    let routes:IRoute[] = [];
+    let daysOfRoute:IRouteDay[] = [];
+    let completeDaysOfRoute: ICompleteRouteDay[] = [];
+
+    // Getting all vendor's routes
+    routes = await getAllRoutesByVendor(vendor.id_vendor);
+
+    // Getting all the days in a route
+    for (let i = 0; i < routes.length; i++) {
+      daysOfRoute = await getAllDaysByRoute(routes[i].id_route);
+      /* Once all the days of a route have been gotten */
+      // From the current days of a route, get the remaining information for each route.
+      daysOfRoute.forEach(routeDay => {
+        let completeRouteDay:ICompleteRouteDay = {
+          ...routeDay,
+          day: DAYS[routeDay.id_day],
+        };
+        completeDaysOfRoute.push(completeRouteDay);
+      });
+
+      // Ordering days of the route.
+      completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
+
+      /*
+        Storing the current route (this information contains both the complete information of the
+        route and the information of each days that made up the route).
+      */
+      currentRoute = {
+        ...routes[i],
+        description: capitalizeFirstLetter(routes[i].description),
+        route_name: capitalizeFirstLetter(routes[i].route_name),
+        routeDays: completeDaysOfRoute,
+      };
+
+      // Avoiding store routes without days.
+      if(completeDaysOfRoute[0] !== undefined) {
+        completeRoutes.push(currentRoute);
+      }
+    }
+
+    return completeRoutes;
+  } catch (error) {
+    console.log('Something was wrong');
+    return [];
+  }
+}
+
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
   const dispatch: AppDispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.user);
 
   // Use states definition
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
@@ -62,6 +124,13 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   const [pendingToAcceptRoute, setPendingToAcceptRoute] = useState<IRoute|undefined>(undefined);
   const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<ICompleteRouteDay|undefined>(undefined);
 
+
+  // Setting the john doe user for testing
+  /*
+    TODO: This request is made at the beginning of the application (login)
+  */
+  // Store information in state.
+  dispatch(setUser(testingUser));
 
   useEffect(() => {
     /*
@@ -77,14 +146,9 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
       In addition, each route will have assigend a vendor who is in charge of maintin the route.
     */
 
-    // Setting the john doe user for testing
-    /*
-      TODO: This request is made at the beginning of the application (login)
-    */
-    // Store information in state.
-    dispatch(setUser(testingUser));
 
-    // Determining if there an initialized route day
+
+    // Determining if there is an initialized day.
     getDayOperations()
     .then(async (dayOperations:IDayOperation[]) => {
       if (dayOperations.length > 0) {
@@ -115,58 +179,12 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
-        console.log("New day")
-        /*
-          It means that there is not currentlu a day operation, so continuing with the
-          normal workflow of the application.
-        */
-        // Getting all the route assigned to a vendor
-        getAllRoutesByVendor('58eb6f1c-29fc-46dd-bf19-caece0950257')
-        .then(routesData => {
-          // Getting all the days in a route
-          routesData.forEach(currentRouteData => {
-            getAllDaysByRoute(currentRouteData.id_route)
-            .then(routeDaysData => {
-              let currentRoute: ICompleteRoute;
-              let arrRouteDays: ICompleteRouteDay[] = [];
-
-              // Getting the name of the day
-              routeDaysData.forEach(routeDayData => {
-                let routeDay:ICompleteRouteDay = {
-                  ...routeDayData,
-                  day: DAYS[routeDayData.id_day],
-                };
-                arrRouteDays.push(routeDay);
-              });
-
-              // Ordering the days
-              arrRouteDays.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
-
-              currentRoute = {
-                ...currentRouteData,
-                description: capitalizeFirstLetter(currentRouteData.description),
-                route_name: capitalizeFirstLetter(currentRouteData.route_name),
-                routeDays: arrRouteDays,
-              };
-
-              // Avoiding store routes without days.
-              if(arrRouteDays[0] !== undefined) {
-                let index = routes.findIndex(route => route.id_route === currentRoute.id_route);
-                // Avoiding duplicate records
-                if (index === -1) {
-                  // The route doesn't exist
-                  setRoutes([...routes, currentRoute]);
-                } else {
-                  setRoutes(routes.map(route => route.id_route === currentRoute.id_route ? currentRoute : route));
-                }
-              }
-            });
-          });
-        })
-        .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
+        /* It is a new 'work' day. */
+        // Getting all the routes assigned to a vendor
+        formattingDaysOfTheVendor(user)
+        .then((routesOfVendor:ICompleteRoute[]) => {setRoutes(routesOfVendor);});
       }
     });
-
   },[]);
 
   // Auxiliar functions
@@ -282,7 +300,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
               );
             })}
           </View>;
-        }) :
+        })
+        :
         <View style={tw`h-full flex flex-col justify-center`}>
           <ActivityIndicator size={'large'} />
         </View>

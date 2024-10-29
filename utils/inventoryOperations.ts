@@ -1,4 +1,5 @@
-import { IProductInventory } from '../interfaces/interfaces';
+import MXN_CURRENCY from '../lib/mxnCurrency';
+import { IProductInventory, ICurrency } from '../interfaces/interfaces';
 
 /*
   This function gets the amount of a particualar product in an array of type "IProductInventory"
@@ -24,3 +25,21 @@ export function findProductAmountInArray(arrProduct: IProductInventory[], curren
 
   return resultAmount;
 }
+
+// Related to currency
+export function initialMXNCurrencyState():ICurrency[] {
+  let arrDenomination:ICurrency[] = [];
+
+  for (const key in MXN_CURRENCY) {
+    arrDenomination.push({
+      id_denomination: parseInt(key,32),
+      value: MXN_CURRENCY[key].value,
+      amount: 0,
+      coin: MXN_CURRENCY[key].coin,
+    });
+  }
+  return arrDenomination;
+}
+
+// Related to product inventory
+

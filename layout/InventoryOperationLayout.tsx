@@ -9,6 +9,7 @@ import tw from 'twrnc';
 import RouteHeader from '../components/RouteHeader';
 import TableInventoryOperations from '../components/InventoryComponents/TableInventoryOperations';
 import VendorConfirmation from '../components/VendorConfirmation';
+import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
 
 // Queries
 // Central database
@@ -53,12 +54,12 @@ import {
 
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
-import MXN_CURRENCY from '../lib/mxnCurrency';
 import TableCashReception from '../components/InventoryComponents/TableCashReception';
 import { timestamp_format } from '../utils/momentFormat';
 import { planningRouteDayOperations } from '../utils/routesFunctions';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
+import { initialMXNCurrencyState } from '../utils/inventoryOperations';
 
 // Redux context
 import { useSelector, useDispatch } from 'react-redux';
@@ -73,9 +74,6 @@ import {
   setNextOperation,
 } from '../redux/slices/dayOperationsSlice';
 
-// Moocks
-import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
-
 const initialProduct:IProductInventory = {
   id_product: '',
   product_name: '',
@@ -88,21 +86,6 @@ const initialProduct:IProductInventory = {
   order_to_show: 0,
   amount: 0,
 };
-
-function initialMXNCurrencyState():ICurrency[] {
-  let arrDenomination:ICurrency[] = [];
-
-  for (const key in MXN_CURRENCY) {
-    arrDenomination.push({
-      id_denomination: parseInt(key,32),
-      value: MXN_CURRENCY[key].value,
-      amount: 0,
-      coin: MXN_CURRENCY[key].coin,
-    });
-  }
-
-  return arrDenomination;
-}
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Defining redux context
@@ -211,7 +194,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           }).catch((error) => { console.error('Something went wrong: ', error);});
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
-    } else { // It is a new operation
+    } else { // It is a new inventory operation
       /* It means it is a product operation */
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
         /*
@@ -234,6 +217,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         }
 
         setIsFirstInventory(false);
+      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+        
       } else {
         /* It is a initial shift inventory operation */
         /*
@@ -645,15 +630,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const handlerOnVendorCancelation = () => {
     navigation.navigate('selectionRouteOperation');
   };
-
-
-
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
-        <RouteHeader
-          onGoBack={handlerGoBack}/>
+        <RouteHeader onGoBack={handlerGoBack}/>
       </View>
+
       {/* Product inventory section. */}
       <Text style={tw`w-full text-center text-black text-2xl`}>Inventario</Text>
       {/* Depending on the action is that one menu or another one will be displayed. */}
@@ -666,7 +648,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               operationInventory={inventory}
               setInventoryOperation={setInventory}/>
           </ScrollView>
-        </View> :
+        </View>
+        :
         <TableInventoryVisualization
           inventory             = {productsInventory}
           suggestedInventory    = {suggestedProduct}
@@ -680,6 +663,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           finalOperation        = {false}
           issueInventory        = {false}/>
       }
+
       {/* Cash reception section. */}
       { currentOperation.id_type_operation !== DAYS_OPERATIONS.restock_inventory && isOperation &&
         /*

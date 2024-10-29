@@ -21,10 +21,6 @@ import TypeOperationItem from '../components/TypeOperationItem';
 import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 
-// Embedded database
-import { updateDayOperation } from '../queries/SQLite/sqlLiteQueries';
-import { getGeolocationStatus } from '../services/geolocationService';
-
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
   const dispatch:AppDispatch = useDispatch();
@@ -73,6 +69,17 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
       id_item: '', // It is still not an operation.
       id_type_operation: DAYS_OPERATIONS.restock_inventory,
+      operation_order: 0,
+      current_operation: 0,
+    }));
+    navigation.navigate('inventoryOperation');
+  };
+
+  const onFinishInventory = ():void => {
+    dispatch(setCurrentOperation({
+      id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
+      id_item: '', // It is still not an operation.
+      id_type_operation: DAYS_OPERATIONS.end_shift_inventory,
       operation_order: 0,
       current_operation: 0,
     }));
@@ -159,11 +166,12 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               <Text style={tw`text-sm text-center`}>Crear nuevo cliente</Text>
             </Pressable>
             <Pressable
-              onPress={() => {onRestockInventory();}}
+              onPress={() => { onRestockInventory(); }}
               style={tw`bg-orange-500 px-4 py-3 mx-1 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Restock de producto</Text>
             </Pressable>
             <Pressable
+              onPress={() => { onFinishInventory(); }}
               style={tw`bg-indigo-400 px-4 py-3 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Finalizar ruta</Text>
             </Pressable>
