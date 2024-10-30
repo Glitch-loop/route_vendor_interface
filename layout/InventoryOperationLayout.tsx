@@ -106,7 +106,165 @@ function getTitleOfInventoryOperation(dayOperation: IDayOperation):string {
   return title;
 }
 
+async function creatingNewWorkDay(cashInventory:ICurrency[],
+  routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
+  const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
+    /*Fields related to the general information.*/
+    id_work_day: '',
+    start_date: '',
+    finish_date: '',
+    start_petty_cash: 0,
+    final_petty_cash: 0,
+    /*Fields related to IRoute interface*/
+    id_route: '',
+    route_name: '',
+    description: '',
+    route_status: '',
+    id_vendor: '',
+    /*Fields related to IDay interface*/
+    id_day: '',
+    day_name: '',
+    order_to_show: 0,
+    /*Fields relate to IRouteDay*/
+    id_route_day: '',
+  };
 
+  try {
+    let startPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
+      { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
+
+    // General information about the route.
+    const dayGeneralInformation:IDayGeneralInformation = {
+      id_work_day: uuidv4(),
+      start_date : timestamp_format(),
+      finish_date: timestamp_format(),
+      start_petty_cash: startPettyCash,
+      final_petty_cash: 0,
+    };
+
+    // Concatenating all the information.
+    return {...dayGeneralInformation, ...routeDay};
+  } catch (error) {
+    return workDay;
+  }
+}
+
+async function gettingStoresInformation(storesInRoute:IRouteDayStores[]):Promise<(IStore&IStoreStatusDay)[]> {
+  try {
+    const stores:(IStore&IStoreStatusDay)[] = [];
+
+    // Getting the information of the stores.
+
+    /*
+      In addition of the information of the stores, it is determined the "state" for each store during the route.
+
+      The state is a way to determine the status of a store in route (if it is pending to visit, if it has been visited,
+      if it is a new client, etc).
+    */
+    (await getStoresByArrID(storesInRoute.map((storeInRoute:IRouteDayStores) => {return storeInRoute.id_store;})))
+      .map((storeInformation) => stores.push({
+        ...storeInformation,
+        route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+      }));
+
+    return stores;
+  } catch (error) {
+    return [];
+  }
+}
+
+async function gettingRouteInformationOfTheStores(routeDay:IRouteDay):Promise<IRouteDayStores[]> {
+  try {
+    const storesInTheRoute:IRouteDayStores[] = [];
+
+    /*
+      Getting the particular stores that belongs to the route day.
+      In addition, this query provides the position of each store in the day.
+    */
+    // Getting the stores that belongs to this particular day of the route
+    (await getAllStoresInARouteDay(routeDay.id_route_day))
+      .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});
+
+    return storesInTheRoute;
+  } catch (error) {
+    return [];
+  }
+}
+
+function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation):IInventoryOperation {
+  const inventoryOperation:IInventoryOperation = {
+    id_inventory_operation: '',
+    sign_confirmation: '',
+    date: '',
+    audit: 0,
+    id_type_of_operation: '',
+    id_work_day: '',
+  };
+  try {
+    // Creating the inventory operation (this inventory operation is tied to the "work day").
+    inventoryOperation.id_inventory_operation = uuidv4();
+    inventoryOperation.sign_confirmation = '1';
+    inventoryOperation.date = timestamp_format();
+    inventoryOperation.audit = 0;
+    inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.start_shift_inventory;
+    inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
+
+    return inventoryOperation;
+  } catch (error) {
+    return inventoryOperation;
+  }
+}
+
+function creatingInventoryOperationDescription(inventory:IProductInventory[], inventoryOperation:IInventoryOperation):IInventoryOperationDescription[] {
+  const inventoryOperationDescription:IInventoryOperationDescription[] = [];
+  try {
+    // Extracting information from the inventory operation.
+    inventory.forEach(product => {
+      inventoryOperationDescription.push({
+        id_product_operation_description: uuidv4(),
+        price_at_moment: product.price,
+        amount: product.amount,
+        id_inventory_operation: inventoryOperation.id_inventory_operation,
+        id_product: product.id_product,
+      });
+    });
+    return inventoryOperationDescription;
+  } catch (error) {
+    return inventoryOperationDescription;
+  }
+}
+
+function creatingDayOperation(idItem:string, operationOrder:number, currentOperation:number):IDayOperation {
+  const dayOperation:IDayOperation = {
+    id_day_operation: '',
+    id_item: '', //At this point the inventory hasn't been created.
+    id_type_operation: '',
+    operation_order: 0,
+    current_operation: 0,
+  };
+  try {
+    // Creating a day operation (day operation resulted from the ivnentory operation).
+    dayOperation.id_day_operation = uuidv4();
+    dayOperation.id_item = idItem;
+    dayOperation.id_type_operation = DAYS_OPERATIONS.start_shift_inventory;
+    dayOperation.operation_order = operationOrder;
+    dayOperation.current_operation = currentOperation;
+
+    return dayOperation;
+  } catch (error) {
+    return dayOperation;
+  }
+}
+
+async function insertOperations() {
+
+          // Day operation.
+        /*
+          Once all the process have been stored, the day operation itself is created.
+        */
+          console.log("Inserting a new operation: ", inventoryDayOperation)
+
+}
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Defining redux context
@@ -290,64 +448,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       if (isInventoryAccepted === true) {
         return;
       }
-
       setIsInventoryAccepted(true);
-
-      // Variables for different processes.
-      // const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
-      //   /*Fields related to the general information.*/
-      //   id_work_day: '',
-      //   start_date: '',
-      //   finish_date: '',
-      //   start_petty_cash: 0,
-      //   final_petty_cash: 0,
-      //   /*Fields related to IRoute interface*/
-      //   id_route: '',
-      //   route_name: '',
-      //   description: '',
-      //   route_status: '',
-      //   id_vendor: '',
-      //   /*Fields related to IDay interface*/
-      //   id_day: '',
-      //   day_name: '',
-      //   order_to_show: 0,
-      //   /*Fields relate to IRouteDay*/
-      //   id_route_day: '',
-      // };
-
-      const dayGeneralInformation:IDayGeneralInformation = {
-        id_work_day: '',
-        start_date : timestamp_format(),
-        finish_date: timestamp_format(),
-        start_petty_cash: 0,
-        final_petty_cash: 0,
-      };
-
-      const inventoryDayOperation:IDayOperation = {
-        id_day_operation: '',
-        id_item: '', //At this point the inventory hasn't been created.
-        id_type_operation: '',
-        operation_order: 0,
-        current_operation: 0,
-      };
-
-      const dayOperationPlanification:IDayOperation[] = [];
-      const storesInTheRoute:IRouteDayStores[] = [];
-      const stores:(IStore&IStoreStatusDay)[] = [];
-
-      const inventoryOperation:IInventoryOperation = {
-        id_inventory_operation: '',
-        sign_confirmation: '',
-        date: '',
-        audit: 0,
-        id_type_of_operation: '',
-        id_work_day: '',
-      };
-
-      const inventoryOperationDescription:IInventoryOperationDescription[] = [];
-
-      const newInventory:IProductInventory[] = [];
-
       /*
         There are 3 types of inventory operations:
         - Start shift inventory: Unique in the day.
@@ -357,150 +458,92 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             - Devolutions
             - Remainded products
       */
+
       // Determining the type of inventory operation.
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
         /*
-          When the vendor selected the route that is going to perform today, all of these
-          were recorded:
-            - route
-            - day
-            - routeDay
+          Implicitly when the vendor closes the first inventory of the day, he accepts to perform the currnet day.
+          So, before creating the first inventory of the day, it is needed to create the "work day".
 
-          So, it is just needed to complete the remainded information.
+          At this moment, all of these information is already recorded:
+            - route: Information related to the route identification.
+            - day: The information of the day.
+            - routeDay: Information that relates the day to perform and the route.
+
+          But it is needed to complete the remainded information:
             - General information related to the route.
-
-          Conceptually, after aceppting the initial inventory, he accepts to make the route with
-          certain amount of product.
         */
+        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay = await creatingNewWorkDay(cashInventory, routeDay);
 
-        // General information about the route.
-        // Setting general information related to the route.
-        dayGeneralInformation.id_work_day = uuidv4();
-        dayGeneralInformation.start_date = timestamp_format();
-        dayGeneralInformation.finish_date = timestamp_format();
-        // Getting the total of money that he is carrying.
-        dayGeneralInformation.start_petty_cash = cashInventory
-        .reduce((acc, currentCurrency) => { if (currentCurrency.amount === undefined) {return acc;}
-          else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
-        dayGeneralInformation.final_petty_cash = 0;
+        // Storing information in embedded database.
+        await insertWorkDay(dayGeneralInformation);
 
-        /*
-          According with the flow of the business operation, after selecting the route,
-          the vendor must make an "start_shift_inventory operation" to have products for selling.
-          So, the next operation (after selecting the route) is make the inventory.
-        */
-
-        // Creating the inventory operation (this inventory operation is tied to the "work day").
-        inventoryOperation.id_inventory_operation = uuidv4();
-        inventoryOperation.sign_confirmation = '1';
-        inventoryOperation.date = timestamp_format();
-        inventoryOperation.audit = 0;
-        inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.start_shift_inventory;
-        inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
-
-        // Creating a day operation (day operation resulted from the ivnentory operation).
-        inventoryDayOperation.id_day_operation = uuidv4();
-        inventoryDayOperation.id_item = inventoryOperation.id_inventory_operation;
-        inventoryDayOperation.id_type_operation = DAYS_OPERATIONS.start_shift_inventory;
-        inventoryDayOperation.operation_order = 0;
-        inventoryDayOperation.current_operation = 1;
-
-        // General information about the route
         // Storing information in redux context.
         dispatch(setDayGeneralInformation(dayGeneralInformation));
 
-        // Storing information in embedded database.
-        await insertWorkDay({...dayGeneralInformation, ...routeDay});
-
-        // Inventory operation.
-        /*
-          In theory, this information should be stored in both redux state and embedded database
-          but since it is information with low read operations, to prevent making the application
-          heavy the information is only stored in the embedded database.
-        */
-        // Storing information in embedded database.
-        await insertInventoryOperation(inventoryOperation);
-
-        //Inventory operation description.
-        /*
-          This is a sub-record of the inventory description. This table contains the "movements"
-          or actions that were made in the inventiry operation... Essentially: product, amount of
-          product.
-        */
-        // Extracting information from the inventory operation.
-        inventory.forEach(product => {
-          inventoryOperationDescription.push({
-            id_product_operation_description: uuidv4(),
-            price_at_moment: product.price,
-            amount: product.amount,
-            id_inventory_operation: inventoryOperation.id_inventory_operation,
-            id_product: product.id_product,
-          });
-        });
-
-        // Storing information in embedded database.
-        await insertInventoryOperationDescription(inventoryOperationDescription);
-
-
-        // Inventory
-        /*
-          Since this is the first inventory operation, the product that is going to be stored
-          will be the inventory.
-        */
-        // Storing information in redux context.
-        dispatch(setProductInventory(inventory));
-
-        // Storing information in embedded database.
-        await insertProducts(inventory);
-
-        // Day operation.
-        /*
-          Once all the process have been stored, the day operation itself is created.
-        */
-      console.log("Inserting a new operation: ", inventoryDayOperation)
-        // Store information in redux context.
-        dispatch(setDayOperation(inventoryDayOperation));
-
-        // Store information in embedded database.
-        // Start shift inventory is not longer the current activity.
-        inventoryDayOperation.current_operation = 0;
-        await insertDayOperation(inventoryDayOperation);
-
-        // Stores.
-        //Setting information of the stores.
-        // Getting the stores that belongs to a particular day of the route
-        (await getAllStoresInARouteDay(routeDay.id_route_day))
-        .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});
-
-        // Getting the information of the stores that belongs to this work day.
-        (await getStoresByArrID(storesInTheRoute
-          .map(storeInRoute => {return storeInRoute.id_store;})))
-          .map((storeInformation) => stores.push({
-            ...storeInformation,
-            route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
-          }));
-
-        // Storing in redux context.
-        dispatch(setStores(stores));
+        /* Once the workday has been declared, it is necessary to get the information of the stores */
+        const storesInTheRoute:IRouteDayStores[] = await gettingRouteInformationOfTheStores(routeDay);
+        const stores:(IStore&IStoreStatusDay)[] = await gettingStoresInformation(storesInTheRoute);
 
         // Storing in embedded database
         await insertStores(stores);
 
-        //Setting route operations (the stores that are going to be visited during the day).
-        planningRouteDayOperations(storesInTheRoute)
-          .forEach((dayOperation:IDayOperation) =>
-            { dayOperationPlanification.push(dayOperation); });
+        // Storing in redux context.
+        dispatch(setStores(stores));
+
+        /* After "selecting" the route, the vendor must make the a "start shift inventory" (to have product for selling). */
+        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(dayGeneralInformation);
+        const inventoryOperationDescription:IInventoryOperationDescription[]
+          = creatingInventoryOperationDescription(inventory, inventoryOperation);
+
+        // Inventory operation.
+        /* Due to this information is low read data, it is going to be stored only in the embedded database. */
+        /* Related to the inventory operation */
+        // Storing information in embedded database.
+        await insertInventoryOperation(inventoryOperation);
+
+        // Storing information in embedded database.
+        await insertInventoryOperationDescription(inventoryOperationDescription);
+
+        /* Related to the inventory that the vendo will use to sell */
+        // Storing information in redux context.
+        dispatch(setProductInventory(inventory));
+
+        /* Related to the product information */
+        // Storing information in embedded database.
+        await insertProducts(inventory);
+
+        /*
+          At this moment, it has been collected all the information needed for the work day,
+          so it is needed to organize the operations that the vendor is going to do throughout the day a.k.a
+          work day operations.
+        */
+
+        // Creating a work day operation for the start "shift inventory".
+        const newDayOperation:IDayOperation = creatingDayOperation(inventoryOperation.id_inventory_operation, 0, 1);
+
+        await insertDayOperation(newDayOperation);
+
+        // Store information in redux context.
+        dispatch(setDayOperation(newDayOperation));
+
+        // Store information in embedded database.
+        // Start shift inventory is not longer the current activity.
+        newDayOperation.current_operation = 0;
+
+        // Getting the rest of the day operations (the stores that are going to be visited)
+        let dayOperationsOfStores:IDayOperation[] = planningRouteDayOperations(storesInTheRoute);
 
         // Storing in redux state.
-        dispatch(setArrayDayOperations(dayOperationPlanification));
+        dispatch(setArrayDayOperations(dayOperationsOfStores));
 
         // Storing in embedded database
-        if (dayOperationPlanification.length > 0) {
-          // Updating the first store of the route is the new current operation. 
-          dayOperationPlanification[0].current_operation = 1;
+        if (dayOperationsOfStores.length > 0) {
+          // The first store of the route is now the new current operation.
+          dayOperationsOfStores[0].current_operation = 1;
         }
 
-        await insertDayOperations(dayOperationPlanification);
+        await insertDayOperations(dayOperationsOfStores);
 
         /*
           At this point the records needed to start a database have been created.
