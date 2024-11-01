@@ -70,9 +70,10 @@ import { setStores } from '../redux/slices/storesSlice';
 import {
   setArrayDayOperations,
   setDayOperation,
-  setDayOperationBeforeCurrentOpeation,
+  setDayOperationBeforeCurrentOperation,
   setNextOperation,
 } from '../redux/slices/dayOperationsSlice';
+import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 
 const initialProduct:IProductInventory = {
@@ -234,7 +235,7 @@ function creatingInventoryOperationDescription(inventory:IProductInventory[], in
   }
 }
 
-function creatingDayOperation(idItem:string, operationOrder:number, currentOperation:number):IDayOperation {
+function creatingDayOperation(idItem:string, idTypeOperation:string, operationOrder:number, currentOperation:number):IDayOperation {
   const dayOperation:IDayOperation = {
     id_day_operation: '',
     id_item: '', //At this point the inventory hasn't been created.
@@ -245,8 +246,8 @@ function creatingDayOperation(idItem:string, operationOrder:number, currentOpera
   try {
     // Creating a day operation (day operation resulted from the ivnentory operation).
     dayOperation.id_day_operation = uuidv4();
-    dayOperation.id_item = idItem;
-    dayOperation.id_type_operation = DAYS_OPERATIONS.start_shift_inventory;
+    dayOperation.id_item = idItem === '' ? uuidv4() : idItem;
+    dayOperation.id_type_operation = idTypeOperation;
     dayOperation.operation_order = operationOrder;
     dayOperation.current_operation = currentOperation;
 
@@ -254,16 +255,6 @@ function creatingDayOperation(idItem:string, operationOrder:number, currentOpera
   } catch (error) {
     return dayOperation;
   }
-}
-
-async function insertOperations() {
-
-          // Day operation.
-        /*
-          Once all the process have been stored, the day operation itself is created.
-        */
-          console.log("Inserting a new operation: ", inventoryDayOperation)
-
 }
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
@@ -305,8 +296,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       a previous inventory operation.
     */
 
-    getAllProducts().then(products => {
-      // Creating inventory for all the products.
+    getAllProducts()
+    .then(products => {
+      // Creating inventory (list) with all the products.
       let productInventory:IProductInventory[] = [];
       products.map(product => {
         productInventory.push({
@@ -366,39 +358,24 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
     } else { // It is a new inventory operation
-      /* It means it is a product operation */
-      if (currentOperation.id_day_operation === DAYS_OPERATIONS.start_shift_inventory) {
-        /* It is a initial shift inventory operation */
-        /*
-          Since it is the first inventory operation and the state
-          'inventory' stores an inventory in blank, we can copy this inventory
-          in currentInventory.
-        */
-          setCurrentInventory(inventory);
-      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
-        /*
-          It means that it is a restock menu.
-          This is an operation which previously has been other inventory operations.
+      /*
+        It is a product inventory operation.
 
-          So, the vendor currently has prouct.
-        */
-        if (productsInventory.length === 0) {
-          // Something happened with the information, so it is needed to consult to the embedded database.
-          getProducts()
-          .then((storedProductsInventory) => {
-            setCurrentInventory(storedProductsInventory);
-          })
-          .catch(() => {
-            setCurrentInventory([]);
-          });
-        } else {
-          setCurrentInventory(productsInventory);
-        }
-      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-        console.log("End shift inventory")
-      } else {
-        /* In this context, there is not a default inventory operation. */
-      }
+        Although there are 4 types of product inventory operations, it doesn't really matter which operation is currently made,
+        all of them will imply a 'product' movement, so it is needed the complete list with all the products.
+
+        Inventory operations:
+        - Start shift inventory
+        - Re-stock inventory
+        - Product devolution inventory
+        - Final shift inventory
+
+        In addition, we don't know which product the vendor is going to take to the route, or which one is going to
+        bring back from the route, so the better option is to dipose the list of all the products.
+      */
+     setCurrentInventory(inventory);
+
+      /* State for determining if it is a product inventory operation or if it is an operation. */
       setIsOperation(true);
     }
 
@@ -519,8 +496,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           work day operations.
         */
 
-        // Creating a work day operation for the start "shift inventory".
-        const newDayOperation:IDayOperation = creatingDayOperation(inventoryOperation.id_inventory_operation, 0, 1);
+        // Creating a work day operation for the "start shift inventory".
+        const newDayOperation:IDayOperation
+          = creatingDayOperation(inventoryOperation.id_inventory_operation, currentOperation.id_type_operation, 0, 1);
 
         await insertDayOperation(newDayOperation);
 
@@ -559,68 +537,40 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         navigation.navigate('routeOperationMenu');
-      } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
-      } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-        // It is a re-stock operation
-        // Creating the inventory operation (this inventory operation is tied to the "work day").
-        inventoryOperation.id_inventory_operation = uuidv4();
-        inventoryOperation.sign_confirmation = '1';
-        inventoryOperation.date = timestamp_format();
-        inventoryOperation.audit = 0;
-        inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.restock_inventory;
-        inventoryOperation.id_work_day = routeDay.id_work_day;
+      } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
+             || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+        /*
+          It is a re-stock inventory or a product devolution operation.
 
-        // Creating a day operation (day operation resulted from the ivnentory operation).
-        inventoryDayOperation.id_day_operation = uuidv4();
-        inventoryDayOperation.id_item = inventoryOperation.id_inventory_operation;
-        inventoryDayOperation.id_type_operation = DAYS_OPERATIONS.restock_inventory;
-        inventoryDayOperation.operation_order = 0;
-        inventoryDayOperation.current_operation = 0;
+          Although both operations are conceptually different, both share that are just a movement of
+          product. It depends in the "id_type_operation if it is an inflow/outflow" of the products.
+         */
+
+        // Creating the inventory operation (this inventory operation is tied to the "work day").
+        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(routeDay);
+
+        // Creating the movements of the inventory operation (also know as operation description).
+        const inventoryOperationDescription:IInventoryOperationDescription[]
+          = creatingInventoryOperationDescription(inventory, inventoryOperation);
 
         // Storing information in embedded database.
         await insertInventoryOperation(inventoryOperation);
 
-        //Inventory operation description.
-        /*
-          This is a sub-record of the inventory description. This table contains the "movements"
-          or actions that were made in the inventiry operation... Essentially: product, amount of
-          product.
-        */
-        // Extracting information from the inventory operation.
-        inventory.forEach(product => {
-          inventoryOperationDescription.push({
-            id_product_operation_description: uuidv4(),
-            price_at_moment: product.price,
-            amount: product.amount,
-            id_inventory_operation: inventoryOperation.id_inventory_operation,
-            id_product: product.id_product,
-          });
-        });
-
         // Storing information in embedded database.
         await insertInventoryOperationDescription(inventoryOperationDescription);
 
-        // Inventory
+        // Updating inventory with the current inventory operation (current amount of product + amount to carry).
         /*
-          Since it is a re-stock operation, it is just needed to:
-            - Update the productInventory
-            - Update the day operation
-        */
-        // Storing information in redux context.
-        dispatch(addProductsInventory(inventory));
-
-        //Calculating the new product inventory
-        /*
-          Note: Remember that from the a product inventory operation
-          there is 2 'items' to be stored.
-
-          - The operation itself (how many product the vendor is carrying or returning)
+          Note: Product inventory has 2 items to be updated:
+          - The product itself .
+          The operation itself (how many product the vendor is carrying or returning)
           - And the updated inventory, bascially the current product amount + inventory operation amount.
         */
+        const newInventory:IProductInventory[] = [];
+
         currentInventory.forEach((currentInventoryUpdate) => {
           const productFound:undefined|IProductInventory = inventory
             .find(productInventory => productInventory.id_product === currentInventoryUpdate.id_product);
-
             if (productFound !== undefined) {
               newInventory.push({
                 ...productFound,
@@ -629,54 +579,172 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             }
         });
 
-        // Storing information in embedded database.
+        // Updating redux context
+        dispatch(addProductsInventory(inventory));
+
+        // Updating information in embedded database.
         await updateProducts(newInventory);
 
-        // Day operations.
+
+        // Updating list of day operations
+        // Creating a work day operation for the "re-stock shift inventory".
+        const newDayOperation:IDayOperation
+          = creatingDayOperation(inventoryOperation.id_inventory_operation, currentOperation.id_type_operation, 0, 0);
+        const listDayOperations:IDayOperation[] = [];
         /*
           Once all the processes have been stored, the day operation itself is created.
 
           There are two options:
-            - Instert the specific item at the middle of the day operations list.
-            - Delete and instert all the day operations, respecting the current information, with the differente of
+            1 - Instert the specific item at the middle of the list of the day operations.
+            2 - Delete and instert all the day operations, keeping the current information. The difference in this scenario is that
+            the new operation is placing in the next position of the current operation.
+            Delete and instert all the day operations, respecting the current information, with the differente of
             place the new operation in the position that correspond.
 
-          Since it is expected that at the day as maximum a vendor can make 100 day operations, and that it might be prone to error
-          the fact of updating the information, it was chosen the second option.
+          Although this strategy of deleting and insterting the list of all the day operations, it is considered as better than
+          keep updating the information.
         */
-        const index = dayOperations.findIndex(operationDay => operationDay.current_operation === 1);
 
-        dayOperations.forEach(dayOperation => {
-          dayOperationPlanification.push(dayOperation);
-        });
+        /* Getting the index of the current operation*/
+        const index = dayOperations.findIndex(dayOperation => dayOperation.current_operation === 1);
 
-        if (index === -1) {
-          /* If there is no current operation, append the new operation to the end of the list. */
-          dayOperationPlanification.push(inventoryDayOperation);
-        } else {
-          /* Insert the new operation before the current operation. */
-          dayOperationPlanification.splice(index, 0, inventoryDayOperation);
+        // Creating a copy of the list of the day operations.
+        dayOperations.forEach(dayOperation => { listDayOperations.push(dayOperation); });
+
+        if (index === -1) { // Case on which the re-stock operation is the last operation in the day.
+          listDayOperations.push(newDayOperation);
+        } else { // Case on which the re-stock operation is at the middle of the day (between other day operations).
+          listDayOperations.splice(index, 0, newDayOperation);
         }
 
-        // Store information in redux context.
-        dispatch(setDayOperationBeforeCurrentOpeation(inventoryDayOperation));
+        // Store the information (new operation) in redux context.
+        dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
 
+        // Replacing the entire list of day operations in embedded datbase.
         // Delete all the information from the database.
         await deleteAllDayOperations();
 
         // Store information in embedded database.
-        await insertDayOperations(dayOperationPlanification);
-        navigation.reset({
-          index: 0, // Set the index of the new state (0 means first screen)
-          routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+        await insertDayOperations(listDayOperations);
+
+
+        /*
+          It is just at the final, when the process differs one from other.
+
+          While in the re-stock inventory the vendor is returned to the route main operation, the product devolution
+          continues with the final product.
+        */
+        if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+          // Final operation
+          // Creating a new work day operation.
+          let nextDayOperation:IDayOperation
+            = creatingDayOperation(inventoryOperation.id_inventory_operation, DAYS_OPERATIONS.end_shift_inventory, 0, 0);
+          setCurrentOperation(nextDayOperation);
+
+          // Reseting variables
+          const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
+            return {
+              ...proudct,
+              amount: 0,
+            };
+          });
+
+          setInventory(newInventoryForFinalOperation);
+          setCurrentInventory(newInventoryForFinalOperation);
+
+        } else {
+          navigation.reset({
+            index: 0, // Set the index of the new state (0 means first screen)
+            routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+          });
+          navigation.navigate('routeOperationMenu');
+        }
+      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+        // Creating the inventory operation (this inventory operation is tied to the "work day").
+        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(routeDay);
+
+        // Creating the movements of the inventory operation (also know as operation description).
+        const inventoryOperationDescription:IInventoryOperationDescription[]
+          = creatingInventoryOperationDescription(inventory, inventoryOperation);
+
+        // Storing information in embedded database.
+        await insertInventoryOperation(inventoryOperation);
+
+        // Storing information in embedded database.
+        await insertInventoryOperationDescription(inventoryOperationDescription);
+
+        // Updating inventory with the current inventory operation (current amount of product + amount to carry).
+        /*
+          Note: Product inventory has 2 items to be updated:
+          - The product itself .
+          The operation itself (how many product the vendor is carrying or returning)
+          - And the updated inventory, bascially the current product amount + inventory operation amount.
+        */
+        const newInventory:IProductInventory[] = [];
+
+        currentInventory.forEach((currentInventoryUpdate) => {
+          const productFound:undefined|IProductInventory = inventory
+            .find(productInventory => productInventory.id_product === currentInventoryUpdate.id_product);
+            if (productFound !== undefined) {
+              newInventory.push({
+                ...productFound,
+                amount: currentInventoryUpdate.amount + productFound.amount,
+              });
+            }
         });
 
-        navigation.navigate('routeOperationMenu');
-      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+        // Updating redux context
+        dispatch(addProductsInventory(inventory));
+
+        // Updating information in embedded database.
+        await updateProducts(newInventory);
+
+
+        // Updating list of day operations
+        // Creating a work day operation for the "re-stock shift inventory".
+        const newDayOperation:IDayOperation
+          = creatingDayOperation(inventoryOperation.id_inventory_operation, currentOperation.id_type_operation, 0, 0);
+        const listDayOperations:IDayOperation[] = [];
+        /*
+          Once all the processes have been stored, the day operation itself is created.
+
+          There are two options:
+            1 - Instert the specific item at the middle of the list of the day operations.
+            2 - Delete and instert all the day operations, keeping the current information. The difference in this scenario is that
+            the new operation is placing in the next position of the current operation.
+            Delete and instert all the day operations, respecting the current information, with the differente of
+            place the new operation in the position that correspond.
+
+          Although this strategy of deleting and insterting the list of all the day operations, it is considered as better than
+          keep updating the information.
+        */
+
+        /* Getting the index of the current operation*/
+        const index = dayOperations.findIndex(dayOperation => dayOperation.current_operation === 1);
+
+        // Creating a copy of the list of the day operations.
+        dayOperations.forEach(dayOperation => { listDayOperations.push(dayOperation); });
+
+        if (index === -1) { // Case on which the re-stock operation is the last operation in the day.
+          listDayOperations.push(newDayOperation);
+        } else { // Case on which the re-stock operation is at the middle of the day (between other day operations).
+          listDayOperations.splice(index, 0, newDayOperation);
+        }
+
+        // Store the information (new operation) in redux context.
+        dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
+
+        // Replacing the entire list of day operations in embedded datbase.
+        // Delete all the information from the database.
+        await deleteAllDayOperations();
+
+        // Store information in embedded database.
+        await insertDayOperations(listDayOperations);
+
+        /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
+      } else {
+        /* At the moment, there is not a default case */
       }
-
-
-
     } catch (error) {
       console.error('Something went wrong: ', error);
       setIsInventoryAccepted(false);

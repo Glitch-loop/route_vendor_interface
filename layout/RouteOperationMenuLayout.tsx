@@ -76,6 +76,11 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   };
 
   const onFinishInventory = ():void => {
+    /*
+      There are two operations to make at the end of the day:
+      1 - product devolution inventory
+      2 - final inventory (remaining product)
+    */
     dispatch(setCurrentOperation({
       id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
       id_item: '', // It is still not an operation.
@@ -120,13 +125,16 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               style = 'my-2 bg-red-300 rounded w-11/12 h-16 flex flex-row justify-center items-center text-white';
 
               // Determining the type of inventory operation
-              if (dayOperation.id_type_operation === '5361d05b-e291-4fce-aa70-9452d7cfcadd'){
+              if (dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory){
                 itemName = 'Inventario de inicio de ruta';
                 // It is a "start shift inventory"
-              } else if (dayOperation.id_type_operation === '37bb2bb6-f8a1-4df9-8318-6fb9831aae49') {
+              } else if (dayOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
                 // It is a "restock inventory"
                 itemName = 'Restock de producto';
-              } else if (dayOperation.id_type_operation === 'b94e615c-9899-4e82-99f1-979d773b8341') {
+              } else if (dayOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+                // It is a "restock inventory"
+                itemName = 'Devolución de producto';
+              } else if (dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
                 // It is a "end shift inventory"
                 itemName = 'Inventario de fin de ruta';
               }

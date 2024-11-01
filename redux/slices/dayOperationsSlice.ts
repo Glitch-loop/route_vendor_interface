@@ -54,7 +54,7 @@ const dayOperationsSlice = createSlice({
         console.error(error);
       }
     },
-    setDayOperationBeforeCurrentOpeation: (state, action: PayloadAction<IDayOperation>) => {
+    setDayOperationBeforeCurrentOperation: (state, action: PayloadAction<IDayOperation>) => {
       /*
         Opposite to "setDayOperation" which push a new operation at the end of the list
         of day operations, this function push the new operation before the current
@@ -134,7 +134,7 @@ export const {
   setArrayDayOperations,
   setDayOperation,
   setNextOperation,
-  setDayOperationBeforeCurrentOpeation,
+  setDayOperationBeforeCurrentOperation,
 } = dayOperationsSlice.actions;
 
 export default dayOperationsSlice.reducer;
