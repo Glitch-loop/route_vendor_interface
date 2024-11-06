@@ -677,9 +677,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         /*
           Note: Product inventory has 2 items to be updated:
           - The product itself .
-          The operation itself (how many product the vendor is carrying or returning)
+          - The operation itself (how many product the vendor is carrying or returning).
           - And the updated inventory, bascially the current product amount + inventory operation amount.
         */
+
         const newInventory:IProductInventory[] = [];
 
         currentInventory.forEach((currentInventoryUpdate) => {
