@@ -33,6 +33,7 @@ import {
   getProducts,
   updateProducts,
   deleteAllDayOperations,
+  updateWorkDay,
 } from '../queries/SQLite/sqlLiteQueries';
 
 
@@ -141,6 +142,50 @@ async function creatingNewWorkDay(cashInventory:ICurrency[],
       finish_date: timestamp_format(),
       start_petty_cash: startPettyCash,
       final_petty_cash: 0,
+    };
+
+    // Concatenating all the information.
+    return {...dayGeneralInformation, ...routeDay};
+  } catch (error) {
+    return workDay;
+  }
+}
+
+async function finishingWorkDay(cashInventory:ICurrency[],
+  routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
+  const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
+    /*Fields related to the general information.*/
+    id_work_day: '',
+    start_date: '',
+    finish_date: '',
+    start_petty_cash: 0,
+    final_petty_cash: 0,
+    /*Fields related to IRoute interface*/
+    id_route: '',
+    route_name: '',
+    description: '',
+    route_status: '',
+    id_vendor: '',
+    /*Fields related to IDay interface*/
+    id_day: '',
+    day_name: '',
+    order_to_show: 0,
+    /*Fields relate to IRouteDay*/
+    id_route_day: '',
+  };
+
+  try {
+    let endPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
+      { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
+
+    // General information about the route.
+    /* Since it is the end shift of the route, there are information that we already have from other operations */
+    const dayGeneralInformation:IDayGeneralInformation = {
+      id_work_day: routeDay.id_work_day,
+      start_date : routeDay.start_date,
+      finish_date: timestamp_format(),
+      start_petty_cash: routeDay.start_petty_cash,
+      final_petty_cash: endPettyCash,
     };
 
     // Concatenating all the information.
@@ -274,7 +319,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
 
   /*
-    current product state is used to store the current inventory (current inventory at the moment of 
+    current product state is used to store the current inventory (current inventory at the moment of
     making the inventory operation).
   */
   const [currentInventory, setCurrentInventory] = useState<IProductInventory[]>([]);
@@ -373,7 +418,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         In addition, we don't know which product the vendor is going to take to the route, or which one is going to
         bring back from the route, so the better option is to dipose the list of all the products.
       */
-     setCurrentInventory(inventory);
+
+      if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+        /* If it is a restock inventory operation, it is needed to get the current inventory */
+        getProducts()
+        .then((allProducts:IProductInventory[]) => { setCurrentInventory(allProducts); })
+        .catch(() => { setCurrentInventory([]); });
+      } else {
+        setCurrentInventory([]);
+      }
 
       /* State for determining if it is a product inventory operation or if it is an operation. */
       setIsOperation(true);
@@ -627,21 +680,24 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Store information in embedded database.
         await insertDayOperations(listDayOperations);
 
-
-        /*
-          It is just at the final, when the process differs one from other.
-
-          While in the re-stock inventory the vendor is returned to the route main operation, the product devolution
-          continues with the final product.
-        */
-        if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-          // Final operation
-          // Creating a new work day operation.
+        /* At this point, the inventory operation has been finished and registered*/
+        if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+          /* The inventory operation was a "restock inventory" */
+          navigation.reset({
+            index: 0, // Set the index of the new state (0 means first screen)
+            routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+          });
+          navigation.navigate('routeOperationMenu');
+        } else {
+          /* The inventory operation was an "product devolution inventoy" */
+          // Creating a new work day operation for end shift inventory.
           let nextDayOperation:IDayOperation
             = creatingDayOperation(inventoryOperation.id_inventory_operation, DAYS_OPERATIONS.end_shift_inventory, 0, 0);
+
+          // Set the new day operation as the current one.
           setCurrentOperation(nextDayOperation);
 
-          // Reseting variables
+          // Reseting states for making the end shift inventory.
           const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
             return {
               ...proudct,
@@ -651,14 +707,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
           setInventory(newInventoryForFinalOperation);
           setCurrentInventory(newInventoryForFinalOperation);
-
-        } else {
-          navigation.reset({
-            index: 0, // Set the index of the new state (0 means first screen)
-            routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
-          });
-          navigation.navigate('routeOperationMenu');
         }
+
       } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
         // Creating the inventory operation (this inventory operation is tied to the "work day").
         const inventoryOperation:IInventoryOperation = creatingInventoryOperation(routeDay);
@@ -678,7 +728,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           Note: Product inventory has 2 items to be updated:
           - The product itself .
           - The operation itself (how many product the vendor is carrying or returning).
-          - And the updated inventory, bascially the current product amount + inventory operation amount.
+          - And the updated inventory, since it is the last operation, it is not needed to be updated.
         */
 
         const newInventory:IProductInventory[] = [];
@@ -689,7 +739,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             if (productFound !== undefined) {
               newInventory.push({
                 ...productFound,
-                amount: currentInventoryUpdate.amount + productFound.amount,
+                amount: currentInventoryUpdate.amount,
               });
             }
         });
@@ -720,20 +770,28 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           keep updating the information.
         */
 
-        /* Getting the index of the current operation*/
-        const index = dayOperations.findIndex(dayOperation => dayOperation.current_operation === 1);
+        /* Closing work day operation */
+
+        /* Storing the end shift inventory of money and getting the date when the route was finished. */
+        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay = await creatingNewWorkDay(cashInventory, routeDay);
+
+        // Storing information in embedded database.
+        await updateWorkDay(dayGeneralInformation);
+
+        // Storing information in redux context.
+        dispatch(setDayGeneralInformation(dayGeneralInformation));
+
+        /* At this point the end shift operation has been finished.
+           So, the task is going to be apendded at the end of the work day list */
 
         // Creating a copy of the list of the day operations.
         dayOperations.forEach(dayOperation => { listDayOperations.push(dayOperation); });
 
-        if (index === -1) { // Case on which the re-stock operation is the last operation in the day.
-          listDayOperations.push(newDayOperation);
-        } else { // Case on which the re-stock operation is at the middle of the day (between other day operations).
-          listDayOperations.splice(index, 0, newDayOperation);
-        }
+        // Since it is the end shift operation, it is exected that it is going to be the last operation.
+        listDayOperations.push(newDayOperation);
 
         // Store the information (new operation) in redux context.
-        dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
+        dispatch(setDayOperation(newDayOperation));
 
         // Replacing the entire list of day operations in embedded datbase.
         // Delete all the information from the database.
@@ -743,6 +801,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         await insertDayOperations(listDayOperations);
 
         /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
+        navigation.reset({
+          index: 0, // Set the index of the new state (0 means first screen)
+          routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+        });
+        navigation.navigate('routeOperationMenu');
       } else {
         /* At the moment, there is not a default case */
       }

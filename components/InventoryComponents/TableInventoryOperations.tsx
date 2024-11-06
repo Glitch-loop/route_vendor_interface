@@ -116,7 +116,7 @@ const TableInventoryOperations = (
           <View style={tw`max-w-20`}>
             <Text style={tw`text-black text-center`}>
               { outflowProductFromFactory ?
-                'Inventario a recibir' :
+                'Inventario total' :
                 'Inventario a entregar'
               }
             </Text>

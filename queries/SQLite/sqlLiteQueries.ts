@@ -163,6 +163,67 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
   }
 }
 
+export async function updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay) {
+  try {
+    const {
+      id_work_day,
+      start_date,
+      finish_date,
+      start_petty_cash,
+      final_petty_cash,
+      /*Fields related to IRoute interface*/
+      id_route,
+      route_name,
+      description,
+      route_status,
+      // id_vendor,
+      /*Fields related to IDay interface*/
+      id_day,
+      // day_name,
+      // order_to_show,
+      /*Fields relate to IRouteDay*/
+      id_route_day,
+    } = workday;
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.ROUTE_DAY} SET 
+        start_date = ?, 
+        end_date = ?, 
+        start_petty_cash = ?, 
+        end_petty_cash = ?, 
+        id_route = ?, 
+        route_name = ?, 
+        description = ?, 
+        route_status = ?, 
+        id_day = ?, 
+        id_route_day = ?
+        WHERE id_work_day = ?`, [
+        start_date,
+        finish_date,
+        start_petty_cash,
+        final_petty_cash,
+        /*Fields related to IRoute interface*/
+        id_route,
+        route_name,
+        description,
+        route_status,
+        // id_vendor,
+        /*Fields related to IDay interface*/
+        id_day,
+        // day_name,
+        // order_to_show,
+        /*Fields relate to IRouteDay*/
+        id_route_day,
+        id_work_day,
+      ]);
+    });
+
+  } catch (error) {
+    console.error('Failed to update work day:', error);
+  }
+}
+
 export async function getWorkDay():Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
   const workDayState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
     /*Fields related to the general information.*/

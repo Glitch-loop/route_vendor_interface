@@ -200,7 +200,7 @@ const TableInventoryVisualization = (
                 restockInventoryOperationAmount.map((productAmount, index) => {
                   return (
                   <DataTable.Cell
-                    key={index}
+                    key={product.id_product + productAmount}
                     style={tw`w-24 flex flex-row justify-center`}>
                     <Text style={tw`text-black`}>{productAmount}</Text>
                   </DataTable.Cell>

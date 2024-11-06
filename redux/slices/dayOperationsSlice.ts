@@ -38,10 +38,7 @@ const dayOperationsSlice = createSlice({
       });
     },
     setDayOperation: (state, action: PayloadAction<IDayOperation>) => {
-      /*
-        This function is to store a new day operation with the consideration that
-        the operation will be stored at the end of the list od the day operations.
-      */
+      /* This function stores a new day operation at the end of the list of the day operations list. */
       try {
         state.push({
           id_day_operation: action.payload.id_day_operation,
