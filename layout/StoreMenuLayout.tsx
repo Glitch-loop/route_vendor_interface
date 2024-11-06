@@ -5,6 +5,7 @@ import tw from 'twrnc';
 
 // Interface and enums
 import {
+  IDayOperation,
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
@@ -31,6 +32,7 @@ import {
 
 // Utils
 import { getStoreFromContext } from '../utils/routesFunctions';
+import DAYS_OPERATIONS from '../lib/day_operations';
 
 
 function buildAddress(store:IStore) {
@@ -82,6 +84,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
   const dispatch: AppDispatch = useDispatch();
   const currentOperation = useSelector((state: RootState) => state.currentOperation);
   const stores = useSelector((state: RootState) => state.stores);
+  const dayOperations = useSelector((state: RootState) => state.dayOperations);
 
   // Defining state
   const [isConsultTransaction, setIsConsultTransaction] = useState<boolean>(false);
@@ -200,7 +203,19 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
             <Pressable
               style={tw`h-full w-11/12 bg-green-500 rounded border-solid border
                         flex flex-row justify-center items-center`}
-              onPress={() => {handlerOnStartSale();}}>
+              onPress={() => {
+                const endShiftInventoryOperation:IDayOperation|undefined
+                  = dayOperations.find(dayOperation => dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+
+              if (endShiftInventoryOperation === undefined) {
+                /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+                handlerOnStartSale();
+              } else {
+                /*There is an end shift operation, the work day was closed. */
+              }
+                
+
+              }}>
               <Text style={tw`text-center text-black`}>Iniciar venta</Text>
             </Pressable>
           </View>

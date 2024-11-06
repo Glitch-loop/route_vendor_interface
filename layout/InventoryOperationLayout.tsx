@@ -897,7 +897,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           onCancel={handlerOnVendorCancelation}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
       </View>
-      <View style={tw`flex basis-1/6`}><Text> </Text></View>
+      <View style={tw`flex basis-1/6`} />
     </ScrollView>
   );
 };

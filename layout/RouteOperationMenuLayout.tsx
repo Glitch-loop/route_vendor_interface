@@ -5,7 +5,7 @@ import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces and enums
-import { IDayOperation } from '../interfaces/interfaces';
+import { IDayOperation, IInventoryOperation } from '../interfaces/interfaces';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
@@ -174,7 +174,17 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               <Text style={tw`text-sm text-center`}>Crear nuevo cliente</Text>
             </Pressable>
             <Pressable
-              onPress={() => { onRestockInventory(); }}
+              onPress={() => {
+                const endShiftInventoryOperation:IDayOperation|undefined
+                  = dayOperations.find(dayOperation => dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+
+                if (endShiftInventoryOperation === undefined) {
+                  /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+                  onRestockInventory();
+                } else {
+                  /*There is an end shift operation, the work day was closed. */
+                }
+              }}
               style={tw`bg-orange-500 px-4 py-3 mx-1 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Restock de producto</Text>
             </Pressable>

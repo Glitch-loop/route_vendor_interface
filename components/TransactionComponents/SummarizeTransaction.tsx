@@ -9,6 +9,7 @@ import { updateProductsInventory } from '../../redux/slices/productsInventorySli
 
 // Interfaces
 import {
+  IDayOperation,
   IProductInventory,
   IRouteTransaction,
   IRouteTransactionOperation,
@@ -134,6 +135,8 @@ const SummarizeTransaction = ({
   const productInventory = useSelector((state: RootState) => state.productsInventory);
   const stores = useSelector((state: RootState) => state.stores);
   const vendor = useSelector((state: RootState) => state.user);
+  const dayOperations = useSelector((state: RootState) => state.dayOperations);
+  
   /*
     Declaring states to store the movements for each operations.
     At the moment there are only 3 type of operations that a transaction can contain.
@@ -341,7 +344,19 @@ const SummarizeTransaction = ({
               <ConfirmationBand
                 textOnAccept={'Iniciar venta apartir de esta'}
                 textOnCancel={'Imprimr'}
-                handleOnAccept={() => {handleOnStartASale();}}
+                handleOnAccept={() => {
+                  const endShiftInventoryOperation:IDayOperation|undefined
+                  = dayOperations.find(dayOperation =>
+                      dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+
+                  if (endShiftInventoryOperation === undefined) {
+                    /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+                    handleOnStartASale();
+                  } else {
+                    /*There is an end shift operation, the work day was closed. */
+                  }
+                  
+                }}
                 handleOnCancel={() => {handleOnPrint();}}
                 styleOnCancel={'bg-blue-500'}
                 />
