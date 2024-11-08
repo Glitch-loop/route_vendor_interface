@@ -792,7 +792,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         /* Storing the end shift inventory of money and getting the date when the route was finished. */
         const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
-          = await creatingNewWorkDay(cashInventory, routeDay);
+          = await finishingWorkDay(cashInventory, routeDay);
 
         // Storing information in embedded database.
         await updateWorkDay(dayGeneralInformation);
