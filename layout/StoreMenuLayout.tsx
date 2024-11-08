@@ -33,6 +33,7 @@ import {
 // Utils
 import { getStoreFromContext } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import Toast from 'react-native-toast-message';
 
 
 function buildAddress(store:IStore) {
@@ -156,7 +157,6 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
     }
   };
 
-
   return (!isConsultTransaction ?
     // Main menu of store
     <View style={tw`w-full flex-1 justify-center items-center`}>
@@ -205,16 +205,16 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
                         flex flex-row justify-center items-center`}
               onPress={() => {
                 const endShiftInventoryOperation:IDayOperation|undefined
-                  = dayOperations.find(dayOperation => dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+                  = dayOperations.find(dayOperation =>
+                      dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
 
-              if (endShiftInventoryOperation === undefined) {
-                /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
-                handlerOnStartSale();
-              } else {
-                /*There is an end shift operation, the work day was closed. */
-              }
-                
-
+                if (endShiftInventoryOperation === undefined) {
+                  /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+                  handlerOnStartSale();
+                } else {
+                  /*There is an end shift operation, the work day was closed. */
+                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                }
               }}>
               <Text style={tw`text-center text-black`}>Iniciar venta</Text>
             </Pressable>

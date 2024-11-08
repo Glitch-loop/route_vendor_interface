@@ -20,6 +20,7 @@ import TypeOperationItem from '../components/TypeOperationItem';
 // Utils
 import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import Toast from 'react-native-toast-message';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -176,20 +177,32 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             <Pressable
               onPress={() => {
                 const endShiftInventoryOperation:IDayOperation|undefined
-                  = dayOperations.find(dayOperation => dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
-
+                  = dayOperations.find(dayOperation =>
+                    dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
                 if (endShiftInventoryOperation === undefined) {
                   /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
                   onRestockInventory();
                 } else {
                   /*There is an end shift operation, the work day was closed. */
+                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
                 }
               }}
               style={tw`bg-orange-500 px-4 py-3 mx-1 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Restock de producto</Text>
             </Pressable>
             <Pressable
-              onPress={() => { onFinishInventory(); }}
+              onPress={() => {
+                const endShiftInventoryOperation:IDayOperation|undefined
+                = dayOperations.find(dayOperation =>
+                  dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+                if (endShiftInventoryOperation === undefined) {
+                  /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+                  onFinishInventory();
+                } else {
+                  /*There is an end shift operation, the work day was closed. */
+                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                }
+              }}
               style={tw`bg-indigo-400 px-4 py-3 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Finalizar ruta</Text>
             </Pressable>

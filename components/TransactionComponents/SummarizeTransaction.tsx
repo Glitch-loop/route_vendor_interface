@@ -37,6 +37,7 @@ import {
 
 // Services
 import { printTicketBluetooth } from '../../services/printerService';
+import Toast from 'react-native-toast-message';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -136,7 +137,7 @@ const SummarizeTransaction = ({
   const stores = useSelector((state: RootState) => state.stores);
   const vendor = useSelector((state: RootState) => state.user);
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
-  
+
   /*
     Declaring states to store the movements for each operations.
     At the moment there are only 3 type of operations that a transaction can contain.
@@ -354,8 +355,8 @@ const SummarizeTransaction = ({
                     handleOnStartASale();
                   } else {
                     /*There is an end shift operation, the work day was closed. */
+                    Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
                   }
-                  
                 }}
                 handleOnCancel={() => {handleOnPrint();}}
                 styleOnCancel={'bg-blue-500'}

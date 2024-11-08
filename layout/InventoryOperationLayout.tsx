@@ -237,7 +237,7 @@ async function gettingRouteInformationOfTheStores(routeDay:IRouteDay):Promise<IR
   }
 }
 
-function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation):IInventoryOperation {
+function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation, idTypeOperation:string):IInventoryOperation {
   const inventoryOperation:IInventoryOperation = {
     id_inventory_operation: '',
     sign_confirmation: '',
@@ -247,13 +247,18 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
     id_work_day: '',
   };
   try {
-    // Creating the inventory operation (this inventory operation is tied to the "work day").
-    inventoryOperation.id_inventory_operation = uuidv4();
-    inventoryOperation.sign_confirmation = '1';
-    inventoryOperation.date = timestamp_format();
-    inventoryOperation.audit = 0;
-    inventoryOperation.id_type_of_operation = DAYS_OPERATIONS.start_shift_inventory;
-    inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
+    if (idTypeOperation === '') {
+      /* It is not possible to create a new inventory operation without the ID
+      of the type operation*/
+    } else {
+      // Creating the inventory operation (this inventory operation is tied to the "work day").
+      inventoryOperation.id_inventory_operation = uuidv4();
+      inventoryOperation.sign_confirmation = '1';
+      inventoryOperation.date = timestamp_format();
+      inventoryOperation.audit = 0;
+      inventoryOperation.id_type_of_operation = idTypeOperation;
+      inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
+    }
 
     return inventoryOperation;
   } catch (error) {
@@ -385,7 +390,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 state will be filled.
               */
               if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-                console.log(productInventory);
                 setInitialShiftInventory(productInventory);
                 setRestockInventories([]);
                 setFinalShiftInventory([]);
@@ -474,6 +478,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
+      console.log("Finishing: ", isInventoryAccepted)
       /* Avoiding re-executions in case of inventory */
       if (isInventoryAccepted === true) {
         return;
@@ -522,7 +527,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         dispatch(setStores(stores));
 
         /* After "selecting" the route, the vendor must make the a "start shift inventory" (to have product for selling). */
-        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(dayGeneralInformation);
+        const inventoryOperation:IInventoryOperation
+          = creatingInventoryOperation(dayGeneralInformation, DAYS_OPERATIONS.start_shift_inventory);
         const inventoryOperationDescription:IInventoryOperationDescription[]
           = creatingInventoryOperationDescription(inventory, inventoryOperation);
 
@@ -592,6 +598,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         navigation.navigate('routeOperationMenu');
       } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
              || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+        console.log("devolution or restock")
+        const idTypeOperation:string = currentOperation.id_type_operation;
         /*
           It is a re-stock inventory or a product devolution operation.
 
@@ -600,7 +608,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
          */
 
         // Creating the inventory operation (this inventory operation is tied to the "work day").
-        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(routeDay);
+        const inventoryOperation:IInventoryOperation
+          = creatingInventoryOperation(routeDay,idTypeOperation);
 
         // Creating the movements of the inventory operation (also know as operation description).
         const inventoryOperationDescription:IInventoryOperationDescription[]
@@ -638,11 +647,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Updating information in embedded database.
         await updateProducts(newInventory);
 
-
         // Updating list of day operations
         // Creating a work day operation for the "re-stock shift inventory".
         const newDayOperation:IDayOperation
-          = creatingDayOperation(inventoryOperation.id_inventory_operation, currentOperation.id_type_operation, 0, 0);
+          = creatingDayOperation(inventoryOperation.id_inventory_operation,
+            currentOperation.id_type_operation, 0, 0);
         const listDayOperations:IDayOperation[] = [];
         /*
           Once all the processes have been stored, the day operation itself is created.
@@ -695,7 +704,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             = creatingDayOperation(inventoryOperation.id_inventory_operation, DAYS_OPERATIONS.end_shift_inventory, 0, 0);
 
           // Set the new day operation as the current one.
-          setCurrentOperation(nextDayOperation);
+          console.log(nextDayOperation)
+          dispatch(setCurrentOperation(nextDayOperation));
 
           // Reseting states for making the end shift inventory.
           const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
@@ -706,12 +716,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           });
 
           setInventory(newInventoryForFinalOperation);
-          setCurrentInventory(newInventoryForFinalOperation);
+
+          setIsInventoryAccepted(false); // State to avoid double-click
         }
 
       } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+        console.log("finish")
         // Creating the inventory operation (this inventory operation is tied to the "work day").
-        const inventoryOperation:IInventoryOperation = creatingInventoryOperation(routeDay);
+        const inventoryOperation:IInventoryOperation
+          = creatingInventoryOperation(routeDay, DAYS_OPERATIONS.end_shift_inventory);
 
         // Creating the movements of the inventory operation (also know as operation description).
         const inventoryOperationDescription:IInventoryOperationDescription[]
@@ -773,7 +786,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         /* Closing work day operation */
 
         /* Storing the end shift inventory of money and getting the date when the route was finished. */
-        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay = await creatingNewWorkDay(cashInventory, routeDay);
+        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+          = await creatingNewWorkDay(cashInventory, routeDay);
 
         // Storing information in embedded database.
         await updateWorkDay(dayGeneralInformation);
@@ -800,6 +814,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Store information in embedded database.
         await insertDayOperations(listDayOperations);
 
+        console.log("Finish inventory")
         /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
         navigation.reset({
           index: 0, // Set the index of the new state (0 means first screen)
