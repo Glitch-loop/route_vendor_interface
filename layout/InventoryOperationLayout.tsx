@@ -389,18 +389,26 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 Depending on what inventory operation the vendor want to see, is how the
                 state will be filled.
               */
+
               if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                console.log("initial")
                 setInitialShiftInventory(productInventory);
                 setRestockInventories([]);
                 setFinalShiftInventory([]);
-              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
+              || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
+              ) {
+                console.log("Product devolution")
                 setInitialShiftInventory([]);
                 setRestockInventories([productInventory]);
                 setFinalShiftInventory([]);
               } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+                console.log("final")
                 setInitialShiftInventory([]);
                 setRestockInventories([]);
                 setFinalShiftInventory(productInventory);
+              } else {
+                console.log("other")
               }
 
           }).catch((error) => { console.error('Something went wrong: ', error);});
@@ -478,7 +486,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const handleVendorConfirmation = async ():Promise<void> => {
     try {
-      console.log("Finishing: ", isInventoryAccepted)
       /* Avoiding re-executions in case of inventory */
       if (isInventoryAccepted === true) {
         return;
@@ -597,8 +604,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         navigation.navigate('routeOperationMenu');
       } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
-             || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-        console.log("devolution or restock")
+             || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory)
+      {
         const idTypeOperation:string = currentOperation.id_type_operation;
         /*
           It is a re-stock inventory or a product devolution operation.
@@ -704,7 +711,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             = creatingDayOperation(inventoryOperation.id_inventory_operation, DAYS_OPERATIONS.end_shift_inventory, 0, 0);
 
           // Set the new day operation as the current one.
-          console.log(nextDayOperation)
           dispatch(setCurrentOperation(nextDayOperation));
 
           // Reseting states for making the end shift inventory.
@@ -721,7 +727,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         }
 
       } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-        console.log("finish")
         // Creating the inventory operation (this inventory operation is tied to the "work day").
         const inventoryOperation:IInventoryOperation
           = creatingInventoryOperation(routeDay, DAYS_OPERATIONS.end_shift_inventory);
@@ -814,7 +819,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         // Store information in embedded database.
         await insertDayOperations(listDayOperations);
 
-        console.log("Finish inventory")
         /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
         navigation.reset({
           index: 0, // Set the index of the new state (0 means first screen)
