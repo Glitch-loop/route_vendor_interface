@@ -34,6 +34,7 @@ import {
   updateProducts,
   deleteAllDayOperations,
   updateWorkDay,
+  getAllInventoryOperations,
 } from '../queries/SQLite/sqlLiteQueries';
 
 
@@ -307,6 +308,8 @@ function creatingDayOperation(idItem:string, idTypeOperation:string, operationOr
   }
 }
 
+
+
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Defining redux context
   const dispatch: AppDispatch = useDispatch();
@@ -360,7 +363,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     });
 
     if (currentOperation.id_item) { // It is a inventory operation visualization.
-      let productInventory:IProductInventory[] = [];
+      let currentProductInventory:IProductInventory[] = [];
+
+      // Variables used for final shift inventory
+      let allInventoryOperations:IInventoryOperation[] = [];
 
       /*
         Since it is an visualization, it is need to 'reset' the states related to
@@ -372,46 +378,99 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
       // Getting the inventory operation.
       getInventoryOperation(currentOperation.id_item)
-        .then((inventoryOperation) => {
-          // Getting the movements of the inventory operation.
-          getInventoryOperationDescription(currentOperation.id_item)
-            .then((inventoryOperationDescriptions) => {
-              inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
-                productInventory.push({
+        .then(async (inventoryOperation) => {
+
+          // Getting the movements of the inventory operation that the user wants to see.
+          (await getInventoryOperationDescription(currentOperation.id_item))
+          .forEach((inventoryOperationDescription) => {
+            currentProductInventory.push({
+              ...initialProduct,
+              amount: inventoryOperationDescription.amount,
+              id_product: inventoryOperationDescription.id_product,
+              price: inventoryOperationDescription.price_at_moment,
+            });
+          });
+
+          /*
+            Depending on which inventory operation the vendor wants to see are the actions that
+            are going to be taken to display correctly the information.
+          */
+
+          if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+            console.log("initial")
+            setInitialShiftInventory(currentProductInventory);
+            setRestockInventories([]);
+            setFinalShiftInventory([]);
+          } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
+          || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
+          ) {
+            console.log("Product devolution or restck inventory")
+            setInitialShiftInventory([]);
+            setRestockInventories([currentProductInventory]);
+            setFinalShiftInventory([]);
+          } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+            /*
+              End shift inventory is an special case. This inventory visualization intends to show the summarize of
+              all the inventory operations that were made during the route.
+
+              In this way, it is needed to get all the inventory operations of the day (inflow and remaining of product):
+              - Initial inventory
+              - Re-stock inventory
+              - Final invnetory
+
+              And also, it is needed to retrieve the outflow of product:
+                - product reposition
+                - selling
+
+              Product devolution is not included becuase it is considered as another inventory out of the product inventory of the day.
+            */
+            const startShiftInventoryProduct:IProductInventory[] = [];
+            const restockInventoryProduct:IProductInventory[][] = [];
+            const productRepositionInventoryProduct:IProductInventory[] = [];
+            const soldProductInventoryProduct:IProductInventory = [];
+
+            // Get all inventory operations
+            (await getAllInventoryOperations()).forEach((currentInventoryOperation:IInventoryOperation) => {
+              allInventoryOperations.push(currentInventoryOperation);
+            });
+
+            // Get all the description for each inventory operation
+            for (let i = 0; i < allInventoryOperations.length; i++) {
+              const { id_inventory_operation, id_type_of_operation } = allInventoryOperations[i];
+
+              let productInventoryOfInventoryOperaton:IProductInventory[] =
+              (await getInventoryOperationDescription(id_inventory_operation))
+              .map((inventoryOperationDescription) => {
+                  return {
                   ...initialProduct,
                   amount: inventoryOperationDescription.amount,
                   id_product: inventoryOperationDescription.id_product,
                   price: inventoryOperationDescription.price_at_moment,
-                });
+                };
               });
-
-              /*
-                Depending on what inventory operation the vendor want to see, is how the
-                state will be filled.
-              */
-
-              if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-                console.log("initial")
-                setInitialShiftInventory(productInventory);
-                setRestockInventories([]);
-                setFinalShiftInventory([]);
-              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
-              || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
-              ) {
-                console.log("Product devolution")
-                setInitialShiftInventory([]);
-                setRestockInventories([productInventory]);
-                setFinalShiftInventory([]);
-              } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-                console.log("final")
-                setInitialShiftInventory([]);
-                setRestockInventories([]);
-                setFinalShiftInventory(productInventory);
+              // Determining where to store the information of the current inventory operation.
+              if (id_type_of_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                productInventoryOfInventoryOperaton.forEach((product:IProductInventory) => {
+                  startShiftInventoryProduct.push(product);
+                });
+              } else if (id_type_of_operation === DAYS_OPERATIONS.restock_inventory) {
+                restockInventoryProduct.push(productInventoryOfInventoryOperaton);
               } else {
-                console.log("other")
+                /* Other case of operations are ignored */
               }
+            }
 
-          }).catch((error) => { console.error('Something went wrong: ', error);});
+            // Get all inventory transactions 
+
+            // Storing information related to the inventory operations
+            setInitialShiftInventory(startShiftInventoryProduct);
+            setRestockInventories(restockInventoryProduct);
+
+            // This information is retrieved with the "currentOperation" state.
+            setFinalShiftInventory(currentProductInventory);
+          } else {
+            console.log("other")
+          }
       }).catch((error) => { console.error('Something went wrong: ', error);});
 
     } else { // It is a new inventory operation
@@ -874,18 +933,22 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           </ScrollView>
         </View>
         :
-        <TableInventoryVisualization
-          inventory             = {productsInventory}
-          suggestedInventory    = {suggestedProduct}
-          initialInventory      = {initialShiftInventory}
-          restockInventories    = {restockInventories}
-          soldOperations        = {[]}
-          repositionsOperations = {[]}
-          returnedInventory     = {finalShiftInventory}
-          inventoryWithdrawal   = {false}
-          inventoryOutflow      = {false}
-          finalOperation        = {false}
-          issueInventory        = {false}/>
+        <View style={tw`flex basis-3/6 w-full mt-3`}>
+          <ScrollView horizontal={true}> 
+          <TableInventoryVisualization
+            inventory             = {productsInventory}
+            suggestedInventory    = {suggestedProduct}
+            initialInventory      = {initialShiftInventory}
+            restockInventories    = {restockInventories}
+            soldOperations        = {[]}
+            repositionsOperations = {[]}
+            returnedInventory     = {finalShiftInventory}
+            inventoryWithdrawal   = {false}
+            inventoryOutflow      = {false}
+            finalOperation        = {false}
+            issueInventory        = {false}/>
+          </ScrollView>
+        </View>
       }
 
       {/* Cash reception section. */}

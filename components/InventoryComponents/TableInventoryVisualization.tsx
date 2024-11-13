@@ -1,12 +1,13 @@
 // Libraries
 import React from 'react';
-import { TextInput, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { DataTable, ActivityIndicator } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces
 import {
   IProductInventory,
+  
   ITransactionDescriptions,
  } from '../../interfaces/interfaces';
 import { findProductAmountInArray } from '../../utils/inventoryOperations';
@@ -67,11 +68,11 @@ const TableInventoryVisualization = (
   }:{
     inventory:IProductInventory[],
     suggestedInventory: IProductInventory[],
-    initialInventory:IProductInventory[],
-    restockInventories:IProductInventory[][],
-    soldOperations: ITransactionDescriptions[],
-    repositionsOperations: ITransactionDescriptions[],
-    returnedInventory:IProductInventory[],
+    initialInventory:IProductInventory[], // There is only "one" initial inventory operation
+    restockInventories:IProductInventory[][], // It could be many "restock" inventories
+    soldOperations: ITransactionDescriptions[], // Outflow in concept of selling
+    repositionsOperations: ITransactionDescriptions[], // Outflow in concept of repositions
+    returnedInventory:IProductInventory[], // There is only "one" final inventory operations
     inventoryWithdrawal:boolean,
     inventoryOutflow:boolean,
     finalOperation:boolean,
@@ -87,7 +88,7 @@ const TableInventoryVisualization = (
           <Text style={tw`text-black`}>Producto</Text>
         </DataTable.Title>
         { initialInventory.length > 0 &&
-          <DataTable.Title style={tw`w-20 flex flex-row justify-center text-center`}>
+          <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
             <Text style={tw`text-black`}>Inventario inicial</Text>
           </DataTable.Title>
         }
@@ -143,28 +144,29 @@ const TableInventoryVisualization = (
       { (initialInventory.length > 0 || returnedInventory.length > 0 || restockInventories.length > 0) ?
         inventory.map((product) => {
           /*
-            To understand how this component works, since inventory already have all the products that the vendor is currently
-            carrying to sell in the route, we can use this array to have a pivot that determines which product print.
+            To keep an order of how to print the inventory operations, it is used the variable "inventory" which has
+            all the products (and the current amount for each product).
 
-            Remember that the inventory operations only store the "movements" (inflow of products in the vendor's inventory)
-            that are in that operation for avoiding store unnecessary information; store all the current inventory with "0"
-            inflow of a particualr product.
+            "Inventory" is used has the reference of what to print in the "current iteration", so it is going to depend
+            on the current product that it is going to be searched that particular product in the other arrays that store
+            the information of the "product inventory"
 
-            To keep thing easy, what this function does is to traverse the inventory array (which has all the possible products)
-            and in each iteration, the product corresponds to this iteration is found between the arrays of the inventory product 
-            operations (that are props in this component).
+            Since the inventory operations only store if a product had a movement, if there is not find the product of the
+            current operation, it is going to be diplayed with a value of "0" (indicating that it was not a
+            movement of that particular product).
           */
 
           // Propierties that are always going to be present.
           let id_product = product.id_product;
           let amount = product.amount;
 
-          /* Declaring variables that will store amount of product for each type of operation*/
+          /* Declaring variables that will store the amount of product for each type of operation*/
           let suggestedAmount = 0;
           let initialInventoryOperationAmount = 0;
           let returnedInventoryOperationAmount = 0;
           let restockInventoryOperationAmount:number[] = [];
 
+          // Searching the product in the inventory operations
           suggestedAmount                   = findProductAmountInArray(suggestedInventory, id_product);
           initialInventoryOperationAmount   = findProductAmountInArray(initialInventory, id_product);
           returnedInventoryOperationAmount  = findProductAmountInArray(returnedInventory, id_product);
@@ -172,13 +174,6 @@ const TableInventoryVisualization = (
           restockInventories.forEach((restockInventory:IProductInventory[]) => {
             restockInventoryOperationAmount.push(findProductAmountInArray(restockInventory, id_product));
           });
-
-
-          /*
-            Pending to do:
-            restockOperations
-          */
-
 
           return (
             <DataTable.Row key={product.id_product}>
@@ -200,7 +195,7 @@ const TableInventoryVisualization = (
                 restockInventoryOperationAmount.map((productAmount, index) => {
                   return (
                   <DataTable.Cell
-                    key={product.id_product + productAmount}
+                    key={index}
                     style={tw`w-24 flex flex-row justify-center`}>
                     <Text style={tw`text-black`}>{productAmount}</Text>
                   </DataTable.Cell>

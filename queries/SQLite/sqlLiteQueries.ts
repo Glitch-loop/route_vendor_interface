@@ -768,6 +768,28 @@ export async function getInventoryOperation(id_inventory_operation:string):Promi
   }
 }
 
+export async function getAllInventoryOperations():Promise<IInventoryOperation[]> {
+  try {
+    const inventoryOperations:IInventoryOperation[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.INVENTORY_OPERATIONS}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        inventoryOperations.push(record.rows.item(index));
+      }
+    });
+
+
+
+    return inventoryOperations;
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
 export async function insertInventoryOperation(inventoryOperation: IInventoryOperation) {
   try {
     const {
