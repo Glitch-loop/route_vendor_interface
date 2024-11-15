@@ -79,6 +79,10 @@ const TableInventoryVisualization = (
     issueInventory:boolean,
   }) => {
 
+    console.log("initialInventory: ", initialInventory.length)
+    console.log("restockInventories: ", restockInventories.length)
+    console.log("soldOperations: ", soldOperations.length)
+    console.log("repositionsOperations: ", repositionsOperations.length)
   return (
     <DataTable style={tw`w-full`}>
       {/* Header section */}
@@ -165,32 +169,58 @@ const TableInventoryVisualization = (
           let initialInventoryOperationAmount = 0;
           let returnedInventoryOperationAmount = 0;
           let restockInventoryOperationAmount:number[] = [];
+          let soldInventoryOperationAmount = 0;
+          let repositionInventoryOperationAmount = 0;
+
+          // Special calculations variables
+          let withdrawalAmount = 0;
+          let inventoryOutflowAmount = 0;
+          let finalOperationAmount = 0;
+          let inventoryIssueAmount = 0;
 
           // Searching the product in the inventory operations
           suggestedAmount                   = findProductAmountInArray(suggestedInventory, id_product);
           initialInventoryOperationAmount   = findProductAmountInArray(initialInventory, id_product);
           returnedInventoryOperationAmount  = findProductAmountInArray(returnedInventory, id_product);
+          soldInventoryOperationAmount  = findProductAmountInArray(soldOperations, id_product);
+          repositionInventoryOperationAmount
+            = findProductAmountInArray(repositionsOperations, id_product);
 
           restockInventories.forEach((restockInventory:IProductInventory[]) => {
-            restockInventoryOperationAmount.push(findProductAmountInArray(restockInventory, id_product));
+            const currentRestockProductAmount
+              = findProductAmountInArray(restockInventory, id_product);
+
+              withdrawalAmount += currentRestockProductAmount;
+            restockInventoryOperationAmount.push(currentRestockProductAmount);
           });
 
+          // Special calculations
+          withdrawalAmount += initialInventoryOperationAmount;
+          inventoryOutflowAmount = soldInventoryOperationAmount + repositionInventoryOperationAmount;
+
+          finalOperationAmount = withdrawalAmount - inventoryOutflowAmount;
+
+          inventoryIssueAmount = finalOperationAmount - returnedInventoryOperationAmount;
           return (
             <DataTable.Row key={product.id_product}>
               {/* This field is never empty since it is necessary anytime */}
+              {/* Product (product identification) */}
               <DataTable.Cell style={tw`w-32  flex flex-row justify-center`}>
                 <Text style={tw`text-black`}>{product.product_name}</Text>
               </DataTable.Cell>
+              {/* Suggested inventory */}
               { suggestedInventory.length > 0 &&
                 <DataTable.Cell style={tw`w-20 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{suggestedAmount}</Text>
                 </DataTable.Cell>
               }
+              {/* Initial inventory */}
               { initialInventory.length > 0 &&
                 <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{initialInventoryOperationAmount}</Text>
                 </DataTable.Cell>
               }
+              {/* Restock of product */}
               { restockInventoryOperationAmount.length > 0 &&
                 restockInventoryOperationAmount.map((productAmount, index) => {
                   return (
@@ -202,9 +232,47 @@ const TableInventoryVisualization = (
                   );
                 })
               }
+              {/* Inflow product */}
+              { inventoryWithdrawal === true &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{withdrawalAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Product sold */}
+              { soldOperations.length > 0 &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{soldInventoryOperationAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Product reposition */}
+              { repositionsOperations.length > 0 &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{repositionInventoryOperationAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Outflow product */}
+              { inventoryOutflow === true &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{inventoryOutflowAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Final inventory */}
+              { finalOperation === true &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
+                  <Text style={tw`text-black`}>{finalOperationAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Returned inventory */}
               { returnedInventory.length > 0 &&
                 <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
                   <Text style={tw`text-black`}>{returnedInventoryOperationAmount}</Text>
+                </DataTable.Cell>
+              }
+              {/* Inventory problem */}
+              { issueInventory === true &&
+                <DataTable.Cell style={tw`w-24 flex flex-row justify-center ${
+                  inventoryIssueAmount === 0 ? 'bg-green-500' : 'bg-red-500'}`}>
+                  <Text style={tw`text-black`}>{inventoryIssueAmount}</Text>
                 </DataTable.Cell>
               }
             </DataTable.Row>

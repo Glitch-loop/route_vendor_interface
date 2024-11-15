@@ -14,3 +14,12 @@ export function avoidingUndefinedItem(item: any, itemUndefinedCase: any) {
     return item;
   }
 }
+
+export function convertingDictionaryInArray(dictionary:any) {
+  const newArray:any[] = [];
+  for (const key in dictionary) {
+    newArray.push(dictionary[key]);
+  }
+
+  return newArray;
+}

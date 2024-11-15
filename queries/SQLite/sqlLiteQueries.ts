@@ -671,8 +671,6 @@ export async function insertDayOperations(dayOperations: IDayOperation[]) {
 
 export async function updateDayOperation(dayOperation: IDayOperation) {
   try {
-    console.log("Updating in database: ", dayOperation);
-
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
