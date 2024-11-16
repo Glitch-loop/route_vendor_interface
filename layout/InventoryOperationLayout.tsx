@@ -615,7 +615,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               productRepositionInventoryProductByStore.push(productsInventoryOfRepositionOfStore);
               productSoldInventoryProductByStore.push(productsInventoryOfSaleOfStore);
             }
-            console.log("final inventory")
+
             // Storing the route transaction information.
             setNameOfStores(titleOfStores);
             setProductSoldByStore(productSoldInventoryProductByStore);
@@ -756,13 +756,13 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         /* Once the workday has been declared, it is necessary to get the information of the stores */
         const storesInTheRoute:IRouteDayStores[] = await gettingRouteInformationOfTheStores(routeDay);
-        const stores:(IStore&IStoreStatusDay)[] = await gettingStoresInformation(storesInTheRoute);
+        const storesOfRoute:(IStore&IStoreStatusDay)[] = await gettingStoresInformation(storesInTheRoute);
 
         // Storing in embedded database
-        await insertStores(stores);
+        await insertStores(storesOfRoute);
 
         // Storing in redux context.
-        dispatch(setStores(stores));
+        dispatch(setStores(storesOfRoute));
 
         /* After "selecting" the route, the vendor must make the a "start shift inventory" (to have product for selling). */
         const inventoryOperation:IInventoryOperation
@@ -1095,18 +1095,18 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       {/* Depending on the action is that one menu or another one will be displayed. */}
       { isOperation ?
         <View style={tw`flex basis-3/6 w-full mt-3`}>
-          <ScrollView horizontal={true}>
+          {/* <ScrollView horizontal={true}> */}
             <TableInventoryOperations
               suggestedInventory={suggestedProduct}
               currentInventory={currentInventory}
               operationInventory={inventory}
               setInventoryOperation={setInventory}
               currentOperation={currentOperation}/>
-          </ScrollView>
+          {/* </ScrollView> */}
         </View>
         :
         <View style={tw`flex basis-3/6 w-full mt-3`}>
-          <ScrollView horizontal={true}>
+          {/* <ScrollView horizontal={true}> */}
             <TableInventoryVisualization
               inventory             = {productsInventory}
               suggestedInventory    = {suggestedProduct}
@@ -1119,31 +1119,31 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               inventoryOutflow      = {inventoryOutflow}
               finalOperation        = {finalOperation}
               issueInventory        = {issueInventory}/>
-          </ScrollView>
+          {/* </ScrollView> */}
           { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
             <View style={tw`flex basis-3/6 w-full mt-3`}>
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Producto vendido por tienda
               </Text>
-              <ScrollView horizontal={true}>
+              {/* <ScrollView horizontal={true}> */}
                 <TableInventoryOperationsVisualization
                   inventory             = {productsInventory}
                   titleColumns          = {nameOfStores}
                   productInventories    = {productSoldByStore}
                   calculateTotal        = {true}
                   />
-              </ScrollView>
+              {/* </ScrollView> */}
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Reposición de producto por tienda
               </Text>
-              <ScrollView horizontal={true}>
+              {/* <ScrollView horizontal={true}> */}
                 <TableInventoryOperationsVisualization
                   inventory             = {productsInventory}
                   titleColumns          = {nameOfStores}
                   productInventories    = {productRepositionByStore}
                   calculateTotal        = {true}
                   />
-              </ScrollView>
+              {/* </ScrollView> */}
 
             </View>
           }
