@@ -82,6 +82,7 @@ import {
 } from '../redux/slices/dayOperationsSlice';
 import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 import { convertingDictionaryInArray } from '../utils/generalFunctions';
+import TableInventoryOperationsVisualization from '../components/InventoryComponents/TableInventoryOperationsVisualization';
 
 
 const initialProduct:IProductInventory = {
@@ -352,6 +353,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   const [isOperation, setIsOperation] = useState<boolean>(true);
 
+  /* States for route transaction operations */
+  const [productSoldByStore, setProductSoldByStore] = useState<IProductInventory[][]>([]);
+  const [productRepositionByStore, setProductRepositionByStore] = useState<IProductInventory[][]>([]);
+  const [nameOfStores, setNameOfStores] = useState<string[]>([]);
+
 
   // State used for the logic of the component
   const [isInventoryAccepted, setIsInventoryAccepted] = useState<boolean>(false);
@@ -387,6 +393,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       // Each "array" represents the total of product for each concept made during the day
       const productRepositionInventoryProductByStore:IProductInventory[][] = [];
       const productSoldInventoryProductByStore:IProductInventory[][] = [];
+      const titleOfStores:string[] = [];
 
       // These variables store the total amount of each concept
       const productRepositionInventoryProduct:any = {};
@@ -427,13 +434,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           setIssueInventory(false);
 
           if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-            console.log("initial")
             setInitialShiftInventory(currentProductInventory);
             setRestockInventories([]);
             setFinalShiftInventory([]);
           } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
           || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-            console.log("Product devolution or restck inventory")
             setInitialShiftInventory([]);
             setRestockInventories([currentProductInventory]);
             setFinalShiftInventory([]);
@@ -442,8 +447,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setInventoryOutflow(true);
             setFinalOperation(true);
             setIssueInventory(true);
-  
-            console.log("Final inventory");
 
             /*
               End shift inventory is an special case. This inventory visualization intends to show the summarize of
@@ -460,13 +463,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
               Product devolution is not included becuase it is considered as another inventory out of the product inventory of the day.
             */
-            // console.log("getting all inventory operations")
             // Get all inventory operations
             (await getAllInventoryOperations()).forEach((currentInventoryOperation:IInventoryOperation) => {
               allInventoryOperations.push(currentInventoryOperation);
             });
 
-            console.log("getting the information ")
             // Get all the descriptions for each inventory operation
             for (let i = 0; i < allInventoryOperations.length; i++) {
               const { id_inventory_operation, id_type_of_operation } = allInventoryOperations[i];
@@ -499,17 +500,17 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               - By store
               - Total of the day
             */
-            console.log("Looping stores")
             for(let i = 0; i < stores.length; i++) {
-              const {id_store} = stores[i];
+              const {id_store, store_name} = stores[i];
               const transactionOfTheStore:IRouteTransaction[] = [];
               const transactionOperationsOfTheStore:IRouteTransactionOperation[] = [];
               const productsInventoryOfRepositionOfStore:IProductInventory[] = [];
               const productsInventoryOfSaleOfStore:IProductInventory[] = [];
 
+              // Storing the name of the corner store
+              titleOfStores.push(store_name);
 
               // Getting transaction of the current store
-              console.log("Asking route transactions");
               (await getRouteTransactionByStore(id_store))
               .forEach((transaction:IRouteTransaction) => {
                 const { state } = transaction;
@@ -522,17 +523,13 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 }
               });
 
-              console.log("asking transaction operations of the store")
               // Getting the transaction operations of the current store
               for(let j = 0; j < transactionOfTheStore.length; j++) {
-                console.log(transactionOfTheStore[j])
                 const { id_route_transaction } = transactionOfTheStore[j];
-                console.log("id_route_transaction: ", id_route_transaction);
                 (await getRouteTransactionOperations(id_route_transaction))
                 .forEach((transactionOperations:IRouteTransactionOperation) => {
                   transactionOperationsOfTheStore.push(transactionOperations);
                 });
-                console.log("after")
               }
 
               // Getting the description of each transaction operation of the current store
@@ -542,7 +539,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
                 // Accordig with the type of operations are the instructions to make
                 if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
-                  console.log("product reposition");
                   // This case is for product repositions
                   (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
                   .forEach((operationDescription) => {
@@ -577,7 +573,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                     }
                   });
                 } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
-                  console.log("sale");
                   // This case is for product repositions
                   (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
                   .forEach((operationDescription) => {
@@ -620,6 +615,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               productRepositionInventoryProductByStore.push(productsInventoryOfRepositionOfStore);
               productSoldInventoryProductByStore.push(productsInventoryOfSaleOfStore);
             }
+            console.log("final inventory")
+            // Storing the route transaction information.
+            setNameOfStores(titleOfStores);
+            setProductSoldByStore(productSoldInventoryProductByStore);
+            setProductRepositionByStore(productRepositionInventoryProductByStore);
+
 
             /*
               These variables have the total amount of product for each concept, but they are stored by corner store:
@@ -1106,19 +1107,46 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         :
         <View style={tw`flex basis-3/6 w-full mt-3`}>
           <ScrollView horizontal={true}>
-          <TableInventoryVisualization
-            inventory             = {productsInventory}
-            suggestedInventory    = {suggestedProduct}
-            initialInventory      = {initialShiftInventory}
-            restockInventories    = {restockInventories}
-            soldOperations        = {productSoldTransactions}
-            repositionsOperations = {productRepositionTransactions}
-            returnedInventory     = {finalShiftInventory}
-            inventoryWithdrawal   = {inventoryWithdrawal}
-            inventoryOutflow      = {inventoryOutflow}
-            finalOperation        = {finalOperation}
-            issueInventory        = {issueInventory}/>
+            <TableInventoryVisualization
+              inventory             = {productsInventory}
+              suggestedInventory    = {suggestedProduct}
+              initialInventory      = {initialShiftInventory}
+              restockInventories    = {restockInventories}
+              soldOperations        = {productSoldTransactions}
+              repositionsOperations = {productRepositionTransactions}
+              returnedInventory     = {finalShiftInventory}
+              inventoryWithdrawal   = {inventoryWithdrawal}
+              inventoryOutflow      = {inventoryOutflow}
+              finalOperation        = {finalOperation}
+              issueInventory        = {issueInventory}/>
           </ScrollView>
+          { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
+            <View style={tw`flex basis-3/6 w-full mt-3`}>
+              <Text style={tw`w-full text-center text-black text-2xl`}>
+                Producto vendido por tienda
+              </Text>
+              <ScrollView horizontal={true}>
+                <TableInventoryOperationsVisualization
+                  inventory             = {productsInventory}
+                  titleColumns          = {nameOfStores}
+                  productInventories    = {productSoldByStore}
+                  calculateTotal        = {true}
+                  />
+              </ScrollView>
+              <Text style={tw`w-full text-center text-black text-2xl`}>
+                Reposición de producto por tienda
+              </Text>
+              <ScrollView horizontal={true}>
+                <TableInventoryOperationsVisualization
+                  inventory             = {productsInventory}
+                  titleColumns          = {nameOfStores}
+                  productInventories    = {productRepositionByStore}
+                  calculateTotal        = {true}
+                  />
+              </ScrollView>
+
+            </View>
+          }
         </View>
       }
 

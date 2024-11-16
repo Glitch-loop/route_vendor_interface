@@ -78,11 +78,6 @@ const TableInventoryVisualization = (
     finalOperation:boolean,
     issueInventory:boolean,
   }) => {
-
-    console.log("initialInventory: ", initialInventory.length)
-    console.log("restockInventories: ", restockInventories.length)
-    console.log("soldOperations: ", soldOperations.length)
-    console.log("repositionsOperations: ", repositionsOperations.length)
   return (
     <DataTable style={tw`w-full`}>
       {/* Header section */}
@@ -97,9 +92,11 @@ const TableInventoryVisualization = (
           </DataTable.Title>
         }
         { restockInventories.length > 0 &&
-          restockInventories.map(() => {
+          restockInventories.map((currentInventory, index) => {
             return (
-            <DataTable.Title style={tw`w-24 flex flex-row justify-center text-center`}>
+            <DataTable.Title
+              key={index}
+              style={tw`w-24 flex flex-row justify-center text-center`}>
               <Text style={tw`text-black`}>Re-stock</Text>
             </DataTable.Title>
             );
