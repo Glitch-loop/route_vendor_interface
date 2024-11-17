@@ -1,5 +1,5 @@
 // Libraries
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BackHandler, ScrollView, View, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
@@ -21,6 +21,7 @@ import TypeOperationItem from '../components/TypeOperationItem';
 import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
+import ActionDialog from '../components/ActionDialog';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -28,12 +29,28 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
+  
+  // States for logic of the layout
+  const [isDayWorkClosed, setIsDayWorkClosed] = useState<boolean>(false);
+  const [showDialog, setShowDialog] = useState<boolean>(false);
 
   useEffect(() => {
     // navigation.reset({
     //   index: 0,
     //   routes: [{name: 'routeOperationMenu'}],
     // });
+    // Determining if the day is still open
+    const endShiftInventoryOperation:IDayOperation|undefined
+    = dayOperations.find(dayOperation =>
+      dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
+
+    if (endShiftInventoryOperation === undefined) {
+      /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
+      /*There is an end shift operation, the work day was closed. */
+      setIsDayWorkClosed(false);
+    } else {
+      setIsDayWorkClosed(true);
+    }
 
     const backAction = () => {
       /*
@@ -52,7 +69,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
     return () => backHandler.remove();
 
-  }, []);
+  }, [dayOperations, isDayWorkClosed]);
 
   // Handlers
   const onSelectStore = (dayOperation: IDayOperation):void => {
@@ -92,8 +109,47 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     navigation.navigate('inventoryOperation');
   };
 
+  // Related with to the end of  the day.
+  const onGoToMainMenu = ():void => {
+    // Resetting the navigation stack (avoiding user go back to the route operation).
+    navigation.reset({
+      index: 0, // Set the index of the new state (0 means first screen)
+      routes: [{ name: 'routeSelection' }], // Array of route objects, with the route to navigate to
+    });
+
+    // Redirecting to main menu.
+    navigation.navigate('routeSelection');
+  };
+
+  const onShowDialog = ():void => {
+    setShowDialog(!showDialog);
+  };
+
+  const onAcceptDialog = ():void => {
+    setShowDialog(false);
+    onGoToMainMenu();
+  };
+
+  const onDeclinedialog = ():void => {
+    setShowDialog(false);
+  };
+
   return (
     <View style={tw`flex-1`}>
+      <ActionDialog
+        visible={showDialog}
+        onAcceptDialog={onAcceptDialog}
+        onDeclinedialog={onDeclinedialog}
+        >
+        <View style={tw`w-full flex flex-col basis-11/12 justify-center items-center`}>
+          <Text style={tw`text-center text-black text-lg`}>
+            ¿Seguro que quieres regresar al menu princial?
+          </Text>
+          <Text style={tw`text-center text-black text-base mt-2`}>
+            (Una vez aceptado no podras volver a este menú)
+          </Text>
+        </View>
+      </ActionDialog>
       <ScrollView
         style={tw`w-full h-full flex flex-col`}
         scrollEventThrottle={16}>
@@ -104,7 +160,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             showPrinterButton={true}
             onGoBack={() => {}}/>
         </View>
-        {/* <Text style={tw`w-full ml-3 my-3 text-4xl`}>{routeDay.route_name}</Text> */}
         <View style={tw`w-full flex flex-row justify-center`}>
           <View style={tw`w-11/12 flex flex-row justify-start`}>
             <TypeOperationItem />
@@ -145,7 +200,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               itemOrder = dayOperation.operation_order.toString();
               itemName = stores[index].store_name!;
               description = stores[index].street + ' #' + stores[index].ext_number + ', ' + stores[index].colony;
-              totalValue = '10';
+              totalValue = '';
               style = `my-2 ${ getColorContextOfStore(stores[index], dayOperation) } rounded w-11/12 h-16 flex flex-row justify-center items-center text-white`;
               typeOperation = true;
             }
@@ -171,20 +226,22 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
           flex flex-row justify-around
           `}>
             <Pressable
+              onPress={() => {
+                if (isDayWorkClosed) {
+                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                } else {
+                  // createNewClient();
+                }
+              }}
               style={tw`bg-green-500 px-4 py-3 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>Crear nuevo cliente</Text>
             </Pressable>
             <Pressable
               onPress={() => {
-                const endShiftInventoryOperation:IDayOperation|undefined
-                  = dayOperations.find(dayOperation =>
-                    dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
-                if (endShiftInventoryOperation === undefined) {
-                  /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
-                  onRestockInventory();
-                } else {
-                  /*There is an end shift operation, the work day was closed. */
+                if (isDayWorkClosed) {
                   Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                } else {
+                  onRestockInventory();
                 }
               }}
               style={tw`bg-orange-500 px-4 py-3 mx-1 rounded flex flex-row basis-1/3 justify-center`}>
@@ -192,19 +249,16 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             </Pressable>
             <Pressable
               onPress={() => {
-                const endShiftInventoryOperation:IDayOperation|undefined
-                = dayOperations.find(dayOperation =>
-                  dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
-                if (endShiftInventoryOperation === undefined) {
-                  /* There is not an end shift operation, the work day is still open. So, user can make more operations*/
-                  onFinishInventory();
+                if (isDayWorkClosed) {
+                  onShowDialog();
                 } else {
-                  /*There is an end shift operation, the work day was closed. */
-                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                  onFinishInventory();
                 }
               }}
               style={tw`bg-indigo-400 px-4 py-3 rounded flex flex-row basis-1/3 justify-center`}>
-              <Text style={tw`text-sm text-center`}>Finalizar ruta</Text>
+              <Text style={tw`text-sm text-center`}>
+                { isDayWorkClosed ? 'Ir a menú principal' : 'Finalizar ruta' }
+              </Text>
             </Pressable>
         </View>
     </View>

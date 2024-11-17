@@ -80,7 +80,7 @@ function App(): React.JSX.Element {
   useEffect(() => {
     // Initializing database
     databaseInitialization();
-  });
+  },[]);
 
 
   return (
