@@ -81,7 +81,7 @@ import {
   setNextOperation,
 } from '../redux/slices/dayOperationsSlice';
 import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
-import { convertingDictionaryInArray } from '../utils/generalFunctions';
+import { addingInformationParticularFieldOfObject, convertingDictionaryInArray } from '../utils/generalFunctions';
 import TableInventoryOperationsVisualization from '../components/InventoryComponents/TableInventoryOperationsVisualization';
 
 
@@ -395,9 +395,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       const productSoldInventoryProductByStore:IProductInventory[][] = [];
       const titleOfStores:string[] = [];
 
-      // These variables store the total amount of each concept
-      const productRepositionInventoryProduct:any = {};
-      const productSoldInventoryProduct:any = {};
+      // These objects store the "total amount" of product for each concept
+      // Information comes from "route transactions"
+      let productRepositionInventoryProduct:any = {};
+      let productSoldInventoryProduct:any = {};
 
       /*
         Since it is an visualization, it is need to 'reset' the states related to
@@ -458,12 +459,13 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               - Final invnetory
 
               And also, it is needed to retrieve the outflow of product:
-                - product reposition
-                - selling
+                - product reposition transactions
+                - selling transactions
 
               Product devolution is not included becuase it is considered as another inventory out of the product inventory of the day.
             */
-            // Get all inventory operations
+
+            // Get all the inventory operations
             (await getAllInventoryOperations()).forEach((currentInventoryOperation:IInventoryOperation) => {
               allInventoryOperations.push(currentInventoryOperation);
             });
@@ -482,6 +484,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                   price: inventoryOperationDescription.price_at_moment,
                 };
               });
+
               // Determining where to store the information of the current inventory operation.
               if (id_type_of_operation === DAYS_OPERATIONS.start_shift_inventory) {
                 productInventoryOfInventoryOperaton.forEach((product:IProductInventory) => {
@@ -494,18 +497,26 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               }
             }
 
-            // Get the inventory of the route transactions.
+            // Get the "inventory" of the "route transactions".
             /*
-              In this section, it is going to be used the data in two formats
-              - By store
-              - Total of the day
+              Route transactions and invnetory transactions have their own format, but
+              route transactions can be "formated" as if they were an "inventory operation"
+            */
+            /*
+              The information of this section is used for two purposes:
+              - Summarize of all the day.
+              - Summarize by store of the day.
             */
             for(let i = 0; i < stores.length; i++) {
               const {id_store, store_name} = stores[i];
+
+              // Variables to store the information about the "route transactions" of the stores.
               const transactionOfTheStore:IRouteTransaction[] = [];
               const transactionOperationsOfTheStore:IRouteTransactionOperation[] = [];
-              const productsInventoryOfRepositionOfStore:IProductInventory[] = [];
-              const productsInventoryOfSaleOfStore:IProductInventory[] = [];
+
+              // Variables to store the route transactions (total of amount of product) by stores.
+              let productsInventoryOfRepositionOfStore:any = {};
+              let productsInventoryOfSaleOfStore:any = {};
 
               // Storing the name of the corner store
               titleOfStores.push(store_name);
@@ -514,7 +525,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               (await getRouteTransactionByStore(id_store))
               .forEach((transaction:IRouteTransaction) => {
                 const { state } = transaction;
-
                 // It is only going to be stored active transactions
                 if (state === 1) {
                   transactionOfTheStore.push(transaction);
@@ -534,92 +544,58 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
               // Getting the description of each transaction operation of the current store
               for(let j = 0; j < transactionOperationsOfTheStore.length; j++) {
-                const {id_route_transaction_operation, id_route_transaction_operation_type}
-                  = transactionOperationsOfTheStore[j];
+                const {
+                  id_route_transaction_operation,
+                  id_route_transaction_operation_type,
+                } = transactionOperationsOfTheStore[j];
 
                 // Accordig with the type of operations are the instructions to make
-                if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
-                  // This case is for product repositions
-                  (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
-                  .forEach((operationDescription) => {
-                    const {id_product} = operationDescription;
+                (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
+                .forEach((operationDescription) => {
+                  const amountOfProduct:number = operationDescription.amount;
 
+                  const newObject:any = {
+                    ...initialProduct,
+                    amount: amountOfProduct,
+                    id_product: operationDescription.id_product,
+                    price: operationDescription.price_at_moment,
+                  };
+
+
+                  // Accordig with the type of operations are the instructions to make
+                  if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
+                    // Getting information of the current store
+                    productsInventoryOfRepositionOfStore = addingInformationParticularFieldOfObject(
+                      productsInventoryOfRepositionOfStore, 'id_product', 'amount', amountOfProduct, newObject);
+
+                    // Adding the information of this transaction to the total information of the day 
+                    productRepositionInventoryProduct = addingInformationParticularFieldOfObject(
+                      productRepositionInventoryProduct, 'id_product', 'amount', amountOfProduct, newObject);
+
+                  } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
                     // Getting information by store
-                    const index = productsInventoryOfRepositionOfStore.findIndex((productInventoryOfProductReposition:IProductInventory) => {
-                      return id_product === productInventoryOfProductReposition.id_product;
-                    });
+                    productsInventoryOfSaleOfStore = addingInformationParticularFieldOfObject(
+                      productsInventoryOfSaleOfStore, 'id_product', 'amount', amountOfProduct, newObject);
 
-                    if(index === -1) { // It is a new product inventory
-                      productsInventoryOfRepositionOfStore.push({
-                        ...initialProduct,
-                        amount: operationDescription.amount,
-                        id_product: operationDescription.id_product,
-                        price: operationDescription.price_at_moment,
-                      });
-                    } else { // The product already exists
-                      productsInventoryOfRepositionOfStore[index].amount += operationDescription.amount;
-                    }
-
-                    // Getting information by product (the total of the day)
-                    if (productRepositionInventoryProduct[id_product] === undefined) {
-                      productRepositionInventoryProduct[id_product] = {
-                        ...initialProduct,
-                        amount: operationDescription.amount,
-                        id_product: operationDescription.id_product,
-                        price: operationDescription.price_at_moment,
-                      };
-                    } else {
-                      productRepositionInventoryProduct[id_product].amount += operationDescription.amount;
-                    }
-                  });
-                } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
-                  // This case is for product repositions
-                  (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
-                  .forEach((operationDescription) => {
-                    const {id_product} = operationDescription;
-
-                    // Getting information by store
-                    const index = productsInventoryOfSaleOfStore
-                    .findIndex((productInventoryOfSales:IProductInventory) => {
-                      return id_product === productInventoryOfSales.id_product;
-                    });
-
-                    if(index === -1) { // It is a new product inventory
-                      productsInventoryOfSaleOfStore.push({
-                        ...initialProduct,
-                        amount: operationDescription.amount,
-                        id_product: operationDescription.id_product,
-                        price: operationDescription.price_at_moment,
-                      });
-                    } else { // The product already exists
-                      productsInventoryOfRepositionOfStore[index].amount += operationDescription.amount;
-                    }
-
-                    // Getting information by product (the total of the day)
-                    if (productSoldInventoryProduct[id_product] === undefined) {
-                      productSoldInventoryProduct[id_product] = {
-                        ...initialProduct,
-                        amount: operationDescription.amount,
-                        id_product: operationDescription.id_product,
-                        price: operationDescription.price_at_moment,
-                      };
-                    } else {
-                      productSoldInventoryProduct[id_product].amount += operationDescription.amount;
-                    }
-                  });
-                } else {
-                  /* All the other operations don't matter */
-                }
+                    // Getting information of the current store
+                    productSoldInventoryProduct = addingInformationParticularFieldOfObject(
+                      productSoldInventoryProduct, 'id_product', 'amount', amountOfProduct, newObject);
+                  } else {
+                    /* All the other operations don't matter */
+                  }
+                });
               }
-
-              productRepositionInventoryProductByStore.push(productsInventoryOfRepositionOfStore);
-              productSoldInventoryProductByStore.push(productsInventoryOfSaleOfStore);
+              // Storing the information of the current store within the rest of the stores.
+              productRepositionInventoryProductByStore.push(
+                convertingDictionaryInArray(productsInventoryOfRepositionOfStore));
+              productSoldInventoryProductByStore.push(
+                convertingDictionaryInArray(productsInventoryOfSaleOfStore));
             }
 
-            // Storing the route transaction information.
+            // Storing route transactions information in states.
             setNameOfStores(titleOfStores);
-            setProductSoldByStore(productSoldInventoryProductByStore);
             setProductRepositionByStore(productRepositionInventoryProductByStore);
+            setProductSoldByStore(productSoldInventoryProductByStore);
 
 
             /*
@@ -630,8 +606,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               Now, it is needed to "reduce" them into a single array for display them in the "inventory visualizator component".
             */
             // Storing information relate to route transactions
-            setProductRepositionTransactions(
-              convertingDictionaryInArray(productRepositionInventoryProduct));
+            setProductRepositionTransactions(convertingDictionaryInArray(productRepositionInventoryProduct));
             setProductSoldTransactions(convertingDictionaryInArray(productSoldInventoryProduct));
 
             // Storing information related to the inventory operations
@@ -1092,9 +1067,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       <Text style={tw`w-full text-center text-black text-2xl`}>
         {getTitleOfInventoryOperation(currentOperation)}
       </Text>
+
+      {/* Inventory product section */}
       {/* Depending on the action is that one menu or another one will be displayed. */}
       { isOperation ?
-        <View style={tw`flex basis-3/6 w-full mt-3`}>
+        <View style={tw`flex basis-auto w-full mt-3`}>
           {/* <ScrollView horizontal={true}> */}
             <TableInventoryOperations
               suggestedInventory={suggestedProduct}
@@ -1105,23 +1082,21 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           {/* </ScrollView> */}
         </View>
         :
-        <View style={tw`flex basis-3/6 w-full mt-3`}>
-          {/* <ScrollView horizontal={true}> */}
-            <TableInventoryVisualization
-              inventory             = {productsInventory}
-              suggestedInventory    = {suggestedProduct}
-              initialInventory      = {initialShiftInventory}
-              restockInventories    = {restockInventories}
-              soldOperations        = {productSoldTransactions}
-              repositionsOperations = {productRepositionTransactions}
-              returnedInventory     = {finalShiftInventory}
-              inventoryWithdrawal   = {inventoryWithdrawal}
-              inventoryOutflow      = {inventoryOutflow}
-              finalOperation        = {finalOperation}
-              issueInventory        = {issueInventory}/>
-          {/* </ScrollView> */}
+        <View style={tw`flex basis-auto w-full mt-3`}>
+          <TableInventoryVisualization
+            inventory             = {productsInventory}
+            suggestedInventory    = {suggestedProduct}
+            initialInventory      = {initialShiftInventory}
+            restockInventories    = {restockInventories}
+            soldOperations        = {productSoldTransactions}
+            repositionsOperations = {productRepositionTransactions}
+            returnedInventory     = {finalShiftInventory}
+            inventoryWithdrawal   = {inventoryWithdrawal}
+            inventoryOutflow      = {inventoryOutflow}
+            finalOperation        = {finalOperation}
+            issueInventory        = {issueInventory}/>
           { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
-            <View style={tw`flex basis-3/6 w-full mt-3`}>
+            <View style={tw`flex basis-auto w-full mt-3`}>
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Producto vendido por tienda
               </Text>
@@ -1159,7 +1134,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             1. Start shift inventory operation.
             2. End shift inventory operation.
         */
-        <View style={tw`flex basis-1/6 w-full mt-3`}>
+        <View style={tw`flex basis-auto w-full mt-3`}>
           <Text style={tw`w-full text-center text-black text-2xl`}>Dinero</Text>
           <TableCashReception
             cashInventoryOperation={cashInventory}

@@ -23,3 +23,17 @@ export function convertingDictionaryInArray(dictionary:any) {
 
   return newArray;
 }
+
+export function addingInformationParticularFieldOfObject(dictionary:any,
+  idField:string,
+  fieldToAdd:string,
+  informationToAdd:any,
+  newObject:any) {
+  if (dictionary[idField] === undefined) {
+    dictionary[idField] = newObject;
+  } else {
+    dictionary[idField][fieldToAdd] += informationToAdd;
+  }
+
+  return dictionary;
+}
