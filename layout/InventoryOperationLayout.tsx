@@ -726,6 +726,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       if (isInventoryAccepted === true) {
         return;
       }
+
       setIsInventoryAccepted(true);
       /*
         There are 3 types of inventory operations:
@@ -1130,31 +1131,24 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Producto vendido por tienda
               </Text>
-              {/* <ScrollView horizontal={true}> */}
-                <TableInventoryOperationsVisualization
-                  inventory             = {productsInventory}
-                  titleColumns          = {nameOfStores}
-                  productInventories    = {productSoldByStore}
-                  calculateTotal        = {true}
-                  />
-              {/* </ScrollView> */}
+              <TableInventoryOperationsVisualization
+                inventory             = {productsInventory}
+                titleColumns          = {nameOfStores}
+                productInventories    = {productSoldByStore}
+                calculateTotal        = {true}/>
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Reposición de producto por tienda
               </Text>
-              {/* <ScrollView horizontal={true}> */}
                 <TableInventoryOperationsVisualization
                   inventory             = {productsInventory}
                   titleColumns          = {nameOfStores}
                   productInventories    = {productRepositionByStore}
                   calculateTotal        = {true}
                   />
-              {/* </ScrollView> */}
-
             </View>
           }
         </View>
       }
-
       {/* Cash reception section. */}
       {((currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
       || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory)
@@ -1175,6 +1169,21 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             ${cashInventory.reduce((accumulator, denomination) => {
                 return accumulator + denomination.amount! * denomination.value;},0)}
             </Text>
+        </View>
+      }
+      { (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) &&
+        <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
+          <Text style={tw`text-black text-lg`}>
+            Dinero llevado al inicio de la ruta: ${routeDay.start_petty_cash}
+          </Text>
+        </View>
+      }
+      { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
+        <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
+          <Text style={tw`text-black text-lg`}>
+            Dinero regresado al final de la ruta: ${routeDay.final_petty_cash}
+          </Text>
         </View>
       }
       <View style={tw`flex basis-1/6 mt-3`}>
