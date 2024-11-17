@@ -36,6 +36,16 @@ const TableInventoryOperationsVisualization = (
     calculateTotal:boolean
   }) => {
 
+    const headerTableStyle:string = 'w-28 flex flex-row justify-center';
+    const viewTagHeaderTableStyle:string = 'w-full flex flex-row items-center justify-center';
+    const textHeaderTableStyle:string = 'text-black text-center max-w-28 flex flex-row justify-center';
+
+    const rowTableStyle:string = '';
+    const cellTableStyle:string = 'w-28 flex flex-row justify-center';
+    const viewTagRowTableStyle:string = 'w-full flex flex-row items-center justify-center';
+    const textRowTableStyle:string = 'text-center ml-3 text-black max-w-28 flex flex-row justify-center';
+
+
   return (
     <View style={tw`w-full flex flex-row`}>
       {(productInventories.length > 0) ?
@@ -44,18 +54,24 @@ const TableInventoryOperationsVisualization = (
           <DataTable style={tw`w-1/3`}>
             <DataTable.Header>
               {/* This field is never empty since it is necessary anytime */}
-              <DataTable.Title style={tw`w-32 flex flex-row justify-center text-center`}>
-                  <Text style={tw`text-black`}>Producto</Text>
-                </DataTable.Title>
+              <DataTable.Title style={tw`${headerTableStyle}`}>
+                <View style={tw`${viewTagHeaderTableStyle}`}>
+                  <Text style={tw`${textHeaderTableStyle}`}>
+                    Producto
+                  </Text>
+                </View>
+              </DataTable.Title>
             </DataTable.Header>
             {(productInventories.length > 0) &&
                 inventory.map((product) => {
                   return (
-                    <DataTable.Row key={product.id_product}>
-                      {/* This field is never empty since it is necessary anytime */}
-                      {/* Product (product identification) */}
-                      <DataTable.Cell style={tw`w-32 flex flex-row justify-center`}>
-                        <Text style={tw`text-black text-center`}>{product.product_name}</Text>
+                    <DataTable.Row key={product.id_product} style={tw`${rowTableStyle}`}>
+                      <DataTable.Cell style={tw`${cellTableStyle}`}>
+                        <View style={tw`${viewTagRowTableStyle}`}>
+                          <Text style={tw`${textRowTableStyle}`}>
+                            {product.product_name}
+                          </Text>
+                        </View>
                       </DataTable.Cell>
                     </DataTable.Row>
                   );
@@ -69,14 +85,24 @@ const TableInventoryOperationsVisualization = (
               <DataTable.Header>
                 {/* This field is never empty since it is necessary anytime */}
                 { titleColumns.map((titleColumn, index) => {
-                  return <DataTable.Title key={index}
-                    style={tw`w-28 flex flex-row justify-center text-center`}>
-                    <Text style={tw`text-black`}>{titleColumn}</Text>
-                  </DataTable.Title>;})
+                    return (
+                      <DataTable.Title key={index} style={tw`${headerTableStyle}`}>
+                        <View style={tw`${viewTagHeaderTableStyle}`}>
+                          <Text style={tw`${textHeaderTableStyle}`}>
+                            {titleColumn}
+                          </Text>
+                        </View>
+                    </DataTable.Title>
+                    );
+                  })
                 }
                 { calculateTotal &&
-                  <DataTable.Title style={tw`w-32 flex flex-row justify-center text-center`}>
-                    <Text style={tw`text-black`}>Total</Text>
+                  <DataTable.Title style={tw`${headerTableStyle}`}>
+                    <View style={tw`${viewTagHeaderTableStyle}`}>
+                      <Text style={tw`${textHeaderTableStyle}`}>
+                        Total
+                      </Text>
+                    </View>
                   </DataTable.Title>
                 }
               </DataTable.Header>
@@ -123,18 +149,24 @@ const TableInventoryOperationsVisualization = (
                       { restockInventoryOperationAmount.length > 0 &&
                         restockInventoryOperationAmount.map((productAmount, index) => {
                           return (
-                          <DataTable.Cell
-                            key={index}
-                            style={tw`w-24 flex flex-row justify-center`}>
-                            <Text style={tw`text-black`}>{productAmount}</Text>
-                          </DataTable.Cell>
+                            <DataTable.Cell key={index} style={tw`${cellTableStyle}`}>
+                              <View style={tw`${viewTagRowTableStyle}`}>
+                                <Text style={tw`${textRowTableStyle}`}>
+                                  {productAmount}
+                                </Text>
+                              </View>
+                            </DataTable.Cell>
                           );
                         })
                       }
                       {/* Inflow product */}
                       { calculateTotal === true &&
-                        <DataTable.Cell style={tw`w-24 flex flex-row justify-center`}>
-                          <Text style={tw`text-black`}>{totalOfTable}</Text>
+                        <DataTable.Cell style={tw`${cellTableStyle}`}>
+                          <View style={tw`${viewTagRowTableStyle}`}>
+                            <Text style={tw`${textRowTableStyle}`}>
+                              {totalOfTable}
+                            </Text>
+                          </View>
                         </DataTable.Cell>
                       }
                     </DataTable.Row>
