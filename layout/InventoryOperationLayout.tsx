@@ -448,7 +448,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setInventoryOutflow(true);
             setFinalOperation(true);
             setIssueInventory(true);
-
             /*
               End shift inventory is an special case. This inventory visualization intends to show the summarize of
               all the inventory operations that were made during the route.
@@ -1181,8 +1180,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
           onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
-          onCancel={handlerOnVendorCancelation}
-          message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}/>
+          onCancel={isOperation ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
+          message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}
+          confirmMessageButton={isOperation ? 'Aceptar' : 'Volver al menú'}
+          cancelMessageButton={isOperation ? 'Cancelar' : 'Volver al menú'}
+          requiredValidation={isOperation}/>
       </View>
       <View style={tw`flex basis-1/6`} />
     </ScrollView>

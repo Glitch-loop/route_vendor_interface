@@ -28,6 +28,8 @@ class MainApplication : Application(), ReactApplication {
 
               // add(RNCConfigPackage())
               // add(RNFusedLocationPackage())
+              
+              // add(VectorIconsPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"

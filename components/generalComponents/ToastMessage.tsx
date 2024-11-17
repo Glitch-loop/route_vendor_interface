@@ -39,7 +39,6 @@ const toastConfig = {
   ),
 };
 
-
 const ToastMessage = () => {
   return (
     <View style={tw`absolute w-full z-20 flex flex-row justify-center`}>
