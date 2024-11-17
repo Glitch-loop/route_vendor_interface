@@ -24,16 +24,24 @@ export function convertingDictionaryInArray(dictionary:any) {
   return newArray;
 }
 
-export function addingInformationParticularFieldOfObject(dictionary:any,
-  idField:string,
-  fieldToAdd:string,
+export function addingInformationParticularFieldOfObject(
+  dictionary: any,
+  idField: string,
+  fieldToAddTheInformation: string,
   informationToAdd:any,
-  newObject:any) {
-  if (dictionary[idField] === undefined) {
-    dictionary[idField] = newObject;
+  newObject: any) {
+  let updatedDictionary:any = { ...dictionary };
+
+  if (!updatedDictionary[idField]) {
+    updatedDictionary[idField] = { ...newObject };
   } else {
-    dictionary[idField][fieldToAdd] += informationToAdd;
+    if (fieldToAddTheInformation in updatedDictionary[idField]) {
+      updatedDictionary[idField][fieldToAddTheInformation] += informationToAdd;
+    } else {
+      /* The field doesn't exist in the object/json */
+      updatedDictionary[idField][fieldToAddTheInformation] = informationToAdd;
+    }
   }
 
-  return dictionary;
+  return updatedDictionary;
 }

@@ -462,13 +462,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 - product reposition transactions
                 - selling transactions
 
-              Product devolution is not included becuase it is considered as another inventory out of the product inventory of the day.
+              Product devolution is not included becuase it is considered as another inventory out 
+              of the product inventory of the day.
             */
 
             // Get all the inventory operations
-            (await getAllInventoryOperations()).forEach((currentInventoryOperation:IInventoryOperation) => {
-              allInventoryOperations.push(currentInventoryOperation);
-            });
+            (await getAllInventoryOperations())
+              .forEach((currentInventoryOperation:IInventoryOperation) => {
+                allInventoryOperations.push(currentInventoryOperation);
+              });
 
             // Get all the descriptions for each inventory operation
             for (let i = 0; i < allInventoryOperations.length; i++) {
@@ -476,14 +478,14 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
               let productInventoryOfInventoryOperaton:IProductInventory[] =
               (await getInventoryOperationDescription(id_inventory_operation))
-              .map((inventoryOperationDescription) => {
-                  return {
-                  ...initialProduct,
-                  amount: inventoryOperationDescription.amount,
-                  id_product: inventoryOperationDescription.id_product,
-                  price: inventoryOperationDescription.price_at_moment,
-                };
-              });
+                .map((inventoryOperationDescription) => {
+                    return {
+                    ...initialProduct,
+                    amount: inventoryOperationDescription.amount,
+                    id_product: inventoryOperationDescription.id_product,
+                    price: inventoryOperationDescription.price_at_moment,
+                  };
+                });
 
               // Determining where to store the information of the current inventory operation.
               if (id_type_of_operation === DAYS_OPERATIONS.start_shift_inventory) {
@@ -521,25 +523,25 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               // Storing the name of the corner store
               titleOfStores.push(store_name);
 
-              // Getting transaction of the current store
+              // Getting transactions of the current store
               (await getRouteTransactionByStore(id_store))
-              .forEach((transaction:IRouteTransaction) => {
-                const { state } = transaction;
-                // It is only going to be stored active transactions
-                if (state === 1) {
-                  transactionOfTheStore.push(transaction);
-                } else {
-                  /* There is no instructions */
-                }
-              });
+                .forEach((transaction:IRouteTransaction) => {
+                  const { state } = transaction;
+                  // It is only going to be stored active transactions
+                  if (state === 1) {
+                    transactionOfTheStore.push(transaction);
+                  } else {
+                    /* There is no instructions */
+                  }
+                });
 
               // Getting the transaction operations of the current store
               for(let j = 0; j < transactionOfTheStore.length; j++) {
                 const { id_route_transaction } = transactionOfTheStore[j];
                 (await getRouteTransactionOperations(id_route_transaction))
-                .forEach((transactionOperations:IRouteTransactionOperation) => {
-                  transactionOperationsOfTheStore.push(transactionOperations);
-                });
+                  .forEach((transactionOperations:IRouteTransactionOperation) => {
+                    transactionOperationsOfTheStore.push(transactionOperations);
+                  });
               }
 
               // Getting the description of each transaction operation of the current store
@@ -552,34 +554,62 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 // Accordig with the type of operations are the instructions to make
                 (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
                 .forEach((operationDescription) => {
-                  const amountOfProduct:number = operationDescription.amount;
-
-                  const newObject:any = {
-                    ...initialProduct,
-                    amount: amountOfProduct,
-                    id_product: operationDescription.id_product,
-                    price: operationDescription.price_at_moment,
-                  };
-
+                  const {
+                    amount,
+                    id_product,
+                    price_at_moment,
+                  } = operationDescription;
 
                   // Accordig with the type of operations are the instructions to make
                   if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
                     // Getting information of the current store
-                    productsInventoryOfRepositionOfStore = addingInformationParticularFieldOfObject(
-                      productsInventoryOfRepositionOfStore, 'id_product', 'amount', amountOfProduct, newObject);
+                    productsInventoryOfRepositionOfStore =
+                    addingInformationParticularFieldOfObject(productsInventoryOfRepositionOfStore, id_product, 'amount', amount,
+                      {
+                        ...initialProduct,
+                        amount: amount,
+                        id_product: id_product,
+                        price: price_at_moment,
+                      }
+                    );
 
-                    // Adding the information of this transaction to the total information of the day 
-                    productRepositionInventoryProduct = addingInformationParticularFieldOfObject(
-                      productRepositionInventoryProduct, 'id_product', 'amount', amountOfProduct, newObject);
+                    // Adding the information of this transaction to the total information of the day
+                    productRepositionInventoryProduct =
+                      addingInformationParticularFieldOfObject(productRepositionInventoryProduct,
+                        id_product, 'amount', amount,
+                        {
+                          ...initialProduct,
+                          amount: amount,
+                          id_product: id_product,
+                          price: price_at_moment,
+                        }
+                      );
 
                   } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
+
                     // Getting information by store
-                    productsInventoryOfSaleOfStore = addingInformationParticularFieldOfObject(
-                      productsInventoryOfSaleOfStore, 'id_product', 'amount', amountOfProduct, newObject);
+                    productsInventoryOfSaleOfStore =
+                      addingInformationParticularFieldOfObject(productsInventoryOfSaleOfStore,
+                        id_product, 'amount', amount,
+                        {
+                          ...initialProduct,
+                          amount: amount,
+                          id_product: id_product,
+                          price: price_at_moment,
+                        }
+                      );
 
                     // Getting information of the current store
-                    productSoldInventoryProduct = addingInformationParticularFieldOfObject(
-                      productSoldInventoryProduct, 'id_product', 'amount', amountOfProduct, newObject);
+                    productSoldInventoryProduct =
+                      addingInformationParticularFieldOfObject(productSoldInventoryProduct,
+                        id_product, 'amount', amount,
+                        {
+                          ...initialProduct,
+                          amount: amount,
+                          id_product: id_product,
+                          price: price_at_moment,
+                        }
+                      );
                   } else {
                     /* All the other operations don't matter */
                   }
@@ -588,6 +618,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               // Storing the information of the current store within the rest of the stores.
               productRepositionInventoryProductByStore.push(
                 convertingDictionaryInArray(productsInventoryOfRepositionOfStore));
+
               productSoldInventoryProductByStore.push(
                 convertingDictionaryInArray(productsInventoryOfSaleOfStore));
             }
@@ -666,7 +697,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     );
 
     return () => backHandler.remove();
-  }, []);
+  }, [currentOperation, stores, navigation]);
 
   // Handlers
   const handlerGoBack = () => {

@@ -7,8 +7,6 @@ import tw from 'twrnc';
 // Interfaces
 import {
   IProductInventory,
-  
-  ITransactionDescriptions,
  } from '../../interfaces/interfaces';
 import { findProductAmountInArray } from '../../utils/inventoryOperations';
 
@@ -70,8 +68,8 @@ const TableInventoryVisualization = (
     suggestedInventory: IProductInventory[],
     initialInventory:IProductInventory[], // There is only "one" initial inventory operation
     restockInventories:IProductInventory[][], // It could be many "restock" inventories
-    soldOperations: ITransactionDescriptions[], // Outflow in concept of selling
-    repositionsOperations: ITransactionDescriptions[], // Outflow in concept of repositions
+    soldOperations: IProductInventory[], // Outflow in concept of selling
+    repositionsOperations: IProductInventory[], // Outflow in concept of repositions
     returnedInventory:IProductInventory[], // There is only "one" final inventory operations
     inventoryWithdrawal:boolean,
     inventoryOutflow:boolean,
@@ -111,7 +109,7 @@ const TableInventoryVisualization = (
                   <Text style={tw`text-black`}>Producto</Text>
                 </DataTable.Title> */}
                 { initialInventory.length > 0 &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Inventario inicial</Text>
                   </DataTable.Title>
                 }
@@ -120,7 +118,7 @@ const TableInventoryVisualization = (
                     return (
                     <DataTable.Title
                       key={index}
-                      style={tw`w-24 flex flex-row justify-center text-center`}>
+                      style={tw`w-24 max-w-24 flex flex-row justify-center text-center`}>
                       <Text style={tw`text-black`}>Re-stock</Text>
                     </DataTable.Title>
                     );
@@ -130,37 +128,37 @@ const TableInventoryVisualization = (
                   This field is never empty since it is the reason of this component (inventory operation)
                 */}
                 { inventoryWithdrawal &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Total producto llevado</Text>
                   </DataTable.Title>
                 }
                 { soldOperations.length > 0 &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Venta</Text>
                   </DataTable.Title>
                 }
                 { repositionsOperations.length > 0 &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Reposición</Text>
                   </DataTable.Title>
                 }
                 { inventoryOutflow &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Total salidas de inventario</Text>
                   </DataTable.Title>
                 }
                 { finalOperation &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Inventario final</Text>
                   </DataTable.Title>
                 }
                 { returnedInventory.length > 0 &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Inventario regresado</Text>
                   </DataTable.Title>
                 }
                 { issueInventory &&
-                  <DataTable.Title style={tw`w-28 flex flex-row justify-center text-center`}>
+                  <DataTable.Title style={tw`w-28 max-w-28 flex flex-row justify-center text-center`}>
                     <Text style={tw`text-black`}>Problema con inventario</Text>
                   </DataTable.Title>
                 }
@@ -226,9 +224,6 @@ const TableInventoryVisualization = (
                     <DataTable.Row key={product.id_product}>
                       {/* This field is never empty since it is necessary anytime */}
                       {/* Product (product identification) */}
-                      {/* <DataTable.Cell style={tw`w-32  flex flex-row justify-center`}>
-                        <Text style={tw`text-black`}>{product.product_name}</Text>
-                      </DataTable.Cell> */}
                       {/* Suggested inventory */}
                       { suggestedInventory.length > 0 &&
                         <DataTable.Cell style={tw`w-20 flex flex-row justify-center`}>

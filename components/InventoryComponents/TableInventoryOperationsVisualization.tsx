@@ -11,43 +11,16 @@ import {
 import { findProductAmountInArray } from '../../utils/inventoryOperations';
 
 /*
-  To generalize as much as possible, this component was made to be capable of showing all the possible "inventory operations".
+ This component is an abstraction from "TableInventoryVisualization" component, here, what is in the "props"
+ is what will be displayed, so the order of how the information is stored in the arrays will influence in
+ how the information will be displayed.
 
-  At the moment of write this,  there are 4 possible operations:
-  - Start inventory
-  - Restock inventory
-  - Product inventory
-  - Final inventory
+ The intention of this component is to provide a component for display information around a "concept" like:
+ - Stores
+ - Movements
+ - Products
 
-  Although each one impacts to the inventory in some way, all of them shares the same interface,
-  so it was decided that the component will work as follows.
-
-  The component recieves the following parameters:
-    - suggestedInventory
-    - currentInventory
-    - operationInventory
-    - enablingFinalInventory
-    - setInventoryOperation
-
-  With the combination of all of them is that we can make all the possible inventory operations.
-
-  It is important to know that the pivotal prop is "operationInventory" that is the "state" that will
-  store the input of the user, in this way "suggestedInventory", "currentInventoy" and
-  "enablingFinalInventory" are auxiliar props that complements the information for the user.
-
-  Another thing to take account is that to indicate that some prop is not needed (at least for
-  "suggestedInventory" and "currentInventoy") for the inventory operations, the prop has to recieve
-  an empty array, so in this way the component will know that that information is not needed.
-
-  For example if I want to make an "start inventory", I'm going to pass a prop the state on which I will
-  store the input of the user (in addition of its handler to manage the events) and in the other props
-  I will pass an empty array "[]" and in the case of enablingFinalInventory I will pass "false".
-
-  In the case of a "restock operation" on which I need all auxiliar oepration I will pass the array
-  with the information according to the prop.
-
-  Important note: Since productIventory is taken as the main array to display the table the other array
-  may not be completed with all the products and it will work without problems.
+ Rather than displaying the information of the route as in the main workflow.
 */
 
 const TableInventoryOperationsVisualization = (
@@ -95,9 +68,6 @@ const TableInventoryOperationsVisualization = (
               {/* Header section */}
               <DataTable.Header>
                 {/* This field is never empty since it is necessary anytime */}
-                {/* <DataTable.Title style={tw`w-32 flex flex-row justify-center text-center`}>
-                  <Text style={tw`text-black`}>Producto</Text>
-                </DataTable.Title> */}
                 { titleColumns.map((titleColumn, index) => {
                   return <DataTable.Title key={index}
                     style={tw`w-28 flex flex-row justify-center text-center`}>
@@ -130,6 +100,7 @@ const TableInventoryOperationsVisualization = (
                   let id_product = product.id_product;
                   let amount = product.amount;
 
+
                   /* Declaring variables that will store the amount of product for each type of operation*/
                   let restockInventoryOperationAmount:number[] = [];
 
@@ -148,10 +119,6 @@ const TableInventoryOperationsVisualization = (
                   return (
                     <DataTable.Row key={product.id_product}>
                       {/* This field is never empty since it is necessary anytime */}
-                      {/* Product (product identification) */}
-                      {/* <DataTable.Cell style={tw`w-32  flex flex-row justify-center`}>
-                        <Text style={tw`text-black`}>{product.product_name}</Text>
-                      </DataTable.Cell> */}
                       {/* Restock of product */}
                       { restockInventoryOperationAmount.length > 0 &&
                         restockInventoryOperationAmount.map((productAmount, index) => {
