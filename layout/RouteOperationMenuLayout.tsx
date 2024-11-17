@@ -5,7 +5,7 @@ import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
 // Interfaces and enums
-import { IDayOperation, IInventoryOperation } from '../interfaces/interfaces';
+import { IDayOperation } from '../interfaces/interfaces';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,7 +29,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
-  
+
   // States for logic of the layout
   const [isDayWorkClosed, setIsDayWorkClosed] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<boolean>(false);
