@@ -355,27 +355,23 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       in this case, this movements will be gathered until the end of shift to calculate an
       inventory to determine the "product devolution inventory".
     */
-   console.log("Updating products transaction operation")
     // Updating redux context
     dispatch(updateProductsInventory(updateInventory));
 
     // Updating embedded database
     await updateProducts(updateInventory);
 
-    console.log("Updating stores operation")
     // Updating the status of the store
     const foundStore:(IStore&IStoreStatusDay|undefined)
       = stores.find(store => store.id_store === currentOperation.id_item);
 
 
     if (foundStore !== undefined) {
-      console.log("Store in the list")
       /*
         It means, the store is already plannified for this day, but we don't know if the client
         asked to be visited or if it is a client that belongs to today.
       */
       if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
-        console.log("Store that asked to be visited")
         /* This store doesn't belong to this day, but it was requested to be visited. */
         // Update redux context
         dispatch(updateStores([{
@@ -390,10 +386,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
           route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
         });
       } else {
-        console.log("Store of the route")
-        console.log("New state of the store: ", determineRouteDayState(foundStore.route_day_state, 2))
-        console.log("neutral state: ", enumStoreStates.NUETRAL_STATE)
-        console.log("served: ", enumStoreStates.SERVED)
         /* This store belongs to the route of the today*/
         // Update redux context.
         dispatch(updateStores([{
@@ -422,15 +414,12 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
        /* Determining if moving to the next operation. */
         if (currentOperation.current_operation) {
-          console.log("There is a current operation");
           /* Moving to the next operation */
           // Updating embedded database
           const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
 
           if (index > -1) { // The operation is in the list of day operations to do.
-            console.log("The operations was found in the list of day operations");
             if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
-              console.log("updating information")
               const currentDayOperation:IDayOperation = dayOperations[index];
               let nextDayOperation:IDayOperation = dayOperations[index + 1];
               /*
@@ -448,8 +437,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
                   });
 
                   if(currentStore !== undefined) {
-                    console.log("Current store: ", currentStore.store_name)
-                    console.log("day state: ", currentStore.route_day_state)
                     if(currentStore.route_day_state === enumStoreStates.PENDING_TO_VISIT
                     || currentStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING
                     ) {
@@ -492,7 +479,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
             }
           }
         } else {
-          console.log("There is not a current operation");
           /*
             Do nothing (the vendor is making a sale for a previous or next store from the current one)
           */
