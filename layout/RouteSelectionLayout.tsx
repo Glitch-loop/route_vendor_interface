@@ -191,7 +191,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         navigation.navigate('routeOperationMenu');
       } else {
         /* It is a new 'work' day. */
-        console.log("new day to work")
         // Getting all the routes assigned to a vendor
         formattingDaysOfTheVendor(testingUser)
           .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); });
@@ -245,7 +244,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   //Handlers
   const handlerOnSelectARoute = (route:IRoute, routeDay:ICompleteRouteDay) => {
     // Verifying that the selected route actually corresponds to make today.
-    if (current_day_name().toLocaleLowerCase() === DAYS[routeDay.id_day].day_name.toLocaleLowerCase()){
+    if (current_day_name().toLocaleLowerCase()
+      === DAYS[routeDay.id_day].day_name.toLocaleLowerCase()){
       // The route selected is the route that corresponds to make today.
       storeRouteSelected(route, routeDay);
       setShowDialog(false);

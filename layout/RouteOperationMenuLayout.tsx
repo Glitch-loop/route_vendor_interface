@@ -22,7 +22,7 @@ import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
-import { dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
+import { createEmbeddedDatabase, dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -72,7 +72,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
     return () => backHandler.remove();
 
-  }, [dayOperations, isDayWorkClosed]);
+  }, [dayOperations, isDayWorkClosed, routeDay]);
 
   // Handlers
   const onSelectStore = (dayOperation: IDayOperation):void => {
@@ -102,6 +102,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       1 - product devolution inventory
       2 - final inventory (remaining product)
     */
+
     dispatch(setCurrentOperation({
       id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
       id_item: '', // It is still not an operation.
@@ -113,7 +114,15 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   };
 
   // Related with to the end of  the day.
-  const onGoToMainMenu = ():void => {
+  const finishWorkDay = async ():Promise<void> => {
+    // Storing the information in the main database.
+
+    // Dropping database for freeing space.
+    await dropEmbeddedDatabase();
+
+    // Creating database with new information.
+    await createEmbeddedDatabase();
+
     // Resetting the navigation stack (avoiding user go back to the route operation).
     navigation.reset({
       index: 0, // Set the index of the new state (0 means first screen)
@@ -130,8 +139,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
   const onAcceptDialog = async ():Promise<void> => {
     setShowDialog(false);
-    await dropEmbeddedDatabase();
-    onGoToMainMenu();
+    finishWorkDay();
   };
 
   const onDeclinedialog = ():void => {

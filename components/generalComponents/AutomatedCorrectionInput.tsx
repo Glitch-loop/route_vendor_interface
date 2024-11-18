@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
-import { TextInput } from 'react-native';
+import { TextInput, Keyboard } from 'react-native';
 import tw from 'twrnc';
 
 const AutomatedCorrectionNumberInput = ({
@@ -10,11 +10,9 @@ const AutomatedCorrectionNumberInput = ({
   amount:number,
   onChangeAmount:any
 }) => {
-
   const [inputValue, setInputValue] = useState(amount.toString());
   const [lastInput, setLastInput] = useState('');
   const [isTypping, setIsTypping] = useState(false);
-
 
   useEffect(() => {
     if (isTypping) {
@@ -51,6 +49,23 @@ const AutomatedCorrectionNumberInput = ({
     onChangeAmount(resultInput);
   };
 
+  const handleAvoidingFalseTouch = async (input:string) => {
+    setTimeout(() => {
+      // input === '' && lastInput === ''
+      if (input === '' && !Keyboard.isVisible()) {
+        /* User didn't type anything */
+        if (lastInput === '') {
+          input = '0';
+        } else {
+          /* There is instructions */
+        }
+        handleTextChange(input);
+      } else {
+        /* There is no instructions */
+      }
+    }, 300);
+  };
+
   return (
     <TextInput
     style={tw`mx-1 border border-solid bg-white rounded-md h-10 text-center`}
@@ -60,7 +75,9 @@ const AutomatedCorrectionNumberInput = ({
       setInputValue('');
       setLastInput(inputValue);
     }}
+    onTouchEnd={() => { handleAvoidingFalseTouch(inputValue); }}
     onEndEditing={() => {
+
       setIsTypping(false);
       handleTextChange(inputValue);
       setLastInput('');

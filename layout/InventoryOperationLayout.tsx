@@ -1082,14 +1082,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       {/* Depending on the action is that one menu or another one will be displayed. */}
       { isOperation ?
         <View style={tw`flex basis-auto w-full mt-3`}>
-          {/* <ScrollView horizontal={true}> */}
-            <TableInventoryOperations
-              suggestedInventory={suggestedProduct}
-              currentInventory={currentInventory}
-              operationInventory={inventory}
-              setInventoryOperation={setInventory}
-              currentOperation={currentOperation}/>
-          {/* </ScrollView> */}
+          <TableInventoryOperations
+            suggestedInventory={suggestedProduct}
+            currentInventory={currentInventory}
+            operationInventory={inventory}
+            setInventoryOperation={setInventory}
+            currentOperation={currentOperation}/>
         </View>
         :
         <View style={tw`flex basis-auto w-full mt-3`}>

@@ -56,7 +56,7 @@ export type RootStackParamList = {
 async function databaseInitialization() {
   try {
     // Dropping database
-    await dropEmbeddedDatabase();
+    // await dropEmbeddedDatabase();
 
     // Creating database
     await createEmbeddedDatabase();
