@@ -46,6 +46,7 @@ const VendorConfirmation = ({
       }
 
       if(isValid) {
+        setInputValue('');
         onConfirm();
       } else {
         Toast.show({type: 'error', text1:'Movimiento invalido',

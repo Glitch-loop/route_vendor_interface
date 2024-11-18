@@ -140,20 +140,20 @@ async function creatingNewWorkDay(cashInventory:ICurrency[],
   };
 
   try {
+    const updatedRouteDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = { ...routeDay };
+
     let startPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
       { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
 
     // General information about the route.
-    const dayGeneralInformation:IDayGeneralInformation = {
-      id_work_day: uuidv4(),
-      start_date : timestamp_format(),
-      finish_date: timestamp_format(),
-      start_petty_cash: startPettyCash,
-      final_petty_cash: 0,
-    };
+    updatedRouteDay.id_work_day = uuidv4();
+    updatedRouteDay.start_date = timestamp_format();
+    updatedRouteDay.finish_date = timestamp_format();
+    updatedRouteDay.start_petty_cash = startPettyCash;
+    updatedRouteDay.final_petty_cash =  0;
 
     // Concatenating all the information.
-    return {...dayGeneralInformation, ...routeDay};
+    return updatedRouteDay;
   } catch (error) {
     return workDay;
   }
@@ -161,45 +161,21 @@ async function creatingNewWorkDay(cashInventory:ICurrency[],
 
 async function finishingWorkDay(cashInventory:ICurrency[],
   routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
-  const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
-    /*Fields related to the general information.*/
-    id_work_day: '',
-    start_date: '',
-    finish_date: '',
-    start_petty_cash: 0,
-    final_petty_cash: 0,
-    /*Fields related to IRoute interface*/
-    id_route: '',
-    route_name: '',
-    description: '',
-    route_status: '',
-    id_vendor: '',
-    /*Fields related to IDay interface*/
-    id_day: '',
-    day_name: '',
-    order_to_show: 0,
-    /*Fields relate to IRouteDay*/
-    id_route_day: '',
-  };
 
   try {
+    const updatedRouteDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = { ...routeDay };
+
     let endPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
       { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
 
     // General information about the route.
     /* Since it is the end shift of the route, there are information that we already have from other operations */
-    const dayGeneralInformation:IDayGeneralInformation = {
-      id_work_day: routeDay.id_work_day,
-      start_date : routeDay.start_date,
-      finish_date: timestamp_format(),
-      start_petty_cash: routeDay.start_petty_cash,
-      final_petty_cash: endPettyCash,
-    };
+    updatedRouteDay.finish_date = timestamp_format();
+    updatedRouteDay.final_petty_cash = endPettyCash;
 
-    // Concatenating all the information.
-    return {...dayGeneralInformation, ...routeDay};
+    return updatedRouteDay;
   } catch (error) {
-    return workDay;
+    return routeDay;
   }
 }
 
@@ -942,6 +918,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           });
           navigation.navigate('routeOperationMenu');
         } else {
+          console.log("Devolution inventory")
           /* The inventory operation was an "product devolution inventoy" */
           // Creating a new work day operation for end shift inventory.
           let nextDayOperation:IDayOperation
@@ -958,8 +935,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             };
           });
 
-          setInventory(newInventoryForFinalOperation);
+          console.log("Last operation of the route: ", nextDayOperation)
 
+          setInventory(newInventoryForFinalOperation);
+          setIsOperation(true);
           setIsInventoryAccepted(false); // State to avoid double-click
         }
 
@@ -1171,15 +1150,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             </Text>
         </View>
       }
-      { (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
-      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) &&
+      { ((currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) && !isOperation) &&
         <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
           <Text style={tw`text-black text-lg`}>
             Dinero llevado al inicio de la ruta: ${routeDay.start_petty_cash}
           </Text>
         </View>
       }
-      { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
+      { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory && !isOperation) &&
         <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
           <Text style={tw`text-black text-lg`}>
             Dinero regresado al final de la ruta: ${routeDay.final_petty_cash}

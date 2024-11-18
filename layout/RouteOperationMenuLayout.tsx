@@ -22,6 +22,7 @@ import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
+import { dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -40,6 +41,8 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     //   routes: [{name: 'routeOperationMenu'}],
     // });
     // Determining if the day is still open
+    console.log(routeDay);
+
     const endShiftInventoryOperation:IDayOperation|undefined
     = dayOperations.find(dayOperation =>
       dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
@@ -125,8 +128,9 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     setShowDialog(!showDialog);
   };
 
-  const onAcceptDialog = ():void => {
+  const onAcceptDialog = async ():Promise<void> => {
     setShowDialog(false);
+    await dropEmbeddedDatabase();
     onGoToMainMenu();
   };
 

@@ -47,10 +47,9 @@ import {
   ICompleteRoute,
   ICompleteRouteDay,
   IDayOperation,
-  IProductInventory,
   IRoute,
   IRouteDay,
-  IUser 
+  IUser,
 } from '../interfaces/interfaces';
 
 // Components
@@ -192,6 +191,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         navigation.navigate('routeOperationMenu');
       } else {
         /* It is a new 'work' day. */
+        console.log("new day to work")
         // Getting all the routes assigned to a vendor
         formattingDaysOfTheVendor(testingUser)
           .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); });
