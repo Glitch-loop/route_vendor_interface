@@ -41,8 +41,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
     //   routes: [{name: 'routeOperationMenu'}],
     // });
     // Determining if the day is still open
-    console.log(routeDay);
-
     const endShiftInventoryOperation:IDayOperation|undefined
     = dayOperations.find(dayOperation =>
       dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory);
@@ -55,6 +53,10 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       setIsDayWorkClosed(true);
     }
 
+
+    dayOperations.forEach((dayOperation) => {
+      console.log("item: ", dayOperation.id_item, "- current Operation: ", dayOperation.current_operation)
+    })
     const backAction = () => {
       /*
         In this particular case, the "back handler" of the phone should not do anything.

@@ -124,6 +124,56 @@ const dayOperationsSlice = createSlice({
         console.error(error);
       }
     },
+    setCurrentOperation: (state, action: PayloadAction<IDayOperation>) => {
+      /*
+        This function updates to the next current day operation.
+
+        The difference between this function and "setNextOperation" is that
+        in this one you have to provide the id of the new day operation.
+      */
+      try {
+        const id_item = action.payload.id_item;
+
+        // Searching the index of the current day operation
+        const index = state.findIndex(operationDay => operationDay.current_operation === 1);
+
+        // Searching the index of the next "current day operation"
+        const indexNextDayOperation = state.findIndex(operationDay => operationDay.id_item === id_item);
+
+        if (index === -1) {
+          /* Do nothing */
+        } else {
+          if (state.length - 1 === index) {
+            /*
+              The current operation is the last one of the day
+            */
+          } else {
+            // Switching to the next operation.
+            /*
+              The current opeartion is not the current one any more.
+            */
+            if (indexNextDayOperation === -1) {
+              /* There is not instructions; It means the next day operation doesn't exists*/
+            } else {
+
+              state[index] = {
+                ...state[index],
+                current_operation: 0,
+              };
+              /*
+                Setting the new curret operation
+              */
+              state[indexNextDayOperation] = {
+                ...state[indexNextDayOperation],
+                current_operation: 1,
+              };
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
   },
 });
 
@@ -131,6 +181,7 @@ export const {
   setArrayDayOperations,
   setDayOperation,
   setNextOperation,
+  setCurrentOperation,
   setDayOperationBeforeCurrentOperation,
 } = dayOperationsSlice.actions;
 

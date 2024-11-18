@@ -9,10 +9,11 @@ import Toast from 'react-native-toast-message';
 // Redux context.
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { setNextOperation } from '../redux/slices/dayOperationsSlice';
+import { setCurrentOperation, setNextOperation } from '../redux/slices/dayOperationsSlice';
 
 // Interfaces and enums
 import {
+  IDayOperation,
   IPaymentMethod,
   IProductInventory,
   IRouteTransaction,
@@ -77,7 +78,6 @@ function productCommitedValidation(
   productsToCommit:IProductInventory[],
   productSharingInventory:IProductInventory[],
   isProductReposition:boolean) {
-  console.log("validating info----")
   let isNewAmountAllowed:boolean = true;
   let errorTitle:string = 'Cantidad a vender excede el inventario.';
   let errorCaption:string = '';
@@ -391,6 +391,9 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
         });
       } else {
         console.log("Store of the route")
+        console.log("New state of the store: ", determineRouteDayState(foundStore.route_day_state, 2))
+        console.log("neutral state: ", enumStoreStates.NUETRAL_STATE)
+        console.log("served: ", enumStoreStates.SERVED)
         /* This store belongs to the route of the today*/
         // Update redux context.
         dispatch(updateStores([{
@@ -405,30 +408,73 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
           route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
         });
 
+        // Updating day operations
         /*
           Verifying the vendor is not making a second sale to a store that has already
           sold (in the route).
 
-          If the current store is the current operation to do (it is the turn of the store
-          to be visited) then it means that after this sale, the vendor has to go to the "next store"
-          (it is needed to update the current operation).
+          If the current store is the current operation to do (it is the "turn" of the store
+          to be visited), then it means that after this sale, the vendor has to go to the "next
+          store" (it is needed to update the current operation).
 
-          Otherwise, it means that the vendor is visiting other route that is not the current one.
+          Otherwise, it means that the vendor is visiting other store that is not the current one.
         */
-       /* Moving to the next operation. */
 
+       /* Determining if moving to the next operation. */
         if (currentOperation.current_operation) {
+          console.log("There is a current operation");
           /* Moving to the next operation */
-          // Updating redux state for the current operation
-          dispatch(setNextOperation());
-
           // Updating embedded database
           const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
 
           if (index > -1) { // The operation is in the list of day operations to do.
+            console.log("The operations was found in the list of day operations");
             if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
-              const currentDayOperation = dayOperations[index];
-              const nextDayOperation = dayOperations[index + 1];
+              console.log("updating information")
+              const currentDayOperation:IDayOperation = dayOperations[index];
+              let nextDayOperation:IDayOperation = dayOperations[index + 1];
+              /*
+                The vendor can follow the order of the route but also, he can
+                sell to any store, it doesn't matter if the store is the next one or
+                not, so it is needed to "find" the next day operation, not necessarily
+                the next operation in the list.
+              */
+              // Searching the day operation (next store in status of pending)
+              // For always going to start in the next day operation.
+              for (let i = index + 1; i < dayOperations.length; i++) {
+                  // Finding in the array of stores that one that corresponds to the day operation
+                  const currentStore = stores.find((store:IStore&IStoreStatusDay) => {
+                    return dayOperations[i].id_item === store.id_store;
+                  });
+
+                  if(currentStore !== undefined) {
+                    console.log("Current store: ", currentStore.store_name)
+                    console.log("day state: ", currentStore.route_day_state)
+                    if(currentStore.route_day_state === enumStoreStates.PENDING_TO_VISIT
+                    || currentStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING
+                    ) {
+                      /*
+                        Store gathers the criteria to be the next current operation.
+
+                        Remember that:
+                        - PENDING TO VISIT: It is the state on which the store belogns to the current
+                        workday but it hasn't been visited.
+                        - REQUEST FOR VISTING: It is the state on which the store doesn't belongs
+                        to the current workday but they asked to be visited today.
+                      */
+                      nextDayOperation = dayOperations[i];
+                      break;
+                    } else {
+                      /* There is not instructions; Store doesn't accomplish the criteria. */
+                    }
+                  } else {
+                    /* There is not instructions; Store doesn't exists in the "stores" state */
+                  }
+              }
+
+
+              // Updating redux state for the current operation
+              dispatch(setCurrentOperation(nextDayOperation));
 
               // Updating in database that the current operation is not longer the current one
               currentDayOperation.current_operation = 0;
@@ -446,6 +492,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
             }
           }
         } else {
+          console.log("There is not a current operation");
           /*
             Do nothing (the vendor is making a sale for a previous or next store from the current one)
           */
