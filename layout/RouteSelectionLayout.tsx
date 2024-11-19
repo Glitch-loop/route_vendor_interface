@@ -8,10 +8,12 @@ import { ActivityIndicator, Button } from 'react-native-paper';
 
 // Queries
 // Main database
-import {
-  getAllRoutesByVendor,
-  getAllDaysByRoute,
-} from '../queries/queries';
+// import {
+//   getAllRoutesByVendor,
+//   getAllDaysByRoute,
+// } from '../queries/queries';
+
+import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 
 // Embedded database
 import {
@@ -63,8 +65,21 @@ import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 
+
+
+
+
 async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
   try {
+    // Initializing database repository.
+    let repository = await RepositoryFactory.createRepository('supabase');
+
+    // Extract queriyes
+    const {
+      getAllRoutesByVendor,
+      getAllDaysByRoute,
+    } = repository;
+
     let completeRoutes:ICompleteRoute[] = [];
     let currentRoute: ICompleteRoute;
     let routes:IRoute[] = [];

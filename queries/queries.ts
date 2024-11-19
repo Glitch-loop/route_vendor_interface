@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import TABLES from '../utils/tables';
 import { IDay, IProduct, IRoute, IRouteDay, IRouteDayStores, IStore } from '../interfaces/interfaces';
 
-export async function getAllDays ():Promise<IDay[]> {
+export async function getAllDays():Promise<IDay[]> {
   try {
     const { data, error } = await supabase.from(TABLES.DAYS).select();
     if (error) {
@@ -14,7 +14,7 @@ export async function getAllDays ():Promise<IDay[]> {
   }
 }
 
-export async function getAllDaysByRoute (id_route:string):Promise<IRouteDay[]> {
+export async function getAllDaysByRoute(id_route:string):Promise<IRouteDay[]> {
   try {
     const { data, error } = await supabase.from(TABLES.ROUTE_DAYS).select().eq('id_route', id_route);
     if (error) {
@@ -27,7 +27,7 @@ export async function getAllDaysByRoute (id_route:string):Promise<IRouteDay[]> {
   }
 }
 
-export async function getAllRoutesByVendor (id_vendor:string):Promise<IRoute[]> {
+export async function getAllRoutesByVendor(id_vendor:string):Promise<IRoute[]> {
   try {
     const { data, error } = await supabase.from(TABLES.ROUTES).select().eq('id_vendor', id_vendor);
     if (error) {

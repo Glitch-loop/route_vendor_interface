@@ -32,7 +32,7 @@ import ConfirmationBand from '../ConfirmationBand';
 // Embedded Database
 import {
   updateProducts,
-  updateTransation,
+  updateTransaction,
 } from '../../queries/SQLite/sqlLiteQueries';
 
 // Services
@@ -236,13 +236,13 @@ const SummarizeTransaction = ({
         });
 
         /* Desactivating state of transaciton */
-        const updateTransaction:IRouteTransaction = {
+        const updatedTransaction:IRouteTransaction = {
           ...currentTransaction,
           state: 0,
         };
 
         // Updating embedded database
-        await updateTransation(updateTransaction);
+        await updateTransaction(updatedTransaction);
 
         /* Updating inventory */
         // Updating embedded database
@@ -252,7 +252,7 @@ const SummarizeTransaction = ({
         dispatch(updateProductsInventory(newInventory));
 
         /* Updating state of transaction; This will activate the 'desactivate status in the card'*/
-        setCurrentTransaction(updateTransaction);
+        setCurrentTransaction(updatedTransaction);
       } else {
         /* It is not possible to cancel a sale that is already cancelled */
       }

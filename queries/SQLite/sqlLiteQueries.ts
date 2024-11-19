@@ -614,7 +614,6 @@ export async function getStores():Promise<(IStore&IStoreStatusDay)[]> {
 export async function insertDayOperation(dayOperation: IDayOperation) {
   try {
     const sqlite = await createSQLiteConnection();
-    console.log("Inserting day operation: ", dayOperation)
     await sqlite.transaction(async (tx) => {
       const {
         id_day_operation,
@@ -985,8 +984,6 @@ export async function insertRouteTransactionOperationDescription(transactionOper
         }
       });
     });
-
-
   } catch(error) {
     /*
       TODO: Decide what to do in the case of failing the database creation.
@@ -1059,8 +1056,7 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
   }
 }
 
-
-export async function updateTransation(transactionOperation: IRouteTransaction) {
+export async function updateTransaction(routeTransaction: IRouteTransaction) {
   try {
     const {
       id_route_transaction,
@@ -1069,7 +1065,7 @@ export async function updateTransation(transactionOperation: IRouteTransaction) 
       id_work_day,
       id_store,
       id_payment_method,
-    } = transactionOperation;
+    } = routeTransaction;
 
     const sqlite = await createSQLiteConnection();
 
