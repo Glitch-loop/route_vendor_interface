@@ -157,3 +157,12 @@ export interface IRouteTransactionOperationDescription {
   id_route_transaction_operation: string;
   id_product: string;
 }
+
+
+// Responses
+export interface IResponse<T> {
+  responseCode: number;
+  data: T | null;
+  message?: string;
+  error?: string;
+}
