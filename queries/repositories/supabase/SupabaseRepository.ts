@@ -215,6 +215,20 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
+  async getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IInventoryOperation[]> {
+    try {
+      const { id_work_day } = workDay;
+      const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS).select().eq('id_work_day', id_work_day);
+      if (error) {
+        return [];
+      } else {
+        return data;
+      }
+    } catch (error) {
+      return [];
+    }
+  }
+
   async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<void> {
     try {
       inventoryOperationDescription
@@ -239,6 +253,20 @@ export class SupabaseRepository implements IRepository {
       });
     } catch (error) {
       console.error('Failed to insert inventory operation description: ', error);
+    }
+  }
+
+  async getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IInventoryOperationDescription[]> {
+    try {
+      const { id_inventory_operation } = inventoryOperation;
+      const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select().eq('id_inventory_operation', id_inventory_operation);
+      if (error) {
+        return [];
+      } else {
+        return data;
+      }
+    } catch (error) {
+      return [];
     }
   }
 
@@ -274,6 +302,20 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
+  async getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):Promise<IRouteTransaction[]>{
+    try {
+      const { id_work_day } = workDay;
+      const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTIONS).select().eq('id_work_day', id_work_day);
+      if (error) {
+        return [];
+      } else {
+        return data;
+      }
+    } catch (error) {
+      return [];
+    }
+  }
+
   async insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<void>{
     try {
       const {
@@ -298,6 +340,20 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
+  async getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IRouteTransactionOperation[]>{
+    try {
+      const { id_route_transaction } = routeTransaction;
+      const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTION_OPERATIONS).select()
+        .eq('id_route_transaction', id_route_transaction);
+      if (error) {
+        return [];
+      } else {
+        return data;
+      }
+    } catch (error) {
+      return [];
+    }
+  }
 
   async insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<void> {
     try {
@@ -334,6 +390,22 @@ export class SupabaseRepository implements IRepository {
         console.error('Something was wrong during "route transacion operation description" instertion:', error);
     }
   }
+
+  async getAllRouteTransactionOperationsDescriptionOfRouteTransactionOperation(routeTransactionOperation:IRouteTransactionOperation):Promise<IRouteTransactionOperationDescription[]> {
+    try {
+      const { id_route_transaction_operation } = routeTransactionOperation;
+      const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select()
+        .eq('id_route_transaction_operation', id_route_transaction_operation);
+      if (error) {
+        return [];
+      } else {
+        return data;
+      }
+    } catch (error) {
+      return [];
+    }
+  }
+
   async updateTransaction(routeTransaction: IRouteTransaction):Promise<void> {
     try {
       const {

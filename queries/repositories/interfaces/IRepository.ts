@@ -32,16 +32,16 @@ export interface IRepository {
 
   // Related to products (inventory operations)
   insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<void>;
-  getAllInventoryOperation():Promise<IInventoryOperation[]>;
+  getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IInventoryOperation[]>;
   insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<void>;
-  getAllInventoryOperationDescription():Promise<IInventoryOperationDescription[]>;
+  getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IInventoryOperationDescription[]>;
 
   // Related to route transactions
   insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<void>;
-  getAllRouteTransaction():Promise<IRouteTransaction[]>;
+  getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):Promise<IRouteTransaction[]>;
   insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<void>;
-  getAllRouteTransactionOperation():Promise<IRouteTransactionOperation[]>;
+  getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IRouteTransactionOperation[]>;
   insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<void>;
-  getAllRouteTransactionOperationDescription():Promise<IRouteTransactionOperation[]>;
+  getAllRouteTransactionOperationsDescriptionOfRouteTransactionOperation(routeTransactionOperation:IRouteTransactionOperation):Promise<IRouteTransactionOperationDescription[]>;
   updateTransaction(transactionOperation: IRouteTransaction):Promise<void>;
 }
