@@ -896,7 +896,7 @@ export async function insertRouteTransaction(transactionOperation: IRouteTransac
   }
 }
 
-export async function insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation) {
+export async function insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<void>> {
   try {
     const {
       id_route_transaction_operation,
@@ -926,7 +926,7 @@ export async function insertRouteTransactionOperation(transactionOperation: IRou
   }
 }
 
-export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]) {
+export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<void>> {
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -962,7 +962,7 @@ export async function insertRouteTransactionOperationDescription(transactionOper
   }
 }
 
-export async function getRouteTransactionByStore(id_store:string):Promise<IRouteTransaction[]> {
+export async function getRouteTransactionByStore(id_store:string):Promise<IResponse<IRouteTransaction[]>> {
   try {
     const transactions:IRouteTransaction[] = [];
 
@@ -975,16 +975,13 @@ export async function getRouteTransactionByStore(id_store:string):Promise<IRoute
       }
     });
 
-
-
-    return transactions;
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    return [];
+    return createApiResponse<IRouteTransaction[]>(200, transactions, null, null);
+  } catch(error) {
+    return createApiResponse<IRouteTransaction[]>(500, [], null, 'Failed retrieving the route transactions of the store.');
   }
 }
 
-export async function getRouteTransactionOperations(id_route_transaction:string):Promise<IRouteTransactionOperation[]> {
+export async function getRouteTransactionOperations(id_route_transaction:string):Promise<IResponse<IRouteTransactionOperation[]>> {
   try {
     const transactionsOperations:IRouteTransactionOperation[] = [];
 
@@ -997,16 +994,13 @@ export async function getRouteTransactionOperations(id_route_transaction:string)
       }
     });
 
-
-
-    return transactionsOperations;
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    return [];
+    return createApiResponse<IRouteTransactionOperation[]>(200, transactionsOperations, null, null);
+  } catch(error) {
+    return createApiResponse<IRouteTransactionOperation[]>(500, [], null, 'Failed retrieving the transaction operations of the route transaction');
   }
 }
 
-export async function getRouteTransactionOperationDescriptions(id_route_transaction_operation:string):Promise<IRouteTransactionOperationDescription[]> {
+export async function getRouteTransactionOperationDescriptions(id_route_transaction_operation:string):Promise<IResponse<IRouteTransactionOperationDescription[]>> {
   try {
     const transactionsOperationDescriptions:IRouteTransactionOperationDescription[] = [];
 
@@ -1019,14 +1013,13 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
       }
     });
 
-    return transactionsOperationDescriptions;
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    return [];
+    return createApiResponse<IRouteTransactionOperationDescription[]>(200, transactionsOperationDescriptions, null, null);
+  } catch(error) {
+    return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null, 'Failed retrieving the transaction operations description of the route transaction operation');
   }
 }
 
-export async function updateTransaction(routeTransaction: IRouteTransaction) {
+export async function updateTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<void>> {
   try {
     const {
       id_route_transaction,
@@ -1058,15 +1051,13 @@ export async function updateTransaction(routeTransaction: IRouteTransaction) {
           id_route_transaction,
         ]);
       } catch (error) {
-        console.error('Something was wrong during "route transacion" instertion:', error);
+        return createApiResponse<void>(500, null, null, 'Failed updating route transaction (query execution level).');
       }
     });
 
 
+    return createApiResponse<void>(200, null, null, 'Route transaction operation description inserted successfully.');
   } catch(error) {
-    /*
-      TODO: Decide what to do in the case of failing the database creation.
-    */
-      console.error('Something was wrong during "route transacion" instertion:', error);
+    return createApiResponse<void>(500, null, null, 'Failed updating route transaction (transaction creation level).');
   }
 }
