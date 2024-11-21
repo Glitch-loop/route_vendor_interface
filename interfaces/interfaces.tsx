@@ -162,7 +162,7 @@ export interface IRouteTransactionOperationDescription {
 // Responses
 export interface IResponse<T> {
   responseCode: number;
-  data: T | null;
+  data: T;
   message?: string;
   error?: string;
 }

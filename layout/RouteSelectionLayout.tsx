@@ -3,16 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
-import {v4 as uuidv4 } from 'uuid';
-import { ActivityIndicator, Button } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 
-// Queries
+// Databases
 // Main database
-// import {
-//   getAllRoutesByVendor,
-//   getAllDaysByRoute,
-// } from '../queries/queries';
-
 import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 
 // Embedded database
@@ -30,12 +24,13 @@ import DAYS from '../lib/days';
 import { current_day_name } from '../utils/momentFormat';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
+import { apiResponseStatus, getDataFromApiResponse } from '../utils/apiResponse';
 
 // Redux States and reducers
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
-import { setDayOperation, setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
+import { setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 import {
   setDayInformation,
   setRouteInformation,
@@ -49,6 +44,7 @@ import {
   ICompleteRoute,
   ICompleteRouteDay,
   IDayOperation,
+  IResponse,
   IRoute,
   IRouteDay,
   IUser,
@@ -64,66 +60,82 @@ import ActionDialog from '../components/ActionDialog';
 import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
+import Toast from 'react-native-toast-message';
 
 
+// Initializing database repository.
+let repository = RepositoryFactory.createRepository('supabase');
+
+// Extract queriyes
+const {
+  getAllRoutesByVendor,
+  getAllDaysByRoute,
+} = repository;
 
 
 
 async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
   try {
-    // Initializing database repository.
-    let repository = await RepositoryFactory.createRepository('supabase');
-
-    // Extract queriyes
-    const {
-      getAllRoutesByVendor,
-      getAllDaysByRoute,
-    } = repository;
-
     let completeRoutes:ICompleteRoute[] = [];
     let currentRoute: ICompleteRoute;
-    let routes:IRoute[] = [];
+    let routesResponse:IResponse<IRoute[]>;
+    let routes:IRoute[];
+    let daysOfRouteResponse:IResponse<IRouteDay[]>;
     let daysOfRoute:IRouteDay[] = [];
     let completeDaysOfRoute: ICompleteRouteDay[] = [];
 
     // Getting all vendor's routes
-    routes = await getAllRoutesByVendor(vendor.id_vendor);
+    routesResponse = await getAllRoutesByVendor(vendor.id_vendor);
 
-    // Getting all the days in a route
-    for (let i = 0; i < routes.length; i++) {
-      daysOfRoute = await getAllDaysByRoute(routes[i].id_route);
-      /* Once all the days of a route have been gotten */
-      // From the current days of a route, get the remaining information for each route.
-      daysOfRoute.forEach(routeDay => {
-        let completeRouteDay:ICompleteRouteDay = {
-          ...routeDay,
-          day: DAYS[routeDay.id_day],
-        };
-        completeDaysOfRoute.push(completeRouteDay);
-      });
+    if (apiResponseStatus(routesResponse, 200)) {
+      routes = getDataFromApiResponse(routesResponse);
 
-      // Ordering days of the route.
-      completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
+      // Getting all the days in a route
+      for (let i = 0; i < routes.length; i++) {
+        daysOfRouteResponse = await getAllDaysByRoute(routes[i].id_route);
 
-      /*
-        Storing the current route (this information contains both the complete information of the
-        route and the information of each days that made up the route).
-      */
-      currentRoute = {
-        ...routes[i],
-        description: capitalizeFirstLetter(routes[i].description),
-        route_name: capitalizeFirstLetter(routes[i].route_name),
-        routeDays: completeDaysOfRoute,
-      };
+        if (apiResponseStatus(daysOfRouteResponse, 200)) {
+          daysOfRoute = getDataFromApiResponse(daysOfRouteResponse);
 
-      // Avoiding store routes without days.
-      if(completeDaysOfRoute[0] !== undefined) {
-        completeRoutes.push(currentRoute);
+          /* Once all the days of a route have been gotten */
+          // From the current days of a route, get the remaining information for each route.
+          daysOfRoute.forEach(routeDay => {
+            let completeRouteDay:ICompleteRouteDay = {
+              ...routeDay,
+              day: DAYS[routeDay.id_day],
+            };
+            completeDaysOfRoute.push(completeRouteDay);
+          });
+
+          // Ordering days of the route.
+          completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
+
+          /*
+            Storing the current route (this information contains both the complete information of the
+            route and the information of each days that made up the route).
+          */
+          currentRoute = {
+            ...routes[i],
+            description: capitalizeFirstLetter(routes[i].description),
+            route_name: capitalizeFirstLetter(routes[i].route_name),
+            routeDays: completeDaysOfRoute,
+          };
+          // Avoiding store routes without days.
+          if(completeDaysOfRoute[0] !== undefined) {
+            completeRoutes.push(currentRoute);
+          }
+
+        } else {
+          Toast.show({type: 'error', text1:'Error durante la consulta de los dias de rutas', text2: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente'});
+        }
       }
+    } else {
+      Toast.show({type: 'error', text1:'Error durante la consulta de los dias las rutas', text2: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente'});
     }
 
     return completeRoutes;
   } catch (error) {
+    Toast.show({type: 'error', text1:'Error durante la consulta de las rutas', text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente'});
     console.log('Something was wrong');
     return [];
   }

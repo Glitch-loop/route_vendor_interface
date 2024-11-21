@@ -2,7 +2,7 @@ import { IResponse } from '../interfaces/interfaces';
 
 export function createApiResponse<T>(
   responseCode: number,
-  data: T | null = null,
+  data: T,
   error: string | null = null,
   message: string | null = null,
 ): IResponse<T> {
@@ -32,4 +32,23 @@ export function createApiResponse<T>(
     data,
     ...(error && { error }),
   };
+}
+
+export function apiResponseStatus<T>(apiResponse: IResponse<T>, valueExpected: number):boolean {
+  const { responseCode } = apiResponse;
+  let result:boolean = false;
+
+  if (valueExpected === responseCode) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  return result;
+}
+
+export function getDataFromApiResponse<T>(apiResponse: IResponse<T>):T {
+  const { data } = apiResponse;
+
+  return data;
 }
