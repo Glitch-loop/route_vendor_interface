@@ -20,13 +20,6 @@ import {
   getWorkDay,
 } from '../queries/SQLite/sqlLiteQueries';
 
-// Utils
-import DAYS from '../lib/days';
-import { current_day_name } from '../utils/momentFormat';
-import { capitalizeFirstLetter } from '../utils/generalFunctions';
-import DAYS_OPERATIONS from '../lib/day_operations';
-import { apiResponseStatus, getDataFromApiResponse } from '../utils/apiResponse';
-
 // Redux States and reducers
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
@@ -40,6 +33,11 @@ import {
 } from '../redux/slices/routeDaySlice';
 import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 
+// Components
+import Card from '../components/Card';
+import MainMenuHeader from '../components/MainMenuHeader';
+import ActionDialog from '../components/ActionDialog';
+
 // Interfaces
 import {
   ICompleteRoute,
@@ -51,10 +49,13 @@ import {
   IUser,
 } from '../interfaces/interfaces';
 
-// Components
-import Card from '../components/Card';
-import MainMenuHeader from '../components/MainMenuHeader';
-import ActionDialog from '../components/ActionDialog';
+// Utils
+import DAYS from '../lib/days';
+import { current_day_name } from '../utils/momentFormat';
+import { capitalizeFirstLetter } from '../utils/generalFunctions';
+import DAYS_OPERATIONS from '../lib/day_operations';
+import { apiResponseStatus, getDataFromApiResponse } from '../utils/apiResponse';
+
 
 // Testing
 import { testingUser } from '../moocks/user';
