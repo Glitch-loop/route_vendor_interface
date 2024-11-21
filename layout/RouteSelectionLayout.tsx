@@ -4,6 +4,7 @@ import { View, Text } from 'react-native';
 import tw from 'twrnc';
 import 'react-native-get-random-values'; // Necessary for uuid
 import { ActivityIndicator } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
 
 // Databases
 // Main database
@@ -55,13 +56,10 @@ import Card from '../components/Card';
 import MainMenuHeader from '../components/MainMenuHeader';
 import ActionDialog from '../components/ActionDialog';
 
-
 // Testing
 import { testingUser } from '../moocks/user';
 import { setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
-import Toast from 'react-native-toast-message';
-
 
 // Initializing database repository.
 let repository = RepositoryFactory.createRepository('supabase');
@@ -71,8 +69,6 @@ const {
   getAllRoutesByVendor,
   getAllDaysByRoute,
 } = repository;
-
-
 
 async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
   try {

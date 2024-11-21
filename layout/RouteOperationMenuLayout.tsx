@@ -4,8 +4,9 @@ import { BackHandler, ScrollView, View, Pressable } from 'react-native';
 import { Text } from 'react-native-paper';
 import tw from 'twrnc';
 
-// Interfaces and enums
-import { IDayOperation } from '../interfaces/interfaces';
+// Databases
+// Embedded
+import { createEmbeddedDatabase, dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,12 +18,14 @@ import RouteCard from '../components/RouteCard';
 import MenuHeader from '../components/generalComponents/MenuHeader';
 import TypeOperationItem from '../components/TypeOperationItem';
 
+// Interfaces and enums
+import { IDayOperation } from '../interfaces/interfaces';
+
 // Utils
 import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
-import { createEmbeddedDatabase, dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
