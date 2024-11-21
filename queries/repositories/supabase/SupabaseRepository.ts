@@ -16,9 +16,11 @@ import {
   IInventoryOperationDescription,
   IProduct,
   IRouteDayStores,
+  IResponse,
 } from '../../../interfaces/interfaces';
 
 import 'react-native-url-polyfill/auto';
+import { createApiResponse } from '../../../utils/apiResponse';
 
 export class SupabaseRepository implements IRepository {
   client:any;
@@ -28,90 +30,98 @@ export class SupabaseRepository implements IRepository {
   }
 
   // Related to the information of the stores
-  async getAllDays(): Promise<IDay[]> {
+  async getAllDays(): Promise<IResponse<IDay[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.DAYS).select();
+
       if (error) {
-        return [];
+        return createApiResponse<IDay[]>(500, [], null, 'Failed getting all the days.');
+      } else {
+        return createApiResponse<IDay[]>(200, data, null);
       }
-      return data;
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IDay[]>(500, [], null, 'Failed getting all the days.');
     }
   }
 
-  async getAllDaysByRoute(id_route:string):Promise<IRouteDay[]> {
+  async getAllDaysByRoute(id_route:string):Promise<IResponse<IRouteDay[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.ROUTE_DAYS).select().eq('id_route', id_route);
       if (error) {
-        return [];
+        return createApiResponse<IRouteDay[]>(500, [], null,
+          'Failed getting all the days by route.');
+      } else {
+        return createApiResponse<IRouteDay[]>(200, data, null);
       }
-      return data;
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IRouteDay[]>(500, [], null, 'Failed getting all the days by route.');
     }
   }
 
-  async getAllRoutesByVendor(id_vendor:string):Promise<IRoute[]> {
+  async getAllRoutesByVendor(id_vendor:string):Promise<IResponse<IRoute[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.ROUTES).select().eq('id_vendor', id_vendor);
       if (error) {
-        return [];
+        return createApiResponse<IRoute[]>(500, [], null,
+          'Failed getting all routes by vendor.');
+      } else {
+        return createApiResponse<IRoute[]>(200, data, null);
       }
-      return data;
-    } catch (error) {
-      console.log(error)
-      return [];
+    } catch(error) {
+      return createApiResponse<IRoute[]>(500, [], null, 'Failed getting all routes by vendor.');
     }
   }
 
-  async getAllProducts():Promise<IProduct[]> {
+  async getAllProducts():Promise<IResponse<IProduct[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.PRODUCTS)
                                             .select()
                                             .order('order_to_show');
       if (error) {
-        return [];
+        return createApiResponse<IProduct[]>(500, [], null,
+          'Failed getting all products.');
       } else {
-        return data;
+        return createApiResponse<IProduct[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IProduct[]>(500, [], null, 'Failed getting all products.');
     }
   }
 
-  async getAllStoresInARouteDay(id_route_day:string):Promise<IRouteDayStores[]> {
+  async getAllStoresInARouteDay(id_route_day:string):Promise<IResponse<IRouteDayStores[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.ROUTE_DAY_STORES)
                                             .select()
                                             .eq('id_route_day', id_route_day)
                                             .order('position_in_route');
       if (error) {
-        return [];
+        return createApiResponse<IRouteDayStores[]>(500, [], null,
+          'Failed getting all stores in a route day.');
       } else {
-        return data;
+        return createApiResponse<IRouteDayStores[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IRouteDayStores[]>(500, [], null, 'Failed getting all stores in a route day');
     }
   }
 
-  async getStoresByArrID(arr_id_stores: string[]):Promise<IStore[]> {
+  async getStoresByArrID(arr_id_stores: string[]):Promise<IResponse<IStore[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.STORES)
                                     .select().in('id_store', arr_id_stores);
+
       if (error) {
-        return [];
+        return createApiResponse<IStore[]>(500, [], null,'Failed getting stores information.');
       } else {
-        return data;
+        return createApiResponse<IStore[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IStore[]>(500, [], null, 'Failed getting stores information.');
     }
   }
 
   // Related to the work day information
-  async insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<void> {
+  async insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>> {
     try {
       const {
         id_work_day,
@@ -143,12 +153,18 @@ export class SupabaseRepository implements IRepository {
         id_vendor: id_vendor,
       });
 
-    } catch (error) {
-      console.error('Failed to insert work day:', error);
+      if (error) {
+        return createApiResponse<void>(500, null, null,
+          'Failed inserting the work day.');
+      } else {
+        return createApiResponse<void>(201, data, null, 'Work day created successfully.');
+      }
+    } catch(error) {
+      return createApiResponse<void>(500, null, null, 'Failed inserting the work day.');
     }
   }
 
-  async updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<void>{
+  async updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>>{
     try {
       const {
         id_work_day,
@@ -181,15 +197,20 @@ export class SupabaseRepository implements IRepository {
       })
       .eq('id_work_day', id_work_day);
 
-    } catch (error) {
-      console.error('Failed to update work day:', error);
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed updating the work day.');
+      } else {
+        return createApiResponse<void>(200, data, null, 'Work day updated successfully.');
+      }
+    } catch(error) {
+      return createApiResponse<void>(500, null, null, 'Failed updating the work day.');
     }
   }
 
   // TODO: Related to users
 
   // Related to products (inventory operations)
-  async insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<void> {
+  async insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>> {
     try {
       const {
         id_inventory_operation,
@@ -210,26 +231,34 @@ export class SupabaseRepository implements IRepository {
         id_work_day: id_work_day,
       });
 
-    } catch (error) {
-      console.error('Failed to insert inventory operation: ', error);
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed inserting the inventory operation.');
+      } else {
+        return createApiResponse<void>(201, data, null, 'Inventory operation inserted successfully.');
+      }
+    } catch(error) {
+      return createApiResponse<void>(500, null, null, 'Failed inserting the inventory operation.');
     }
   }
 
-  async getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IInventoryOperation[]> {
+  async getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IResponse<IInventoryOperation[]>> {
     try {
       const { id_work_day } = workDay;
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS).select().eq('id_work_day', id_work_day);
+
       if (error) {
-        return [];
+        return createApiResponse<IInventoryOperation[]>(500, [], null,
+          'Failed getting all inventory operations of the day.');
       } else {
-        return data;
+        return createApiResponse<IInventoryOperation[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IInventoryOperation[]>(500, [], null, 
+        'Failed getting all inventory operations of the day.');
     }
   }
 
-  async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<void> {
+  async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<void>> {
     try {
       inventoryOperationDescription
       .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
@@ -250,28 +279,42 @@ export class SupabaseRepository implements IRepository {
           id_inventory_operation: id_inventory_operation,
           id_product: id_product,
         });
+
+        if (error) {
+          return createApiResponse<void>(500, null, null,
+            'Failed inserting an operation description.');
+        } else {
+          /* There is not instruaciton; The process continues*/
+        }
       });
+
+      return createApiResponse<void>(201, null, null,
+        'Inventory operation description inserted successfully.');
+
     } catch (error) {
-      console.error('Failed to insert inventory operation description: ', error);
+      return createApiResponse<void>(500, null, null,
+        'Failed inserting an operation description.');
     }
   }
 
-  async getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IInventoryOperationDescription[]> {
+  async getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperationDescription[]>> {
     try {
       const { id_inventory_operation } = inventoryOperation;
       const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select().eq('id_inventory_operation', id_inventory_operation);
       if (error) {
-        return [];
+        return createApiResponse<IInventoryOperationDescription[]>(500, [], null,
+          'Failed getting all operation description of an inventory operation.');
       } else {
-        return data;
+        return createApiResponse<IInventoryOperationDescription[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IInventoryOperationDescription[]>(500, [], null,
+        'Failed getting all operation description of an inventory operation.');
     }
   }
 
   // Related to route transactions
-  async insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<void>{
+  async insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>{
     try {
       const {
         id_route_transaction,
@@ -294,29 +337,36 @@ export class SupabaseRepository implements IRepository {
         id_store: id_store,
         id_payment_method: id_payment_method,
       });
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed inserting route transaction.');
+      } else {
+        return createApiResponse<void>(201, data, null, 'Route transaction inserted successfully.');
+      }
     } catch(error) {
-      /*
-        TODO: Decide what to do in the case of failing the database creation.
-      */
-        console.error('Something was wrong during "route transacion" instertion:', error);
+      return createApiResponse<void>(500, null, null, 'Failed inserting route transaction.');
     }
   }
 
-  async getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):Promise<IRouteTransaction[]>{
+  async getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):
+  Promise<IResponse<IRouteTransaction[]>>{
     try {
       const { id_work_day } = workDay;
-      const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTIONS).select().eq('id_work_day', id_work_day);
+      const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTIONS)
+        .select().eq('id_work_day', id_work_day);
+
       if (error) {
-        return [];
+        return createApiResponse<IRouteTransaction[]>(500, [], null,
+          'Failed getting all route transactions of the day.');
       } else {
-        return data;
+        return createApiResponse<IRouteTransaction[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IRouteTransaction[]>(500, [], null,
+        'Failed getting all route transactions of the day.');
     }
   }
 
-  async insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<void>{
+  async insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<void>>{
     try {
       const {
         id_route_transaction_operation,
@@ -332,32 +382,35 @@ export class SupabaseRepository implements IRepository {
         id_route_transaction_operation_type: id_route_transaction_operation_type,
       });
 
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed inserting route transaction route transaction operation.');
+      } else {
+        return createApiResponse<void>(201, data, null, 'Route transaction operation inserted successfully.');
+      }
     } catch(error) {
-      /*
-        TODO: Decide what to do in the case of failing the database creation.
-      */
-      console.error('Something was wrong during "route transacion operation" instertion:', error);
+      return createApiResponse<void>(500, null, null, 'Failed inserting route transaction route transaction operation.');
     }
   }
 
-  async getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IRouteTransactionOperation[]>{
+  async getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<IRouteTransactionOperation[]>>{
     try {
       const { id_route_transaction } = routeTransaction;
       const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTION_OPERATIONS).select()
         .eq('id_route_transaction', id_route_transaction);
       if (error) {
-        return [];
+        return createApiResponse<IRouteTransactionOperation[]>(500, [], null,
+          'Failed getting all route transactions operation of a route transaction.');
       } else {
-        return data;
+        return createApiResponse<IRouteTransactionOperation[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IRouteTransactionOperation[]>(500, [], null,
+        'Failed getting all route transactions operation of a route transaction.');
     }
   }
 
-  async insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<void> {
+  async insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<void>> {
     try {
-
       transactionOperationDescription.forEach(async (transactionDescription:IRouteTransactionOperationDescription)=> {
         try {
           const {
@@ -378,35 +431,43 @@ export class SupabaseRepository implements IRepository {
             id_product: id_product,
           });
 
+          if (error) {
+            return createApiResponse<void>(500, null, null,
+              'Failed inserting route transaction operation description.');
+          } else {
+            /* There is not instructions*/
+          }
         } catch (error) {
-          console.error('Something was wrong during "route transacion operation description" instertion:', error);
+          return createApiResponse<void>(500, null, null,
+            'Failed inserting route transaction operation description.');
         }
       });
 
+      return createApiResponse<void>(201, null, null, 'Route transaction operation description inserted successfully.');
     } catch(error) {
-      /*
-        TODO: Decide what to do in the case of failing the database creation.
-      */
-        console.error('Something was wrong during "route transacion operation description" instertion:', error);
+      return createApiResponse<void>(500, null, null,
+        'Failed inserting route transaction operation description.');
     }
   }
 
-  async getAllRouteTransactionOperationsDescriptionOfRouteTransactionOperation(routeTransactionOperation:IRouteTransactionOperation):Promise<IRouteTransactionOperationDescription[]> {
+  async getAllRouteTransactionOperationsDescriptionOfRouteTransactionOperation(routeTransactionOperation:IRouteTransactionOperation):Promise<IResponse<IRouteTransactionOperationDescription[]>> {
     try {
       const { id_route_transaction_operation } = routeTransactionOperation;
       const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select()
         .eq('id_route_transaction_operation', id_route_transaction_operation);
       if (error) {
-        return [];
+        return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null,
+          'Failed getting all route transactions operation description of a route transaction operation.');
       } else {
-        return data;
+        return createApiResponse<IRouteTransactionOperationDescription[]>(200, data, null);
       }
-    } catch (error) {
-      return [];
+    } catch(error) {
+      return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null,
+        'Failed getting all route transactions operation description of a route transaction operation.');
     }
   }
 
-  async updateTransaction(routeTransaction: IRouteTransaction):Promise<void> {
+  async updateTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<void>> {
     try {
       const {
         id_route_transaction,
@@ -426,11 +487,14 @@ export class SupabaseRepository implements IRepository {
         id_payment_method: id_payment_method,
       })
       .eq('id_work_day', id_route_transaction);
+      
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed updating route transaction.');
+      } else {
+        return createApiResponse<void>(2000, null, null, 'Route transaction updated successfully.');
+      }
     } catch(error) {
-      /*
-        TODO: Decide what to do in the case of failing the database creation.
-      */
-        console.error('Something was wrong during "route transacion" instertion:', error);
+      return createApiResponse<void>(500, null, null, 'Failed updating route transaction.');
     }
   }
 }
