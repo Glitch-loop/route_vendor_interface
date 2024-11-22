@@ -37,7 +37,7 @@ import {
 import { createApiResponse } from '../../utils/apiResponse';
 
 // Function to create database
-export async function createEmbeddedDatabase():Promise<IResponse<void>> {
+export async function createEmbeddedDatabase():Promise<IResponse<null>> {
   try {
     const tablesToCreate:string[] = [
       userEmbeddedTable,
@@ -76,7 +76,7 @@ export async function createEmbeddedDatabase():Promise<IResponse<void>> {
   }
 }
 
-export async function dropEmbeddedDatabase() {
+export async function dropEmbeddedDatabase():Promise<IResponse<null>> {
   try {
     const tablesToDelete:string[] = [
       EMBEDDED_TABLES.USER,
@@ -113,27 +113,28 @@ export async function dropEmbeddedDatabase() {
 
 // Related to work day
 export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):
-  Promise<IResponse<void>> {
+  Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {
+  const {
+    id_work_day,
+    start_date,
+    finish_date,
+    start_petty_cash,
+    final_petty_cash,
+    /*Fields related to IRoute interface*/
+    id_route,
+    route_name,
+    description,
+    route_status,
+    // id_vendor,
+    /*Fields related to IDay interface*/
+    id_day,
+    // day_name,
+    // order_to_show,
+    /*Fields relate to IRouteDay*/
+    id_route_day,
+  } = workday;
+
   try {
-    const {
-      id_work_day,
-      start_date,
-      finish_date,
-      start_petty_cash,
-      final_petty_cash,
-      /*Fields related to IRoute interface*/
-      id_route,
-      route_name,
-      description,
-      route_status,
-      // id_vendor,
-      /*Fields related to IDay interface*/
-      id_day,
-      // day_name,
-      // order_to_show,
-      /*Fields relate to IRouteDay*/
-      id_route_day,
-    } = workday;
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
@@ -158,33 +159,33 @@ export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       ]);
     });
 
-    return createApiResponse(201, null, null, 'Work day inserted sucessfully');
+    return createApiResponse(201, workday, null, 'Work day inserted sucessfully');
   } catch (error) {
-    return createApiResponse(500,null, null, 'Failed to insert work day');
+    return createApiResponse(500, workday, null, 'Failed to insert work day');
   }
 }
 
-export async function updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>> {
+export async function updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {
+  const {
+    id_work_day,
+    start_date,
+    finish_date,
+    start_petty_cash,
+    final_petty_cash,
+    /*Fields related to IRoute interface*/
+    id_route,
+    route_name,
+    description,
+    route_status,
+    // id_vendor,
+    /*Fields related to IDay interface*/
+    id_day,
+    // day_name,
+    // order_to_show,
+    /*Fields relate to IRouteDay*/
+    id_route_day,
+  } = workday;
   try {
-    const {
-      id_work_day,
-      start_date,
-      finish_date,
-      start_petty_cash,
-      final_petty_cash,
-      /*Fields related to IRoute interface*/
-      id_route,
-      route_name,
-      description,
-      route_status,
-      // id_vendor,
-      /*Fields related to IDay interface*/
-      id_day,
-      // day_name,
-      // order_to_show,
-      /*Fields relate to IRouteDay*/
-      id_route_day,
-    } = workday;
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
@@ -220,13 +221,14 @@ export async function updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&I
       ]);
     });
 
-    return createApiResponse(200, null, null, 'Work day updated sucessfully.');
+    return createApiResponse(200, workday, null, 'Work day updated sucessfully.');
   } catch (error) {
-    return createApiResponse(500, null, null, 'Failed updating work day.');
+    return createApiResponse(500, workday, null, 'Failed updating work day.');
   }
 }
 
-export async function getWorkDay():Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {
+export async function getWorkDay()
+:Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {
   const workDayState: IRoute&IDayGeneralInformation&IDay&IRouteDay = {
     /*Fields related to the general information.*/
     id_work_day: '',
@@ -254,7 +256,6 @@ export async function getWorkDay():Promise<IResponse<IRoute&IDayGeneralInformati
     const record = result[0];
 
 
-
     return createApiResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>(200, record.rows.item(0), null, null);
   } catch (error) {
     return createApiResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>(500, workDayState, null, 'Failed to get the work day.');
@@ -262,16 +263,16 @@ export async function getWorkDay():Promise<IResponse<IRoute&IDayGeneralInformati
 }
 
 // Related to users
-export async function insertUser(user: IUser):Promise<IResponse<void>> {
-  try {
-    const {
-      id_vendor,
-      cellphone,
-      name,
-      password,
-      status,
-    } = user;
+export async function insertUser(user: IUser):Promise<IResponse<IUser>> {
+  const {
+    id_vendor,
+    cellphone,
+    name,
+    password,
+    status,
+  } = user;
 
+  try {
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
@@ -280,9 +281,9 @@ export async function insertUser(user: IUser):Promise<IResponse<void>> {
       `, [id_vendor, cellphone, name, password, status]);
     });
 
-    return createApiResponse<void>(201, null, null, 'User inserted sucessfully');
+    return createApiResponse<IUser>(201, user, null, 'User inserted sucessfully');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed insterting user.');
+    return createApiResponse<IUser>(500, user, null, 'Failed insterting user.');
   }
 }
 
@@ -312,10 +313,11 @@ export async function getUsers():Promise<IResponse<IUser[]>> {
   So, with this function the user will store the information that will carry
   for the route.
 */
-export async function insertProducts(products: IProductInventory[]):Promise<IResponse<void>> {
+export async function insertProducts(products: IProductInventory[])
+:Promise<IResponse<IProductInventory[]>> {
+  const insertedProducts:IProductInventory[] = [];
   try {
     const sqlite = await createSQLiteConnection();
-
     await sqlite.transaction(async (tx) => {
       try {
         products.forEach(async (product:IProductInventory) => {
@@ -347,17 +349,18 @@ export async function insertProducts(products: IProductInventory[]):Promise<IRes
               order_to_show,
               amount,
             ]);
+            insertedProducts.push(product);
           } catch (error) {
-            console.error('Error inserting product: ', error);
+            return createApiResponse<IProductInventory[]>(500, insertedProducts, null, 'Products inserted correctly.');
           }
         });
       } catch (error) {
-        console.error('Error inserting product process: ', error);
+        return createApiResponse<IProductInventory[]>(500, insertedProducts, null, 'Products inserted correctly.');
       }
     });
-    return createApiResponse<void>(201, null, null, 'Products inserted correctly.');
+    return createApiResponse<IProductInventory[]>(201, insertedProducts, null, 'Products inserted correctly.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting products');
+    return createApiResponse<IProductInventory[]>(500, insertedProducts, null, 'Failed inserting products');
   }
 }
 
@@ -372,7 +375,9 @@ export async function insertProducts(products: IProductInventory[]):Promise<IRes
   This function receives the products to update, idoneally, all the product of the
   inventory.
 */
-export async function updateProducts(products: IProductInventory[]):Promise<IResponse<void>> {
+export async function updateProducts(products: IProductInventory[])
+:Promise<IResponse<IProductInventory[]>> {
+  const updatedProducts:IProductInventory[] = [];
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -416,18 +421,21 @@ export async function updateProducts(products: IProductInventory[]):Promise<IRes
               order_to_show,
               amount,
             ]);
+            updatedProducts.push(product);
           } catch (error) {
             console.error('Failed to update products:', error);
-            return createApiResponse<void>(500, null, null, 'Failed update products (executing transaction level).');
+            return createApiResponse<IProductInventory[]>(500, updatedProducts, null, 'Failed update products (executing transaction level).');
           }
         });
       } catch (error) {
-        return createApiResponse<void>(500, null, null, 'Failed update products (traversing product array level).');
+        return createApiResponse<IProductInventory[]>(500, updatedProducts, null, 'Failed update products (traversing product array level).');
       }
     });
-    return createApiResponse<void>(200, null, null, 'Products updated successfully.');
+
+    return createApiResponse<IProductInventory[]>(200, updatedProducts, null, 'Products updated successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed update products (transaction creation level).');
+
+    return createApiResponse<IProductInventory[]>(500, updatedProducts, null, 'Failed update products (transaction creation level).');
   }
 }
 
@@ -457,10 +465,12 @@ export async function getProducts():Promise<IResponse<IProductInventory[]>> {
 }
 
 // Related to stores
-export async function insertStores(stores: (IStore&IStoreStatusDay)[]):Promise<IResponse<void>> {
+export async function insertStores(stores: (IStore&IStoreStatusDay)[])
+:Promise<IResponse<(IStore&IStoreStatusDay)[]>> {
+  const insertedStores:(IStore&IStoreStatusDay)[] = [];
+
   try {
     const sqlite = await createSQLiteConnection();
-
     await sqlite.transaction(async (tx) => {
       stores.forEach(async (store:IStore&IStoreStatusDay) => {
         const {
@@ -500,16 +510,21 @@ export async function insertStores(stores: (IStore&IStoreStatusDay)[]):Promise<I
           status_store,
           route_day_state,
         ]);
+
+        insertedStores.push(store);
       });
     });
 
-    return createApiResponse<void>(201, null, null, 'Stores inserted correctly.');
+    return createApiResponse<(IStore&IStoreStatusDay)[]>(201, stores, null,
+      'Stores inserted correctly.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting stores');
+    return createApiResponse<(IStore&IStoreStatusDay)[]>(500, insertedStores, null,
+      'Failed inserting stores');
   }
 }
 
-export async function updateStore(store: IStore&IStoreStatusDay):Promise<IResponse<void>> {
+export async function updateStore(store: IStore&IStoreStatusDay)
+:Promise<IResponse<IStore&IStoreStatusDay>> {
   try {
     const sqlite = await createSQLiteConnection();
     await sqlite.transaction(async (tx) => {
@@ -567,14 +582,12 @@ export async function updateStore(store: IStore&IStoreStatusDay):Promise<IRespon
           route_day_state,
         ]);
       } catch (error) {
-        return createApiResponse<void>(500, null, null, 'Failed updating the store (sql execution)');
+        return createApiResponse<IStore&IStoreStatusDay>(500, store, null, 'Failed updating the store (sql execution)');
       }
     });
-
-
-    return createApiResponse<void>(200, null, null, 'Store updated successfully');
+    return createApiResponse<IStore&IStoreStatusDay>(200, store, null, 'Store updated successfully');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed updating the store (transaction level)');
+    return createApiResponse<IStore&IStoreStatusDay>(500, store, null, 'Failed updating the store (transaction level)');
   }
 }
 
@@ -599,7 +612,8 @@ export async function getStores():Promise<IResponse<(IStore&IStoreStatusDay)[]>>
 }
 
 // Related to day operations
-export async function insertDayOperation(dayOperation: IDayOperation):Promise<IResponse<void>> {
+export async function insertDayOperation(dayOperation: IDayOperation)
+:Promise<IResponse<IDayOperation>> {
   try {
     const sqlite = await createSQLiteConnection();
     await sqlite.transaction(async (tx) => {
@@ -621,13 +635,15 @@ export async function insertDayOperation(dayOperation: IDayOperation):Promise<IR
     });
 
 
-    return createApiResponse<void>(201, null, null, 'Day operation inserted successfully.');
+    return createApiResponse<IDayOperation>(201, dayOperation, null, 'Day operation inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed insterting day operation.');
+    return createApiResponse<IDayOperation>(500, dayOperation, null, 'Failed insterting day operation.');
   }
 }
 
-export async function insertDayOperations(dayOperations: IDayOperation[]):Promise<IResponse<void>> {
+export async function insertDayOperations(dayOperations: IDayOperation[])
+:Promise<IResponse<IDayOperation[]>> {
+  const insertedDayOperations:IDayOperation[] = [];
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -651,13 +667,14 @@ export async function insertDayOperations(dayOperations: IDayOperation[]):Promis
       });
     });
 
-    return createApiResponse<void>(201, null, null, 'Day operations inserted successfully.');
+    return createApiResponse<IDayOperation[]>(201, insertedDayOperations, null, 'Day operations inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed insterting day operations.');
+    return createApiResponse<IDayOperation[]>(500, insertedDayOperations, null, 'Failed insterting day operations.');
   }
 }
 
-export async function updateDayOperation(dayOperation: IDayOperation):Promise<IResponse<void>> {
+export async function updateDayOperation(dayOperation: IDayOperation)
+:Promise<IResponse<IDayOperation>> {
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -683,13 +700,14 @@ export async function updateDayOperation(dayOperation: IDayOperation):Promise<IR
       ]);
     });
 
-    return createApiResponse<void>(201, null, null, 'Day operation updated successfully.');
+    return createApiResponse<IDayOperation>(201, dayOperation, null, 'Day operation updated successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed updating day operation.');
+
+    return createApiResponse<IDayOperation>(500, dayOperation, null, 'Failed updating day operation.');
   }
 }
 
-export async function deleteAllDayOperations():Promise<IResponse<void>> {
+export async function deleteAllDayOperations():Promise<IResponse<null>> {
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -697,9 +715,9 @@ export async function deleteAllDayOperations():Promise<IResponse<void>> {
       await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.DAY_OPERATIONS};`);
     });
 
-    return createApiResponse<void>(200, null, null, 'Day operation deleted successfully.');
+    return createApiResponse<null>(200, null, null, 'Day operation deleted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed deleting day operations.');
+    return createApiResponse<null>(500, null, null, 'Failed deleting day operations.');
   }
 }
 
@@ -770,7 +788,7 @@ export async function getAllInventoryOperations():Promise<IResponse<IInventoryOp
   }
 }
 
-export async function insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>> {
+export async function insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperation>> {
   try {
     const {
       id_inventory_operation,
@@ -796,9 +814,9 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
         ]);
     });
 
-    return createApiResponse<void>(201, null, null, 'Inventory operation inserted successfully.');
+    return createApiResponse<IInventoryOperation>(201, inventoryOperation, null, 'Inventory operation inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting inventory operation.');
+    return createApiResponse<IInventoryOperation>(500, inventoryOperation, null, 'Failed inserting inventory operation.');
   }
 }
 
@@ -822,12 +840,14 @@ export async function getInventoryOperationDescription(id_inventory_operation:st
   }
 }
 
-export async function insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<void>> {
+export async function insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[])
+:Promise<IResponse<IInventoryOperationDescription[]>> {
+
+  const insertedInventoryOperationDescription:IInventoryOperationDescription[] = [];
   try {
     const sqlite = await createSQLiteConnection();
 
-    inventoryOperationDescription
-    .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
+    inventoryOperationDescription.forEach(async (inventoryOperationItem:IInventoryOperationDescription) => {
       const {
         id_product_operation_description,
         price_at_moment,
@@ -837,28 +857,37 @@ export async function insertInventoryOperationDescription(inventoryOperationDesc
       } = inventoryOperationItem;
 
       await sqlite.transaction(async (tx) => {
-        await tx.executeSql(`
-          INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?);
-        `, [
-            id_product_operation_description,
-            price_at_moment,
-            amount,
-            id_inventory_operation,
-            id_product,
-          ]
-        );
+        try {
+          await tx.executeSql(`
+            INSERT INTO ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (id_product_operation_description, price_at_moment, amount, id_inventory_operation, id_product) VALUES (?, ?, ?, ?, ?);
+          `, [
+              id_product_operation_description,
+              price_at_moment,
+              amount,
+              id_inventory_operation,
+              id_product,
+            ]
+          );
+          insertedInventoryOperationDescription.push(inventoryOperationItem);
+        } catch (error) {
+          return createApiResponse<IInventoryOperationDescription[]>(500, insertedInventoryOperationDescription, null, 'Failed inserting inventory operation description.');
+        }
       });
     });
 
 
-    return createApiResponse<void>(201, null, null, 'Inventory operation description inserted successfully.');
+    return createApiResponse<IInventoryOperationDescription[]>(201,
+      insertedInventoryOperationDescription, null,
+      'Inventory operation description inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting inventory operation description.');
+    return createApiResponse<IInventoryOperationDescription[]>(500,
+      insertedInventoryOperationDescription, null,
+      'Failed inserting inventory operation description.');
   }
 }
 
 // Related to transcations
-export async function insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>> {
+export async function insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<IRouteTransaction>> {
   try {
     const {
       id_route_transaction,
@@ -886,17 +915,17 @@ export async function insertRouteTransaction(transactionOperation: IRouteTransac
           id_store,
         ]);
       } catch (error) {
-        return createApiResponse<void>(500, null, null, 'Failed inserting route transaction (query execution level).');
+        return createApiResponse<IRouteTransaction>(500, transactionOperation, null, 'Failed inserting route transaction (query execution level).');
       }
     });
 
-    return createApiResponse<void>(201, null, null, 'Route transaction inserted successfully.');
+    return createApiResponse<IRouteTransaction>(201, transactionOperation, null, 'Route transaction inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting route transaction (transaction creation level).');
+    return createApiResponse<IRouteTransaction>(500, transactionOperation, null, 'Failed inserting route transaction (transaction creation level).');
   }
 }
 
-export async function insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<void>> {
+export async function insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<IRouteTransactionOperation>> {
   try {
     const {
       id_route_transaction_operation,
@@ -916,17 +945,19 @@ export async function insertRouteTransactionOperation(transactionOperation: IRou
           id_route_transaction_operation_type,
         ]);
       } catch (error) {
-        return createApiResponse<void>(500, null, null, 'Failed inserting route transaction operation (query execution level).');
+        return createApiResponse<IRouteTransactionOperation>(500, transactionOperation, null, 'Failed inserting route transaction operation (query execution level).');
       }
     });
 
-    return createApiResponse<void>(201, null, null, 'Route transaction operation inserted successfully.');
+    return createApiResponse<IRouteTransactionOperation>(201, transactionOperation, null, 'Route transaction operation inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting route transaction operation (transaction creation level).');
+    return createApiResponse<IRouteTransactionOperation>(500, transactionOperation, null, 'Failed inserting route transaction operation (transaction creation level).');
   }
 }
 
-export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<void>> {
+export async function insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[])
+:Promise<IResponse<IRouteTransactionOperationDescription[]>> {
+  const insertedTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
   try {
     const sqlite = await createSQLiteConnection();
 
@@ -951,14 +982,15 @@ export async function insertRouteTransactionOperationDescription(transactionOper
               id_product,
             ]
           );
+          insertedTransactionOperationDescription.push(transactionDescription);
         } catch (error) {
-          return createApiResponse<void>(500, null, null, 'Failed inserting route transaction operation description (query execution level).');
+          return createApiResponse<IRouteTransactionOperationDescription[]>(500, insertedTransactionOperationDescription, null, 'Failed inserting route transaction operation description (query execution level).');
         }
       });
     });
-    return createApiResponse<void>(201, null, null, 'Route transaction operation description inserted successfully.');
+    return createApiResponse<IRouteTransactionOperationDescription[]>(201, insertedTransactionOperationDescription, null, 'Route transaction operation description inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed inserting route transaction operation description (transaction creation level).');
+    return createApiResponse<IRouteTransactionOperationDescription[]>(500, insertedTransactionOperationDescription, null, 'Failed inserting route transaction operation description (transaction creation level).');
   }
 }
 
@@ -1019,7 +1051,7 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
   }
 }
 
-export async function updateTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<void>> {
+export async function updateTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<IRouteTransaction>> {
   try {
     const {
       id_route_transaction,
@@ -1033,7 +1065,6 @@ export async function updateTransaction(routeTransaction: IRouteTransaction):Pro
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      try {
         await tx.executeSql(`UPDATE ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} SET  
           date = ?, 
           state = ?, 
@@ -1050,14 +1081,9 @@ export async function updateTransaction(routeTransaction: IRouteTransaction):Pro
           id_store,
           id_route_transaction,
         ]);
-      } catch (error) {
-        return createApiResponse<void>(500, null, null, 'Failed updating route transaction (query execution level).');
-      }
     });
-
-
-    return createApiResponse<void>(200, null, null, 'Route transaction operation description inserted successfully.');
+    return createApiResponse<IRouteTransaction>(200, routeTransaction, null, 'Route transaction operation description inserted successfully.');
   } catch(error) {
-    return createApiResponse<void>(500, null, null, 'Failed updating route transaction (transaction creation level).');
+    return createApiResponse<IRouteTransaction>(500, routeTransaction, null, 'Failed updating route transaction (transaction creation level).');
   }
 }

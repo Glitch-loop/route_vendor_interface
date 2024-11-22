@@ -5,19 +5,14 @@ import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 import tw from 'twrnc';
 
-// Components
-import RouteHeader from '../components/RouteHeader';
-import TableInventoryOperations from '../components/InventoryComponents/TableInventoryOperations';
-import VendorConfirmation from '../components/VendorConfirmation';
-import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
-
 // Queries
-// Central database
-import {
-  getAllProducts,
-  getAllStoresInARouteDay,
-  getStoresByArrID,
-} from '../queries/queries';
+// Main database
+import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
+// import {
+//   getAllProducts,
+//   getAllStoresInARouteDay,
+//   getStoresByArrID,
+// } from '../queries/queries';
 
 // Embedded database
 import {
@@ -40,6 +35,26 @@ import {
   getRouteTransactionOperationDescriptions,
 } from '../queries/SQLite/sqlLiteQueries';
 
+// Redux context
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../redux/store';
+import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
+import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setStores } from '../redux/slices/storesSlice';
+import {
+  setArrayDayOperations,
+  setDayOperation,
+  setDayOperationBeforeCurrentOperation,
+  setNextOperation,
+} from '../redux/slices/dayOperationsSlice';
+import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
+
+// Components
+import RouteHeader from '../components/RouteHeader';
+import TableInventoryOperations from '../components/InventoryComponents/TableInventoryOperations';
+import VendorConfirmation from '../components/VendorConfirmation';
+import TableInventoryVisualization from '../components/InventoryComponents/TableInventoryVisualization';
+import TableInventoryOperationsVisualization from '../components/InventoryComponents/TableInventoryOperationsVisualization';
 
 // Interfaces
 import {
@@ -57,6 +72,9 @@ import {
   IStoreStatusDay,
   IRouteTransaction,
   IRouteTransactionOperation,
+  IResponse,
+  IProduct,
+  IRouteTransactionOperationDescription,
  } from '../interfaces/interfaces';
 
 // Utils
@@ -67,23 +85,18 @@ import { planningRouteDayOperations } from '../utils/routesFunctions';
 import { determineRouteDayState } from '../utils/routeDayStoreStatesAutomata';
 import { enumStoreStates } from '../interfaces/enumStoreStates';
 import { initialMXNCurrencyState } from '../utils/inventoryOperations';
-
-// Redux context
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
-import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
-import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
-import { setStores } from '../redux/slices/storesSlice';
-import {
-  setArrayDayOperations,
-  setDayOperation,
-  setDayOperationBeforeCurrentOperation,
-  setNextOperation,
-} from '../redux/slices/dayOperationsSlice';
-import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
 import { addingInformationParticularFieldOfObject, convertingDictionaryInArray } from '../utils/generalFunctions';
-import TableInventoryOperationsVisualization from '../components/InventoryComponents/TableInventoryOperationsVisualization';
+import { apiResponseProcess, apiResponseStatus, getDataFromApiResponse } from '../utils/apiResponse';
+import Toast from 'react-native-toast-message';
 
+// Initializing database
+const databaseRepository = RepositoryFactory.createRepository('supabase');
+
+const {
+  getAllProducts,
+  getAllStoresInARouteDay,
+  getStoresByArrID,
+} = databaseRepository;
 
 const initialProduct:IProductInventory = {
   id_product: '',
@@ -116,8 +129,8 @@ function getTitleOfInventoryOperation(dayOperation: IDayOperation):string {
   return title;
 }
 
-async function creatingNewWorkDay(cashInventory:ICurrency[],
-  routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IRoute&IDayGeneralInformation&IDay&IRouteDay> {
+function creatingNewWorkDay(cashInventory:ICurrency[],
+  routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):IRoute&IDayGeneralInformation&IDay&IRouteDay {
   const workDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = {
     /*Fields related to the general information.*/
     id_work_day: '',
@@ -155,6 +168,11 @@ async function creatingNewWorkDay(cashInventory:ICurrency[],
     // Concatenating all the information.
     return updatedRouteDay;
   } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'Error durante la creación del nuevo dia de trabajo.',
+      text2: 'Ha habido un error durante la creación del dia de trabajo, por favor intente nuevamente.',
+    });
     return workDay;
   }
 }
@@ -175,13 +193,27 @@ async function finishingWorkDay(cashInventory:ICurrency[],
 
     return updatedRouteDay;
   } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'Error durante cierre del dia de trabajo.',
+      text2: 'Ha habido error durante la finalización del "dia de trabajo", intente nuevamente.',
+    });
     return routeDay;
   }
 }
 
-async function gettingStoresInformation(storesInRoute:IRouteDayStores[]):Promise<(IStore&IStoreStatusDay)[]> {
+async function gettingStoresInformation(storesInRoute:IRouteDayStores[]):
+Promise<(IStore&IStoreStatusDay)[]> {
   try {
+    const settingAllStoresOfTheDay:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta las tiendas en la ruta.',
+      toastMessageError: 'Ha habido un error durante la consulta de las tiendas para crear el inventario, por favor intente nuevamente.',
+    };
+
     const stores:(IStore&IStoreStatusDay)[] = [];
+    let storesInformation:IStore[] = [];
+    const idStoresArr:string[] = [];
 
     // Getting the information of the stores.
 
@@ -191,32 +223,56 @@ async function gettingStoresInformation(storesInRoute:IRouteDayStores[]):Promise
       The state is a way to determine the status of a store in route (if it is pending to visit, if it has been visited,
       if it is a new client, etc).
     */
-    (await getStoresByArrID(storesInRoute.map((storeInRoute:IRouteDayStores) => {return storeInRoute.id_store;})))
-      .map((storeInformation) => stores.push({
+    for (let i = 0; i < storesInRoute.length; i++) {
+      const { id_store } = storesInRoute[i];
+      idStoresArr.push(id_store);
+    }
+
+    storesInformation = apiResponseProcess(await getStoresByArrID(idStoresArr),
+      settingAllStoresOfTheDay);
+
+    storesInformation.map((storeInformation) => {
+      stores.push({
         ...storeInformation,
         route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
-      }));
+      });
+    });
 
     return stores;
   } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1:'Error durante la consulta las tiendas en la ruta',
+      text2: 'Ha habido un error durante la consulta de las tiendas para crear el inventario, por favor intente nuevamente',
+    });
     return [];
   }
 }
 
 async function gettingRouteInformationOfTheStores(routeDay:IRouteDay):Promise<IRouteDayStores[]> {
   try {
-    const storesInTheRoute:IRouteDayStores[] = [];
+    const settingAllStoresOfTheDay:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de la información de las tiendas para crear el inventario.',
+      toastMessageError: 'Ha habido un error durante la consulta de la información de las tiendas, por favor intente nuevamente',
+    };
 
+    const storesInTheRoute:IRouteDayStores[] = [];
     /*
       Getting the particular stores that belongs to the route day.
       In addition, this query provides the position of each store in the day.
     */
     // Getting the stores that belongs to this particular day of the route
-    (await getAllStoresInARouteDay(routeDay.id_route_day))
-      .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});
+    apiResponseProcess(await getAllStoresInARouteDay(routeDay.id_route_day),
+      settingAllStoresOfTheDay)
+        .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});;
 
     return storesInTheRoute;
+
   } catch (error) {
+    Toast.show({type: 'error',
+      text1:'Error durante la consulta de la información de las tiendas para crear el inventario', text2: 'Ha habido un error durante la consulta de la información de las tiendas, por favor intente nuevamente',
+    });
     return [];
   }
 }
@@ -246,6 +302,11 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
 
     return inventoryOperation;
   } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'Error durante la creación del inventario.',
+      text2: 'Ha habido un error al momento de crear el inventario.',
+    });
     return inventoryOperation;
   }
 }
@@ -345,16 +406,25 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       a previous inventory operation.
     */
 
+    const settingResponseProducts:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de productos',
+      toastMessageError: 'Ha habido un error durante la consulta de los productos, por favor intente nuevamente',
+    };
+
     getAllProducts()
-    .then(products => {
+    .then((responseProducts:IResponse<IProduct[]>) => {
       // Creating inventory (list) with all the products.
       let productInventory:IProductInventory[] = [];
+      let products:IProduct[] = apiResponseProcess(responseProducts, settingResponseProducts);
+
       products.map(product => {
         productInventory.push({
           ...product,
           amount: 0,
         });
       });
+
       setInventory(productInventory);
     });
 
@@ -384,13 +454,37 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       setInventory([]);
       setIsOperation(false);
 
+
+      const settingOperationDescriptions:any = {
+        showErrorMessage: true,
+        toastTitleError: 'Error durante la consulta de la operación de inventario',
+        toastMessageError: 'Ha habido un error durante la consulta, no se ha podido recuperar parte de las operaciones de inventario, por favor intente nuevamente',
+      };
+      const settingAllInventoryOperations:any = {
+        showErrorMessage: true,
+        toastTitleError:'Error al mostrar inventario final',
+        toastMessageError: 'Ha habido un error durante la consulta de las operaciones de inventario del dia, por favor intente nuevamente',
+      };
+      const settingOperationDescriptionsFinalInventory:any = {
+        showErrorMessage: true,
+        toastTitleError:'Error en mostrar el inventario final',
+        toastMessageError: 'Ha habido un error durante la consulta de las operaciones que componen el inventario final, por favor intente nuevamente',
+      };
+      const settingFinalInventoryByStores:any = {
+        showErrorMessage: true,
+        toastTitleError:'Error al mostrar inventario final',
+        toastMessageError: 'Ha habido un error durante la consulta de los movimientos de producto por tienda',
+      };
+
       // Getting the inventory operation.
       getInventoryOperation(currentOperation.id_item)
-        .then(async (inventoryOperation) => {
+      .then(async (inventoryOperation) => {
 
           // Getting the movements of the inventory operation that the user wants to see.
-          (await getInventoryOperationDescription(currentOperation.id_item))
-          .forEach((inventoryOperationDescription) => {
+          let inventoryOperationDescriptions:IInventoryOperationDescription[] = apiResponseProcess(await getInventoryOperationDescription(currentOperation.id_item),
+            settingOperationDescriptions);
+
+          inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
             currentProductInventory.push({
               ...initialProduct,
               amount: inventoryOperationDescription.amount,
@@ -420,6 +514,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setRestockInventories([currentProductInventory]);
             setFinalShiftInventory([]);
           } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+
+            // Variables used by the process.
+            let inventoryOperations:IInventoryOperation[] = [];
+            let productInventoryOfInventoryOperation:IProductInventory[] = [];
+
             setInventoryWithdrawal(true);
             setInventoryOutflow(true);
             setFinalOperation(true);
@@ -441,9 +540,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               of the product inventory of the day.
             */
 
+              inventoryOperations = apiResponseProcess(await getAllInventoryOperations(),
+                settingAllInventoryOperations);
+
             // Get all the inventory operations
-            (await getAllInventoryOperations())
-              .forEach((currentInventoryOperation:IInventoryOperation) => {
+              inventoryOperations.forEach((currentInventoryOperation:IInventoryOperation) => {
                 allInventoryOperations.push(currentInventoryOperation);
               });
 
@@ -451,10 +552,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             for (let i = 0; i < allInventoryOperations.length; i++) {
               const { id_inventory_operation, id_type_of_operation } = allInventoryOperations[i];
 
-              let productInventoryOfInventoryOperaton:IProductInventory[] =
-              (await getInventoryOperationDescription(id_inventory_operation))
-                .map((inventoryOperationDescription) => {
-                    return {
+              // Get description (movements) of the current inventory oepration
+              apiResponseProcess(await getInventoryOperationDescription(id_inventory_operation),
+                settingOperationDescriptionsFinalInventory)
+                .map((inventoryOperationDescription:IInventoryOperationDescription) =>
+                {
+                  return {
                     ...initialProduct,
                     amount: inventoryOperationDescription.amount,
                     id_product: inventoryOperationDescription.id_product,
@@ -464,11 +567,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
               // Determining where to store the information of the current inventory operation.
               if (id_type_of_operation === DAYS_OPERATIONS.start_shift_inventory) {
-                productInventoryOfInventoryOperaton.forEach((product:IProductInventory) => {
-                  startShiftInventoryProduct.push(product);
-                });
+                productInventoryOfInventoryOperation
+                  .forEach((product:IProductInventory) =>
+                    {startShiftInventoryProduct.push(product);});
               } else if (id_type_of_operation === DAYS_OPERATIONS.restock_inventory) {
-                restockInventoryProduct.push(productInventoryOfInventoryOperaton);
+                restockInventoryProduct.push(productInventoryOfInventoryOperation);
               } else {
                 /* Other case of operations are ignored */
               }
@@ -487,6 +590,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             for(let i = 0; i < stores.length; i++) {
               const {id_store, store_name} = stores[i];
 
+              // Variables used by the responses
+              let routeTransactionsOperationsByStore:IRouteTransactionOperation[] = [];
+
               // Variables to store the information about the "route transactions" of the stores.
               const transactionOfTheStore:IRouteTransaction[] = [];
               const transactionOperationsOfTheStore:IRouteTransactionOperation[] = [];
@@ -499,7 +605,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               titleOfStores.push(store_name);
 
               // Getting transactions of the current store
-              (await getRouteTransactionByStore(id_store))
+              apiResponseProcess(await getRouteTransactionByStore(id_store),
+                settingFinalInventoryByStores)
                 .forEach((transaction:IRouteTransaction) => {
                   const { state } = transaction;
                   // It is only going to be stored active transactions
@@ -510,13 +617,18 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                   }
                 });
 
+
               // Getting the transaction operations of the current store
               for(let j = 0; j < transactionOfTheStore.length; j++) {
                 const { id_route_transaction } = transactionOfTheStore[j];
-                (await getRouteTransactionOperations(id_route_transaction))
-                  .forEach((transactionOperations:IRouteTransactionOperation) => {
-                    transactionOperationsOfTheStore.push(transactionOperations);
-                  });
+
+                routeTransactionsOperationsByStore =
+                  apiResponseProcess(await getRouteTransactionOperations(id_route_transaction),
+                    settingFinalInventoryByStores);
+
+                routeTransactionsOperationsByStore
+                  .forEach((transactionOperations:IRouteTransactionOperation) =>
+                    { transactionOperationsOfTheStore.push(transactionOperations); });
               }
 
               // Getting the description of each transaction operation of the current store
@@ -527,31 +639,21 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 } = transactionOperationsOfTheStore[j];
 
                 // Accordig with the type of operations are the instructions to make
-                (await getRouteTransactionOperationDescriptions(id_route_transaction_operation))
-                .forEach((operationDescription) => {
-                  const {
-                    amount,
-                    id_product,
-                    price_at_moment,
-                  } = operationDescription;
+                apiResponseProcess(
+                  await getRouteTransactionOperationDescriptions(id_route_transaction_operation),
+                  settingFinalInventoryByStores)
+                  .forEach((operationDescription) => {
+                    const {
+                      amount,
+                      id_product,
+                      price_at_moment,
+                    } = operationDescription;
 
-                  // Accordig with the type of operations are the instructions to make
-                  if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
-                    // Getting information of the current store
-                    productsInventoryOfRepositionOfStore =
-                    addingInformationParticularFieldOfObject(productsInventoryOfRepositionOfStore, id_product, 'amount', amount,
-                      {
-                        ...initialProduct,
-                        amount: amount,
-                        id_product: id_product,
-                        price: price_at_moment,
-                      }
-                    );
-
-                    // Adding the information of this transaction to the total information of the day
-                    productRepositionInventoryProduct =
-                      addingInformationParticularFieldOfObject(productRepositionInventoryProduct,
-                        id_product, 'amount', amount,
+                    // Accordig with the type of operations are the instructions to make
+                    if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
+                      // Getting information of the current store
+                      productsInventoryOfRepositionOfStore =
+                      addingInformationParticularFieldOfObject(productsInventoryOfRepositionOfStore, id_product, 'amount', amount,
                         {
                           ...initialProduct,
                           amount: amount,
@@ -560,35 +662,47 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                         }
                       );
 
-                  } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
+                      // Adding the information of this transaction to the total information of the day
+                      productRepositionInventoryProduct =
+                        addingInformationParticularFieldOfObject(productRepositionInventoryProduct,
+                          id_product, 'amount', amount,
+                          {
+                            ...initialProduct,
+                            amount: amount,
+                            id_product: id_product,
+                            price: price_at_moment,
+                          }
+                        );
 
-                    // Getting information by store
-                    productsInventoryOfSaleOfStore =
-                      addingInformationParticularFieldOfObject(productsInventoryOfSaleOfStore,
-                        id_product, 'amount', amount,
-                        {
-                          ...initialProduct,
-                          amount: amount,
-                          id_product: id_product,
-                          price: price_at_moment,
-                        }
-                      );
+                    } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
 
-                    // Getting information of the current store
-                    productSoldInventoryProduct =
-                      addingInformationParticularFieldOfObject(productSoldInventoryProduct,
-                        id_product, 'amount', amount,
-                        {
-                          ...initialProduct,
-                          amount: amount,
-                          id_product: id_product,
-                          price: price_at_moment,
-                        }
-                      );
-                  } else {
-                    /* All the other operations don't matter */
-                  }
-                });
+                      // Getting information by store
+                      productsInventoryOfSaleOfStore =
+                        addingInformationParticularFieldOfObject(productsInventoryOfSaleOfStore,
+                          id_product, 'amount', amount,
+                          {
+                            ...initialProduct,
+                            amount: amount,
+                            id_product: id_product,
+                            price: price_at_moment,
+                          }
+                        );
+
+                      // Getting information of the current store
+                      productSoldInventoryProduct =
+                        addingInformationParticularFieldOfObject(productSoldInventoryProduct,
+                          id_product, 'amount', amount,
+                          {
+                            ...initialProduct,
+                            amount: amount,
+                            id_product: id_product,
+                            price: price_at_moment,
+                          }
+                        );
+                    } else {
+                      /* All the other operations don't matter */
+                    }
+                  });
               }
               // Storing the information of the current store within the rest of the stores.
               productRepositionInventoryProductByStore.push(
@@ -612,7 +726,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               Now, it is needed to "reduce" them into a single array for display them in the "inventory visualizator component".
             */
             // Storing information relate to route transactions
-            setProductRepositionTransactions(convertingDictionaryInArray(productRepositionInventoryProduct));
+            setProductRepositionTransactions(
+              convertingDictionaryInArray(productRepositionInventoryProduct));
             setProductSoldTransactions(convertingDictionaryInArray(productSoldInventoryProduct));
 
             // Storing information related to the inventory operations
@@ -624,7 +739,14 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           } else {
             /* Other inventory operation */
           }
-      }).catch((error) => { console.error('Something went wrong: ', error);});
+      })
+      .catch(() => {
+        Toast.show({
+          type: 'error',
+          text1: 'Error durante la recuperación de la operacion de inventario.',
+          text2: 'Ha ocurrido un error durante la recuperación de la operación de inventario.',
+        });
+      });
 
     } else { // It is a new inventory operation
       /*
@@ -646,8 +768,19 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
         /* If it is a restock inventory operation, it is needed to get the current inventory */
         getProducts()
-        .then((allProducts:IProductInventory[]) => { setCurrentInventory(allProducts); })
-        .catch(() => { setCurrentInventory([]); });
+        .then((allProductsResponse:IResponse<IProductInventory[]>) => { 
+          let allProducts:IProductInventory[] = apiResponseProcess(allProductsResponse, 
+            settingResponseProducts);
+          setCurrentInventory(allProducts);
+        })
+        .catch(() => {
+          Toast.show({
+            type: 'error',
+            text1: 'Error durante la creación de la operación de inventario.',
+            text2: 'Ha habido un error al momento de obtener el producto para la operación de inventario.',
+          });
+          setCurrentInventory([]);
+        });
       } else {
         setCurrentInventory([]);
       }
@@ -717,8 +850,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       // Determining the type of inventory operation.
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
         /*
-          Implicitly when the vendor closes the first inventory of the day, he accepts to perform the currnet day.
+          When the vendor clicks "accept", he accepts to perform the currnet day.
           So, before creating the first inventory of the day, it is needed to create the "work day".
+
+          A "work day" is a coined concept to refer to all the "generla information" to identify
+          the current day as a " work day".
 
           At this moment, all of these information is already recorded:
             - route: Information related to the route identification.
@@ -728,25 +864,34 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           But it is needed to complete the remainded information:
             - General information related to the route.
         */
-        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay = await creatingNewWorkDay(cashInventory, routeDay);
+        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+          = creatingNewWorkDay(cashInventory, routeDay);
 
         // Storing information in embedded database.
-        await insertWorkDay(dayGeneralInformation);
+        const resultInsertionWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay> 
+          = await insertWorkDay(dayGeneralInformation);
 
         // Storing information in redux context.
         dispatch(setDayGeneralInformation(dayGeneralInformation));
 
-        /* Once the workday has been declared, it is necessary to get the information of the stores */
-        const storesInTheRoute:IRouteDayStores[] = await gettingRouteInformationOfTheStores(routeDay);
-        const storesOfRoute:(IStore&IStoreStatusDay)[] = await gettingStoresInformation(storesInTheRoute);
+        // Getting the stores that belongs to the route.
+        const storesInTheRoute:IRouteDayStores[]
+          = await gettingRouteInformationOfTheStores(routeDay);
+
+        // Gettin all the information of the stores that belongs to the route.
+        const storesOfRoute:(IStore&IStoreStatusDay)[]
+          = await gettingStoresInformation(storesInTheRoute);
 
         // Storing in embedded database
-        await insertStores(storesOfRoute);
+        const resultInsertionStores:IResponse<(IStore&IStoreStatusDay)[]>
+          = await insertStores(storesOfRoute);
 
         // Storing in redux context.
         dispatch(setStores(storesOfRoute));
 
-        /* After "selecting" the route, the vendor must make the a "start shift inventory" (to have product for selling). */
+        /*
+          After "selecting" the route, and therefore, creating the workday, it will be created the inventory operation that respresents the "start shift inventory" (to have product for selling).
+        */
         const inventoryOperation:IInventoryOperation
           = creatingInventoryOperation(dayGeneralInformation, DAYS_OPERATIONS.start_shift_inventory);
         const inventoryOperationDescription:IInventoryOperationDescription[]
@@ -756,18 +901,21 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         /* Due to this information is low read data, it is going to be stored only in the embedded database. */
         /* Related to the inventory operation */
         // Storing information in embedded database.
-        await insertInventoryOperation(inventoryOperation);
+        const resultInventoryOperation:IResponse<null> 
+          = await insertInventoryOperation(inventoryOperation);
 
         // Storing information in embedded database.
-        await insertInventoryOperationDescription(inventoryOperationDescription);
+        const resultInventoryOperationDescription:IResponse<null>
+          = await insertInventoryOperationDescription(inventoryOperationDescription);
 
-        /* Related to the inventory that the vendo will use to sell */
+        /* Related to the inventory that the vendor will use to sell */
+        /* Related to the product information */
+        // Storing information in embedded database.
+        const resultInsertProducts:IResponse<null> = await insertProducts(inventory);
+
         // Storing information in redux context.
         dispatch(setProductInventory(inventory));
 
-        /* Related to the product information */
-        // Storing information in embedded database.
-        await insertProducts(inventory);
 
         /*
           At this moment, it has been collected all the information needed for the work day,
@@ -779,7 +927,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         const newDayOperation:IDayOperation
           = creatingDayOperation(inventoryOperation.id_inventory_operation, currentOperation.id_type_operation, 0, 1);
 
-        await insertDayOperation(newDayOperation);
+        const resultInsertDayOperation:IResponse<null> = await insertDayOperation(newDayOperation);
 
         // Store information in redux context.
         dispatch(setDayOperation(newDayOperation));
@@ -800,7 +948,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           dayOperationsOfStores[0].current_operation = 1;
         }
 
-        await insertDayOperations(dayOperationsOfStores);
+        const resultInsertDayOperations:IResponse<null>
+          = await insertDayOperations(dayOperationsOfStores);
 
         /*
           At this point the records needed to start a database have been created.
@@ -810,6 +959,14 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         */
         dispatch(setNextOperation());
 
+        if (apiResponseStatus(resultInsertionWorkDay, 201)
+        || apiResponseProcess(resultInsertionStores, 201)
+        || apiResponseProcess(resultInsertionStores, 201)
+      
+      ) {
+
+        }
+        
         navigation.reset({
           index: 0, // Set the index of the new state (0 means first screen)
           routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to

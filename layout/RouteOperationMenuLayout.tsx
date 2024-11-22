@@ -121,7 +121,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Related with to the end of  the day.
   const finishWorkDay = async ():Promise<void> => {
     // Storing the information in the main database.
-
     // Dropping database for freeing space.
     await dropEmbeddedDatabase();
 

@@ -1,3 +1,4 @@
+import Toast from 'react-native-toast-message';
 import { IResponse } from '../interfaces/interfaces';
 
 export function createApiResponse<T>(
@@ -51,4 +52,85 @@ export function getDataFromApiResponse<T>(apiResponse: IResponse<T>):T {
   const { data } = apiResponse;
 
   return data;
+}
+
+export function apiResponseProcess<T>(
+  apiResponse: IResponse<T>,
+  configProcess?:any,
+  valueExpected?: number,
+  // showSuccessMessage:boolean = false,
+  // showErrorMEssage:boolean = true,
+  // toastTitleSuccess?: string,
+  // toastMessageSuccess?: string,
+  // toastTitleError?:string,
+  // toastMessageError?:string
+):T{
+
+  const {
+    showSuccessMessage,
+    toastTitleSuccess,
+    toastMessageSuccess,
+    showErrorMessage,
+    toastTitleError,
+    toastMessageError,
+  } = configProcess;
+
+  let title:string = '';
+  let message:string = '';
+  let isCorrectProcess:boolean = false;
+
+  if(valueExpected) {
+    isCorrectProcess = apiResponseStatus(apiResponse, valueExpected);
+  } else {
+    /* If expected code is not provided, then, expect the "success" default codes */
+    isCorrectProcess = apiResponseStatus(apiResponse, 200) || apiResponseStatus(apiResponse, 201);
+  }
+
+  if (isCorrectProcess) { // Response status: OK
+    if (toastTitleSuccess) {
+      title = toastTitleSuccess;
+    } else {
+      title = 'Proceso terminado con exito';
+    }
+
+    if(toastMessageSuccess) {
+      message = toastMessageSuccess;
+    } else {
+      message = 'El proceso se ha terminado exitosamente';
+    }
+
+    if (showSuccessMessage) {
+      Toast.show({
+        type: 'success',
+        text1: title,
+        text2: message,
+      });
+    } else {
+      /* It is not necessary to show the message */
+    }
+  } else { // Response status: Error or fail
+    if (toastTitleError) {
+      title = toastTitleError;
+    } else {
+      title = 'Error durante el proceso';
+    }
+
+    if(toastMessageError) {
+      message = toastMessageError;
+    } else {
+      message = 'Ha habido un error durante el processo';
+    }
+
+    if (showErrorMessage) {
+      Toast.show({
+        type: 'error',
+        text1: title,
+        text2: message,
+      });
+    } else {
+      /* It is not necessary to show the message */
+    }
+  }
+
+  return getDataFromApiResponse(apiResponse);
 }

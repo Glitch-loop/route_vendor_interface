@@ -54,7 +54,7 @@ import DAYS from '../lib/days';
 import { current_day_name } from '../utils/momentFormat';
 import { capitalizeFirstLetter } from '../utils/generalFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
-import { apiResponseStatus, getDataFromApiResponse } from '../utils/apiResponse';
+import { apiResponseProcess } from '../utils/apiResponse';
 
 
 // Testing
@@ -75,64 +75,66 @@ async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]>
   try {
     let completeRoutes:ICompleteRoute[] = [];
     let currentRoute: ICompleteRoute;
-    let routesResponse:IResponse<IRoute[]>;
-    let routes:IRoute[];
-    let daysOfRouteResponse:IResponse<IRouteDay[]>;
+    let routes:IRoute[] = [];
     let daysOfRoute:IRouteDay[] = [];
     let completeDaysOfRoute: ICompleteRouteDay[] = [];
 
+    // Responses
+    const settingResponseRoutesByVendor:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de los dias las rutas',
+      toastMessageError: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente',
+    };
+    const settingResponseDaysOfRoutesByVendor:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de los dias de rutas',
+      toastMessageError: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente.',
+    };
+
     // Getting all vendor's routes
-    routesResponse = await getAllRoutesByVendor(vendor.id_vendor);
+    routes = apiResponseProcess(await getAllRoutesByVendor(vendor.id_vendor),
+      settingResponseRoutesByVendor);
 
-    if (apiResponseStatus(routesResponse, 200)) {
-      routes = getDataFromApiResponse(routesResponse);
+    // Getting all the days in a route
+    for (let i = 0; i < routes.length; i++) {
+      daysOfRoute = apiResponseProcess(await getAllDaysByRoute(routes[i].id_route),
+        settingResponseDaysOfRoutesByVendor);
 
-      // Getting all the days in a route
-      for (let i = 0; i < routes.length; i++) {
-        daysOfRouteResponse = await getAllDaysByRoute(routes[i].id_route);
+      /* Once all the days of a route have been gotten */
+      // From the current days of a route, get the remaining information for each route.
+      daysOfRoute.forEach(routeDay => {
+        let completeRouteDay:ICompleteRouteDay = {
+          ...routeDay,
+          day: DAYS[routeDay.id_day],
+        };
+        completeDaysOfRoute.push(completeRouteDay);
+      });
 
-        if (apiResponseStatus(daysOfRouteResponse, 200)) {
-          daysOfRoute = getDataFromApiResponse(daysOfRouteResponse);
+      // Ordering days of the route.
+      completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
 
-          /* Once all the days of a route have been gotten */
-          // From the current days of a route, get the remaining information for each route.
-          daysOfRoute.forEach(routeDay => {
-            let completeRouteDay:ICompleteRouteDay = {
-              ...routeDay,
-              day: DAYS[routeDay.id_day],
-            };
-            completeDaysOfRoute.push(completeRouteDay);
-          });
-
-          // Ordering days of the route.
-          completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
-
-          /*
-            Storing the current route (this information contains both the complete information of the
-            route and the information of each days that made up the route).
-          */
-          currentRoute = {
-            ...routes[i],
-            description: capitalizeFirstLetter(routes[i].description),
-            route_name: capitalizeFirstLetter(routes[i].route_name),
-            routeDays: completeDaysOfRoute,
-          };
-          // Avoiding store routes without days.
-          if(completeDaysOfRoute[0] !== undefined) {
-            completeRoutes.push(currentRoute);
-          }
-
-        } else {
-          Toast.show({type: 'error', text1:'Error durante la consulta de los dias de rutas', text2: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente'});
-        }
+      /*
+        Storing the current route (this information contains both the complete information of the
+        route and the information of each days that made up the route).
+      */
+      currentRoute = {
+        ...routes[i],
+        description: capitalizeFirstLetter(routes[i].description),
+        route_name: capitalizeFirstLetter(routes[i].route_name),
+        routeDays: completeDaysOfRoute,
+      };
+      // Avoiding store routes without days.
+      if(completeDaysOfRoute[0] !== undefined) {
+        completeRoutes.push(currentRoute);
       }
-    } else {
-      Toast.show({type: 'error', text1:'Error durante la consulta de los dias las rutas', text2: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente'});
     }
 
     return completeRoutes;
   } catch (error) {
-    Toast.show({type: 'error', text1:'Error durante la consulta de las rutas', text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente'});
+    Toast.show({type: 'error',
+      text1:'Error durante la consulta de las rutas',
+      text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente',
+    });
     console.log('Something was wrong');
     return [];
   }
@@ -184,12 +186,37 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
 
     // Determining if there is an initialized day.
-    getDayOperations()
-    .then(async (dayOperations:IDayOperation[]) => {
-      if (dayOperations.length > 0) {
-        console.log("From get operation array, consulting the first one: ", dayOperations[0])
+    const settingResponseDayOperations:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de las operaciones',
+      toastMessageError: 'Al momento de intentar consultar las operaciones del dia de hoy ha habido un error, por favor intente nuevamente',
+    };
 
-        console.log("It is a started day")
+    const settingResponseWorkDay:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta del dia de trabajo',
+      toastMessageError: 'Al momento de intentar consultar la información general del dia ha habido un error, por favor intente nuevamente',
+    };
+
+    const settingResponseProducts:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de los productos',
+      toastMessageError: 'Al momento de intentar consultar los productos para hacer el inventario ha habido un error, por favor intente nuevamente',
+    };
+
+    const settingResponseStores:any = {
+      showErrorMessage: true,
+      toastTitleError: 'Error durante la consulta de las tiendas',
+      toastMessageError: 'Al momento de intentar consultar las tiendas para cargar el dia ha habido un error, por favor intente nuevamente',
+    };
+
+    getDayOperations()
+    .then(async (dayOperationsResponse:IResponse<IDayOperation[]>) => {
+
+      let dayOperations:IDayOperation[] = apiResponseProcess(dayOperationsResponse,
+        settingResponseDayOperations);
+
+      if (dayOperations.length > 0) {
         /*
           It means it is a day operation, so it is necessary to get retrieve the information and
           set it in the context.
@@ -197,7 +224,13 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
         // Getting general information of the day.
         console.log("Getting the information of the day")
-        dispatch(setAllGeneralInformation(await getWorkDay()));
+
+        Toast.show({type: 'info',
+          text1:'Consultando información',
+          text2: 'Recuperando la información del dia.'});
+
+        dispatch(setAllGeneralInformation(
+          apiResponseProcess(await getWorkDay(), settingResponseWorkDay)));
 
         // Setting the operations of the day
         console.log("Getting the day operations")
@@ -205,17 +238,22 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
         // Setting inventory of the day
         console.log("Getting products")
-        dispatch(setProductInventory(await getProducts()));
+        dispatch(setProductInventory(
+          apiResponseProcess(await getProducts(), settingResponseProducts)));
 
         // Setting the information of the stores to visit
         console.log("Getting stores")
-        dispatch(setStores(await getStores()));
+        dispatch(setStores(apiResponseProcess(await getStores(), settingResponseStores)));
 
         console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
         /* It is a new 'work' day. */
         // Getting all the routes assigned to a vendor
+        Toast.show({type: 'info',
+          text1:'Consultando rutas',
+          text2: 'Consultando rutas disponibles para el vendedor'});
+
         formattingDaysOfTheVendor(testingUser)
           .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); });
       }
@@ -247,10 +285,19 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     */
 
     // Verifying there is not a registerd user.
-    getUsers().then(async (responseUsers:IUser[]) => {
+    getUsers().then(async (userResponse:IResponse<IUser[]>) => {
+      const settingResponseUser:any = {
+        showErrorMessage: true,
+        toastTitleError: 'Error durante la obtención de los datos del usuario',
+        toastMessageError: 'Ha ocurrido un error al momento de consultar la información del vendedor, por favor intente nuevamente',
+      };
+
+      let responseUsers:IUser[] = apiResponseProcess(userResponse, settingResponseUser);
+
       const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
         return responseUser.id_vendor === testingUser.id_vendor;
       });
+
       if (userFound === undefined) {
         // Store information in embeddded database.
         await insertUser(testingUser);
