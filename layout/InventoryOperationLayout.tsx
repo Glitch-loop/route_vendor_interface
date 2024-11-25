@@ -217,14 +217,13 @@ function finishingWorkDay(cashInventory:ICurrency[],
 }
 
 async function gettingStoresInformation(storesInRoute:IRouteDayStores[]):
-Promise<(IStore&IStoreStatusDay)[]> {
-  try {
-    const settingAllStoresOfTheDay:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta las tiendas en la ruta.',
-      toastMessageError: 'Ha habido un error durante la consulta de las tiendas para crear el inventario, por favor intente nuevamente.',
-    };
+Promise<IResponse<(IStore&IStoreStatusDay)[]>> {
+  let resultGetStores:IResponse<any> = {
+    responseCode: 500,
+    data: [],
+  };
 
+  try {
     const stores:(IStore&IStoreStatusDay)[] = [];
     let storesInformation:IStore[] = [];
     const idStoresArr:string[] = [];
@@ -242,52 +241,84 @@ Promise<(IStore&IStoreStatusDay)[]> {
       idStoresArr.push(id_store);
     }
 
-    storesInformation = apiResponseProcess(await getStoresByArrID(idStoresArr),
-      settingAllStoresOfTheDay);
+    resultGetStores = await getStoresByArrID(idStoresArr);
 
-    storesInformation.map((storeInformation) => {
-      stores.push({
-        ...storeInformation,
-        route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+    if(apiResponseStatus(resultGetStores, 200)) {
+      storesInformation = getDataFromApiResponse(resultGetStores);
+
+      // Assign the status for each store in the route.
+      storesInformation.map((storeInformation) => {
+        stores.push({
+          ...storeInformation,
+          route_day_state: determineRouteDayState(enumStoreStates.NUETRAL_STATE, 1),
+        });
       });
-    });
 
-    return stores;
+      // Storing the complete information in the response.
+      resultGetStores.data = stores;
+
+    } else {
+      Toast.show({
+        type: 'error',
+        text1:'Error durante la consulta de las tiendas en la ruta.',
+        text2: 'Ha habido un error durante la consulta de las tiendas para crear el inventario, por favor intente nuevamente',
+      });
+    }
+
+    return resultGetStores;
   } catch (error) {
     Toast.show({
       type: 'error',
       text1:'Error durante la consulta las tiendas en la ruta',
       text2: 'Ha habido un error durante la consulta de las tiendas para crear el inventario, por favor intente nuevamente',
     });
-    return [];
+
+    resultGetStores.responseCode = 500;
+    resultGetStores.data = [];
+
+    return resultGetStores;
   }
 }
 
-async function gettingRouteInformationOfTheStores(routeDay:IRouteDay):Promise<IRouteDayStores[]> {
+async function gettingRouteInformationOfTheStores(routeDay:IRouteDay)
+:Promise<IResponse<IRouteDayStores[]>> {
+  let resultAllStoresInRoute:IResponse<IRouteDayStores[]> = {
+    responseCode: 500,
+    data: [],
+  };
   try {
-    const settingAllStoresOfTheDay:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de la información de las tiendas para crear el inventario.',
-      toastMessageError: 'Ha habido un error durante la consulta de la información de las tiendas, por favor intente nuevamente',
-    };
-
     const storesInTheRoute:IRouteDayStores[] = [];
     /*
       Getting the particular stores that belongs to the route day.
       In addition, this query provides the position of each store in the day.
     */
     // Getting the stores that belongs to this particular day of the route
-    apiResponseProcess(await getAllStoresInARouteDay(routeDay.id_route_day),
-      settingAllStoresOfTheDay)
-        .forEach((storeInRouteDay) => {storesInTheRoute.push(storeInRouteDay);});
+    resultAllStoresInRoute = await getAllStoresInARouteDay(routeDay.id_route_day);
 
-    return storesInTheRoute;
+    if (apiResponseStatus(resultAllStoresInRoute, 200)) {
+      let allStoreInRoute:IRouteDayStores[] = getDataFromApiResponse(resultAllStoresInRoute);
+
+      allStoreInRoute.forEach((storeInRouteDay) => { storesInTheRoute.push(storeInRouteDay); });
+
+      resultAllStoresInRoute.data = storesInTheRoute;
+
+    } else {
+
+      Toast.show({type: 'error',
+        text1:'Error durante la consulta de la información de las tiendas para crear el inventario', text2: 'Ha habido un error durante la consulta de la información de las tiendas, por favor intente nuevamente',
+      });
+    }
+
+    return resultAllStoresInRoute;
 
   } catch (error) {
+    resultAllStoresInRoute.responseCode = 500;
+    resultAllStoresInRoute.data = [];
+
     Toast.show({type: 'error',
       text1:'Error durante la consulta de la información de las tiendas para crear el inventario', text2: 'Ha habido un error durante la consulta de la información de las tiendas, por favor intente nuevamente',
     });
-    return [];
+    return resultAllStoresInRoute;
   }
 }
 
@@ -897,12 +928,16 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         // Getting the stores that belongs to the route.
-        const storesInTheRoute:IRouteDayStores[]
-          = await gettingRouteInformationOfTheStores(routeDay);
+        const resultGetStoresInTheRoute:IResponse<IRouteDayStores[]>
+        = await gettingRouteInformationOfTheStores(routeDay);
+
+        const storesInTheRoute:IRouteDayStores[] = apiResponseProcess(resultGetStoresInTheRoute);
 
         // Gettin all the information of the stores that belongs to the route.
-        const storesOfRoute:(IStore&IStoreStatusDay)[]
+        const resultGetStoresOfRoute:IResponse<(IStore&IStoreStatusDay)[]>
           = await gettingStoresInformation(storesInTheRoute);
+
+        const storesOfRoute:(IStore&IStoreStatusDay)[] = apiResponseProcess(resultGetStoresOfRoute);
 
         // Storing in embedded database
         const resultInsertionStores:IResponse<(IStore&IStoreStatusDay)[]>
@@ -916,8 +951,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           text1: 'Registrando el inventario inicial.',
           text2: 'Registrando la información que compone el inventario inicial.',
         });
+
         const inventoryOperation:IInventoryOperation
           = creatingInventoryOperation(dayGeneralInformation, DAYS_OPERATIONS.start_shift_inventory);
+
         const inventoryOperationDescription:IInventoryOperationDescription[]
           = creatingInventoryOperationDescription(inventory, inventoryOperation);
 
@@ -981,7 +1018,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         && apiResponseProcess(resultInsertProducts, 201)
         && apiResponseProcess(resultInsertDayOperation, 201)
         && apiResponseProcess(resultInsertDayOperations, 201)
-      ) {
+        && apiResponseProcess(resultGetStoresInTheRoute, 200)
+        && apiResponseProcess(resultGetStoresOfRoute, 200)) {
           /* The process has been finished successfully */
           /* Once the information has been stored in the embedded database, store the information
              in the states of the application.
@@ -1269,9 +1307,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             }
         });
 
-        // Updating redux context
-        dispatch(addProductsInventory(inventory));
-
         // Updating information in embedded database.
         const resultUpdatingInventory:IResponse<IProductInventory[]>
           = await updateProducts(newInventory);
@@ -1308,9 +1343,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         const resultFinishingWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
           = await updateWorkDay(dayGeneralInformation);
 
-        // Storing information in redux context.
-        dispatch(setDayGeneralInformation(dayGeneralInformation));
-
         /* At this point the end shift operation has been finished.
            So, the task is going to be apendded at the end of the work day list */
 
@@ -1319,9 +1351,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         // Since it is the end shift operation, it is exected that it is going to be the last operation.
         listDayOperations.push(newDayOperation);
-
-        // Store the information (new operation) in redux context.
-        dispatch(setDayOperation(newDayOperation));
 
         // Replacing the entire list of day operations in embedded datbase.
         // Delete all the information from the database.
@@ -1336,15 +1365,44 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         &&  apiResponseStatus(resultInsertionInventoryOperationDescriptions, 201)
         &&  apiResponseStatus(resultUpdatingInventory, 200)
         &&  apiResponseStatus(resultFinishingWorkDay, 200)
-        &&  apiResponseStatus(resultFinishingWorkDay, 200)
         &&  apiResponseStatus(resultdeletionAllDayOperations, 200)
         &&  apiResponseStatus(resultInsertionDayOperations, 201)) {
+          // Updating redux context
+          dispatch(addProductsInventory(inventory));
+
+          // Storing information in redux context.
+          dispatch(setDayGeneralInformation(dayGeneralInformation));
+
+          // Store the information (new operation) in redux context.
+          dispatch(setDayOperation(newDayOperation));
+
           navigation.reset({
             index: 0, // Set the index of the new state (0 means first screen)
             routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
           });
           navigation.navigate('routeOperationMenu');
-          
+        } else {
+          /* Something was wrong during the final shift inventory */
+          Toast.show({
+            type: 'error',
+            text1: 'Ha habido un error durnate el inventario final.',
+            text2: 'Ha habido un error durante el registro de la operación del inventario final, porfavor intente nuevamente.',
+          });
+
+          // Reverting the inventory to the previous state of the current inventory operations
+          await updateProducts(currentInventory);
+
+          // Deleting the current inventory operation
+          await deleteInventoryOperationsById(inventoryOperation);
+
+          // Deleting the "descriptions" of the current inventory operation
+          await deleteInventoryOperationDescriptionsById(inventoryOperationDescription);
+
+          // Ensuring that the new day operation don't appear in the list of actions.
+          await deleteAllDayOperations();
+
+          await insertDayOperations(dayOperations);
+          /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
         }
       } else {
         /* At the moment, there is not a default case */
