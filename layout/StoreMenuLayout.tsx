@@ -34,6 +34,7 @@ import {
 import { getStoreFromContext } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
+import { apiResponseProcess } from '../utils/apiResponse';
 
 
 function buildAddress(store:IStore) {
@@ -116,13 +117,26 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
 
   const handlerOnConsultTransactions = async() => {
     try {
+      // Variables used throughout the logic of the handler
       const arrTransactions:IRouteTransaction[] = [];
       const mapTransactionOperations = new Map<string, IRouteTransactionOperation[]>();
       const mapTransactionOperationDescriptions = new Map<string, IRouteTransactionOperationDescription[]>();
 
+      const settingRouteTransactionByStore:any = {
+        showErrorMessage: true,
+        toastTitleError: 'Error durante la consulta de las transacciones de la tienda.',
+        toastMessageError: 'Ha habido un error durante la consulta, no se ha podido recuperar la información, por favor intente nuevamente',
+      };
+      const settingTransactionsOperation:any = {
+        showErrorMessage: true,
+        toastTitleError: 'Error durante la consulta de las operaciones de las trasnsacciones.',
+        toastMessageError: 'Ha habido un error durante la consulta, no se ha podido recuperar la información, por favor intente nuevamente',
+      };
 
       /* Getting all the transaciton of the store of today. */
-      (await getRouteTransactionByStore(store.id_store))
+      apiResponseProcess((
+        await getRouteTransactionByStore(store.id_store)),
+        settingRouteTransactionByStore)
       .forEach((transaction:IRouteTransaction) => {
         arrTransactions.push(transaction);
       });
@@ -132,7 +146,9 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
         const { id_route_transaction } = transaction;
         mapTransactionOperations.set(
           id_route_transaction,
-          await (getRouteTransactionOperations(id_route_transaction))
+          apiResponseProcess(
+            await getRouteTransactionOperations(id_route_transaction),
+            settingTransactionsOperation)
         );
       }
 
@@ -142,7 +158,8 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
           const { id_route_transaction_operation } = currentTransactionOperation;
           mapTransactionOperationDescriptions.set(
             id_route_transaction_operation,
-            await getRouteTransactionOperationDescriptions(id_route_transaction_operation)
+            apiResponseProcess(await getRouteTransactionOperationDescriptions(id_route_transaction_operation),
+            settingTransactionsOperation)
           );
         }
       }
