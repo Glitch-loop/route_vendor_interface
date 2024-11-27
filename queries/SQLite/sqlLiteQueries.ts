@@ -979,7 +979,8 @@ export async function deleteInventoryOperationsById(inventoryOperation: IInvento
 
 export async function deleteInventoryOperationDescriptionsById(inventoryOperationDescriptions: IInventoryOperationDescription[])
 :Promise<IResponse<IInventoryOperationDescription[]>> {
-  const inventoryOperationDescriptionsDeleted:IInventoryOperationDescription[] = [];
+  const inventoryOperationDescriptionsDeleted
+  :IInventoryOperationDescription[] = [];
   try {
     const sqlite = await createSQLiteConnection();
 

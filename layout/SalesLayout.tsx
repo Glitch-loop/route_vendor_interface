@@ -258,8 +258,10 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
     // Creating description for each type of transaction operation.
     const saleRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
-    const productDevolutionRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
-    const productRepositionRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
+    const productDevolutionRouteTransactionOperationDescription
+      :IRouteTransactionOperationDescription[] = [];
+    const productRepositionRouteTransactionOperationDescription
+      :IRouteTransactionOperationDescription[] = [];
 
 
     // Variable get the inventory after sale.
@@ -324,7 +326,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
     console.log("Creating transaction")
     // Storing transaction
-    await insertRouteTransaction(routeTransaction);
+     await insertRouteTransaction(routeTransaction);
     if (productDevolutionRouteTransactionOperationDescription[0] !== undefined) {
       console.log("Creating devolution transaction operation")
       /* There was a movement in concept of devolution. */
@@ -483,7 +485,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
             Do nothing (the vendor is making a sale for a previous or next store from the current one)
           */
         }
-
       }
     } else {
       /*
