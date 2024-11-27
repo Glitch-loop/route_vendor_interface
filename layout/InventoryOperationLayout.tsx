@@ -85,7 +85,6 @@ import {
   IRouteTransactionOperation,
   IResponse,
   IProduct,
-  IRouteTransactionOperationDescription,
  } from '../interfaces/interfaces';
 
 // Utils
