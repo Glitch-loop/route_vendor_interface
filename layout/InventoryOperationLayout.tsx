@@ -597,16 +597,6 @@ async function startShiftInventoryOperationProcess(
       // Deleting all the day operations (the list of actions for the vendor)
       await deleteAllDayOperations();
 
-      /*
-        Since this is the operations of the day, it is important to ensure the integrity of the workflow, thus,
-        to achieve this, it is needed to redirect the user to the main manu to force complete all the process again.
-      */
-      navigation.reset({
-        index: 0, // Set the index of the new state (0 means first screen)
-        routes: [{ name: 'selectionRouteOperation' }], // Array of route objects, with the route to navigate to
-      });
-
-      navigation.navigate('selectionRouteOperation');
       return false;
     }
   } catch (error) {
@@ -666,7 +656,11 @@ async function intermediateInventoryOperationProcess(
     = creatingInventoryOperationDescription(inventory, inventoryOperation);
 
   try {
-
+    Toast.show({
+      type: 'info',
+      text1: 'Comenzando registro de operación de inventario.',
+      text2: 'Comenzado el registro de la operación de inventario.',
+    });
     // Inserting in embedded database the new inventory operation.
     const resultInsertionInventoryOperation:IResponse<IInventoryOperation>
       = await insertInventoryOperation(inventoryOperation);
@@ -754,15 +748,20 @@ async function intermediateInventoryOperationProcess(
       // Store the information (new operation) in redux context.
       dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
 
-      Toast.show({
-        type: 'success',
-        text1: 'Se ha registrado la operación de inventario exitosamente.',
-        text2: 'No ha habido ningún error durante el registro de la operación.',
-      });
-
       if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
         /* There is not extra instructions. */
+        Toast.show({
+          type: 'success',
+          text1: 'Se ha registrado el re-stock de producto exitosamente.',
+          text2: 'Se ha agregado los productos del re-stock de producto al inventario.',
+        });
       } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Se ha registrado la devolución de producto exitosamente.',
+          text2: 'Se ha registrado el inventario de devolución de producto exitosamente.',
+        });
+
         /* The inventory operation was an "product devolution inventoy" */
         // Creating a new work day operation for "end shift inventory".
         let nextDayOperation:IDayOperation
@@ -843,6 +842,13 @@ async function endShiftInventoryOperationProcess(
   const inventoryOperationDescription:IInventoryOperationDescription[]
     = creatingInventoryOperationDescription(inventory, inventoryOperation);
   try {
+
+    Toast.show({
+      type: 'info',
+      text1: 'Comenzando registro de inventario final.',
+      text2: 'Registrando inventario final.',
+    });
+
     // Storing information in embedded database.
     const resultInsertionInventoryOperation:IResponse<IInventoryOperation>
       = await insertInventoryOperation(inventoryOperation);
@@ -900,7 +906,11 @@ async function endShiftInventoryOperationProcess(
     */
 
     /* Closing work day operation */
-
+    Toast.show({
+      type: 'info',
+      text1: 'Cerrando el dia de trabajo.',
+      text2: 'Guardando información necesaria para terminar el dia correctamente.',
+    });
     /* Storing the end shift inventory of money and getting the date when the route was finished. */
     const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
       = finishingWorkDay(cashInventory, routeDay);
@@ -941,6 +951,10 @@ async function endShiftInventoryOperationProcess(
 
       // Store the information (new operation) in redux context.
       dispatch(setDayOperation(newDayOperation));
+
+      Toast.show({type: 'success',
+        text1:'Se ha registrado el inventario final exitosamente.',
+        text2: 'Se ha registrado el inventario final exitosamente.'});
 
       return true;
     } else {
@@ -1538,6 +1552,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             });
             navigation.navigate('routeOperationMenu');
           } else {
+            Toast.show({
+              type: 'info',
+              text1: 'Preparando el inventario final.',
+              text2: 'Preparando información para registrar el inventario final.',
+            });
             // Reseting states for making the end shift inventory.
             const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
               return {

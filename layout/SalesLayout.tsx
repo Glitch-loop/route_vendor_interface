@@ -210,6 +210,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     /*This handler inserts the sale in the database*/
     /* Validating that the payment a correct state for the payment method*/
     setFinishedSale(true); // Finishing sale payment process.
+
     try {
     /*
       When a vendor vistis a store, a transaction is created.
@@ -290,7 +291,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       });
 
       const index:number = updateInventory
-        .findIndex(currentProduct => {return currentProduct.id_product === product.id_product; });
+        .findIndex(currentProduct => { return currentProduct.id_product === product.id_product; });
       if(index === -1) {
         /* Do nothing */
       } else {
