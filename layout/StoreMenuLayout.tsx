@@ -170,7 +170,9 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
       setIsConsultTransaction(true);
 
     } catch (error) {
-      console.error('Something was wrong during transaction retrieving: ', error);
+      Toast.show({type: 'error',
+        text1:'Error al consultar las ventas de la tienda',
+        text2: 'Ha habido un error al intentar recuperar la información de la tienda.'});
     }
   };
 

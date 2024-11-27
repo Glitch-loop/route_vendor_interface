@@ -11,6 +11,7 @@ import { updateProductsInventory } from '../../redux/slices/productsInventorySli
 import {
   IDayOperation,
   IProductInventory,
+  IResponse,
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
@@ -38,6 +39,7 @@ import {
 // Services
 import { printTicketBluetooth } from '../../services/printerService';
 import Toast from 'react-native-toast-message';
+import { apiResponseStatus } from '../../utils/apiResponse';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -197,15 +199,15 @@ const SummarizeTransaction = ({
 
   const handleOnCancelASale = async () => {
     try {
+      /* The process for canceling a sale only is available for active transactions */
       if (currentTransaction.state === 1) {
-        /* The process for canceling a sale only is available for active transactions */
+
+        /* Creating a variable for storing the inventory with the products of the sale.
+        (To store current inventory + products of the sale). */
         const newInventory:IProductInventory[] = productInventory
           .map((product:IProductInventory) => { return product; });
 
-        /*
-          Adding the product reposition and product for sale of the transaction to be cancelled.
-        */
-
+        /* Adding the product reposition and product for sale of the transaction to be cancelled. */
         productsReposition.forEach((product:IProductInventory) => {
           const index = newInventory.findIndex((newInventoryProduct:IProductInventory) =>
             { return product.id_product === newInventoryProduct.id_product; });
@@ -238,27 +240,58 @@ const SummarizeTransaction = ({
         /* Desactivating state of transaciton */
         const updatedTransaction:IRouteTransaction = {
           ...currentTransaction,
-          state: 0,
+          state: 0, // 0 = Desactivated transaction.
         };
 
         // Updating embedded database
-        await updateTransaction(updatedTransaction);
+        const resultUpdationTransaction:IResponse<IRouteTransaction>
+          =  await updateTransaction(updatedTransaction);
 
         /* Updating inventory */
         // Updating embedded database
-        await updateProducts(newInventory);
+        const resultUpdationProductInventory:IResponse<IProductInventory[]>
+          = await updateProducts(newInventory);
 
-        // Updating redux context
-        dispatch(updateProductsInventory(newInventory));
 
-        /* Updating state of transaction; This will activate the 'desactivate status in the card'*/
-        setCurrentTransaction(updatedTransaction);
+        if (apiResponseStatus(resultUpdationTransaction, 200)
+        && apiResponseStatus(resultUpdationProductInventory, 200)) {
+          // Updating redux context
+          dispatch(updateProductsInventory(newInventory));
+
+          /* Updating state of transaction; This will activate the 'desactivate status in the card'*/
+          setCurrentTransaction(updatedTransaction);
+
+          Toast.show({type: 'success',
+            text1:'Transacción cancelada exitosamente.',
+            text2: 'Se ha cancelado la transacción exitosamente.'});
+
+        } else {
+          /* Something was wrong during the cancelation of the transaction */
+          // Ensuring the transaction is not cancelled
+          await updateTransaction(currentTransaction);
+
+          /* Ensuring the product inventory is in the previous state of the transaction cancelation operation */
+          await updateProducts(productInventory);
+
+          Toast.show({type: 'error',
+            text1:'Ha habido un error durante la cancelación de la transacción.',
+            text2: 'Ha hanido un error durante la cancelación de la transacción.'});
+        }
       } else {
         /* It is not possible to cancel a sale that is already cancelled */
       }
       setShowDialog(false);
     } catch (error) {
       setShowDialog(false);
+      // Ensuring the transaction is not cancelled
+      await updateTransaction(currentTransaction);
+
+      /* Ensuring the product inventory is in the previous state of the transaction cancelation operation */
+      await updateProducts(productInventory);
+
+      Toast.show({type: 'error',
+        text1:'Ha habido un error durante la cancelación de la transacción.',
+        text2: 'Ha hanido un error durante la cancelación de la transacción.'});
     }
   };
 
