@@ -16,6 +16,7 @@ import {
   IDayOperation,
   IPaymentMethod,
   IProductInventory,
+  IResponse,
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
@@ -57,6 +58,9 @@ import { updateProductsInventory } from '../redux/slices/productsInventorySlice'
 
 // Database
 import {
+  deleteRouteTransactionById,
+  deleteRouteTransactionOperationById,
+  deleteRouteTransactionOperationDescriptionsById,
   insertRouteTransaction,
   insertRouteTransactionOperation,
   insertRouteTransactionOperationDescription,
@@ -64,6 +68,26 @@ import {
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
+import { apiResponseStatus } from '../utils/apiResponse';
+
+const initialStateStore:IStore&IStoreStatusDay = {
+  id_store: '',
+  street: '',
+  ext_number: '',
+  colony: '',
+  postal_code: '',
+  address_reference: '',
+  store_name: '',
+  owner_name: '',
+  cellphone: '',
+  latitude: '',
+  longuitude: '',
+  id_creator: 0,
+  creation_date: '',
+  creation_context: '',
+  status_store: '',
+  route_day_state: 0,
+};
 
 function getInitialInventoryParametersFromRoute(params:any, inventoryName:string) {
   if (params === undefined) {
@@ -73,8 +97,7 @@ function getInitialInventoryParametersFromRoute(params:any, inventoryName:string
   }
 }
 
-function productCommitedValidation(
-  productInventory:IProductInventory[],
+function productCommitedValidation(productInventory:IProductInventory[],
   productsToCommit:IProductInventory[],
   productSharingInventory:IProductInventory[],
   isProductReposition:boolean) {
@@ -138,6 +161,273 @@ function productCommitedValidation(
   }
 
   return productsToCommit;
+}
+
+function determiningNextStatusOfStore(foundStore: IStore&IStoreStatusDay|undefined):IStore&IStoreStatusDay {
+
+  let updatedStore:IStore&IStoreStatusDay;
+  // Creating variable to store the new status
+  if (foundStore === undefined) {
+    updatedStore = { ...initialStateStore };
+  } else {
+    updatedStore = { ...foundStore };
+  }
+
+  if (foundStore !== undefined) {
+    /*
+      It means, the store is already plannified for this day, but we don't know if the client
+      asked to be visited or if it is a client that belongs to today.
+    */
+   // Determining new status based on this context.
+    if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
+      updatedStore = {
+        ...foundStore,
+        route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
+      };
+    } else {
+      /* This store belongs to the route of the today*/
+      // Update redux context.
+      updatedStore = {
+        ...foundStore,
+        route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
+      };
+
+    }
+  } else {
+    /*
+      If the user was not in the redux state "stores" that means that it is an special sale
+      without a "petition to visit"; Vendor visited a store that didn't belong to the route
+      and it didn't have a "petition to visit" status.
+    */
+    /*TO DO*/
+  }
+
+  return updatedStore;
+
+}
+
+
+/*
+  This function helps to determine if there is necessary to update the current day operation.
+
+  If it is necessary to update, the fucntion will return the next day operation, otherwise, it will 
+  return the current day operation.
+*/
+function determinigNextOperation(currentOperation: IDayOperation,
+  dayOperations: IDayOperation[],
+  stores:(IStore&IStoreStatusDay)[]
+):IDayOperation {
+  let nextDayOperation:IDayOperation = { ...currentOperation };
+
+  /* Determining if moving to the next operation. */
+  if (currentOperation.current_operation) {
+    /* Moving to the next operation */
+    // Updating embedded database
+    const index = dayOperations
+      .findIndex(operation => { return operation.id_item === currentOperation.id_item; });
+
+    if (index > -1) { // The operation is in the list of day operations to do.
+      if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
+        let candidateNextDayOperation:IDayOperation = dayOperations[index + 1];
+        /*
+          The vendor can follow the order of the route but also, he can
+          sell to any store, it doesn't matter if the store is the next one or
+          not, so it is needed to "find" the next day operation, not necessarily
+          the next operation in the list.
+        */
+        // Searching the day operation (next store in status of pending)
+        // For always going to start in the next day operation.
+        for (let i = index + 1; i < dayOperations.length; i++) {
+            // Finding in the array of stores that one that corresponds to the day operation
+            const currentStore = stores.find((store:IStore&IStoreStatusDay) => {
+              return dayOperations[i].id_item === store.id_store;
+            });
+
+            if(currentStore !== undefined) {
+              if(currentStore.route_day_state === enumStoreStates.PENDING_TO_VISIT
+              || currentStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
+                /*
+                  Store gathers the criteria to be the next current operation.
+
+                  Remember that:
+                  - PENDING TO VISIT: It is the state on which the store belogns to the current
+                  workday but it hasn't been visited.
+                  - REQUEST FOR VISTING: It is the state on which the store doesn't belongs
+                  to the current workday but they asked to be visited today.
+                */
+                candidateNextDayOperation = dayOperations[i];
+                break;
+              } else {
+                /* There is not instructions; Store doesn't accomplish the criteria. */
+              }
+            } else {
+              /* There is not instructions; Store doesn't exists in the "stores" state */
+            }
+        }
+
+      nextDayOperation = { ...candidateNextDayOperation };
+
+      } else {
+        /*
+          If it is the last operation, then it is not needed to move to the next one because
+          the vendor is already in the last one.
+        */
+      }
+    } else { /* There is not instructions. */ }
+  } else {
+    /*
+      If the current store is not the current operation, then, it is not needed to make
+      anything.
+
+      The pointer that points to the current operation is only going to move when the store
+      that is being selling is current operation.
+
+      In this context, the vendor is selling a store that has already visited or
+      that is pending to visit.
+    */
+  }
+
+  return nextDayOperation;
+}
+
+async function updateDayOperations(currentOperation: IDayOperation, nextDayOperation: IDayOperation)
+:Promise<boolean> {
+  try {
+    let resultProcess:boolean = true;
+    let resultUpdateCurrentDay:IResponse<IDayOperation>;
+    let resultUpdateNextDay:IResponse<IDayOperation>;
+
+    if (currentOperation.id_day_operation !== nextDayOperation.id_day_operation) {
+      // Update embedded database.
+      resultUpdateCurrentDay = await updateDayOperation({
+        ...currentOperation,
+        current_operation: 0,
+      });
+
+      resultUpdateNextDay = await updateDayOperation({
+        ...nextDayOperation,
+        current_operation: 1,
+      });
+
+      if (apiResponseStatus(resultUpdateCurrentDay, 200)
+      && apiResponseStatus(resultUpdateNextDay, 200)) {
+        resultProcess = true;
+      } else {
+        resultProcess = false;
+      }
+    } else {
+      /* It means, there is not a new current day. The current day remains */
+    }
+
+    return resultProcess;
+  } catch (error) {
+    return false;
+  }
+}
+
+function createRouteTransactionOperation(
+  routeTransaction:IRouteTransaction,
+  typeOfOperation:string):IRouteTransactionOperation {
+  const { id_route_transaction } = routeTransaction;
+
+  const routeTransactionOperation:IRouteTransactionOperation = {
+    id_route_transaction_operation: uuidv4(),
+    id_route_transaction: id_route_transaction,
+    id_route_transaction_operation_type: typeOfOperation,
+  };
+
+  return routeTransactionOperation;
+}
+
+function createRouteTransactionOperationDescription(
+  routeTransactionOperation:IRouteTransactionOperation,
+  movementInTransaction: IProductInventory[]
+):IRouteTransactionOperationDescription[] {
+  const routeTransactionOperationDescriptions:IRouteTransactionOperationDescription[] = [];
+
+  const { id_route_transaction_operation } = routeTransactionOperation;
+
+  movementInTransaction.forEach((product) => {
+    const {price, amount, id_product} = product;
+    routeTransactionOperationDescriptions.push({
+      id_route_transaction_operation_description: uuidv4(),
+      price_at_moment: price,
+      amount: amount,
+      id_route_transaction_operation: id_route_transaction_operation,
+      id_product: id_product,
+    });
+  });
+
+  return routeTransactionOperationDescriptions;
+}
+
+function substractingProductFromCurrentInventory(currentInventory: IProductInventory[],
+  inventoryToSubstract:IProductInventory[]):IProductInventory[] {
+    // Creating a copy of the current inventory
+    const updatedInventory:IProductInventory[] = currentInventory
+    .map((product:IProductInventory) => { return { ...product }; });
+
+    inventoryToSubstract.forEach((product:IProductInventory) => {
+      const amountToSubstract:number = product.amount;
+
+      const index:number = updatedInventory.findIndex(currentProduct =>
+          { return currentProduct.id_product === product.id_product; });
+
+      const currentAmount:number = updatedInventory[index].amount;
+
+      if(index === -1) {
+        /* Do nothing */
+      } else {
+        updatedInventory[index] = {
+          ...updatedInventory[index],
+          amount: currentAmount - amountToSubstract,
+        };
+      }
+
+    });
+
+    return updatedInventory;
+}
+
+async function insertionTransactionOperationsAndOperationDescriptions(
+  routeTransactionOperation:IRouteTransactionOperation,
+  routeTransactionOperationDescription:IRouteTransactionOperationDescription[]
+):Promise<boolean> {
+  try {
+    let resultInsertion:boolean = true;
+    if (routeTransactionOperationDescription[0] !== undefined) {
+      /* There was a movement in concept of devolution. */
+      let resultInsertionOperationDevolution:IResponse<IRouteTransactionOperation>
+        = await insertRouteTransactionOperation(routeTransactionOperation);
+      let resultInsertionOperationDescriptionDevolution
+      :IResponse<IRouteTransactionOperationDescription[]>
+        = await insertRouteTransactionOperationDescription(routeTransactionOperationDescription);
+
+        if (apiResponseStatus(resultInsertionOperationDevolution, 201)
+        && apiResponseStatus(resultInsertionOperationDescriptionDevolution, 201)) {
+          resultInsertion = true;
+        } else {
+          Toast.show({
+            type: 'error',
+            text1:'Ha habido un error durante el registro de la venta',
+            text2: 'Ha habido un error al insertar una de las descripciones de la venta'});
+          resultInsertion = false;
+        }
+    } else {
+      /* It means, that there is not movements for the current operation,
+         so, it won't be registered  */
+      resultInsertion = true;
+    }
+
+    return resultInsertion;
+  } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1:'Ha habido un error durante el registro de la venta',
+      text2: 'Ha habido un error al insertar una de las descripciones de la venta'});
+    return false;
+  }
+
 }
 
 const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
@@ -211,7 +501,8 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     /* Validating that the payment a correct state for the payment method*/
     setFinishedSale(true); // Finishing sale payment process.
 
-    try {
+    // Creating route transaction
+
     /*
       When a vendor vistis a store, a transaction is created.
 
@@ -227,6 +518,21 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       counts with at least one transaction operation movement (this one is actual movement inventory and
       cash {inflow/outflow} operations that were made in the visit to the store).
     */
+      Toast.show({
+        type: 'info',
+        text1:'Comenzando proceso para registrar la venta',
+        text2: 'Iniciando proceso para registrar la venta'});
+
+    // Variables to perform operations.
+    // Variable get the inventory after route transaction.
+    const updateInventory:IProductInventory[] = [];
+
+    // Variables used to store the response of the insertions
+    // Bands for determine if there was during the process.
+    let resultOperationDevolution:boolean = true;
+    let resultOperationSale:boolean       = true;
+    let resultOperationReposition:boolean = true;
+
     // Creating transaction
     const routeTransaction:IRouteTransaction = {
       id_route_transaction: uuidv4(),
@@ -238,116 +544,102 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       id_store: currentOperation.id_item, // Item will be the id of the store in question.
     };
 
-    // Creating transaction operations
-    const saleRouteTransactionOperation:IRouteTransactionOperation = {
-      id_route_transaction_operation: uuidv4(),
-      id_route_transaction: routeTransaction.id_route_transaction,
-      id_route_transaction_operation_type: DAYS_OPERATIONS.sales,
-    };
+    // Creating route transaction operations
+    const productDevolutionRouteTransactionOperation:IRouteTransactionOperation
+      = createRouteTransactionOperation(routeTransaction, DAYS_OPERATIONS.product_devolution);
 
-    const productDevolutionRouteTransactionOperation:IRouteTransactionOperation = {
-      id_route_transaction_operation: uuidv4(),
-      id_route_transaction: routeTransaction.id_route_transaction,
-      id_route_transaction_operation_type: DAYS_OPERATIONS.product_devolution,
-    };
+    const productRepositionRouteTransactionOperation:IRouteTransactionOperation
+      = createRouteTransactionOperation(routeTransaction, DAYS_OPERATIONS.product_reposition);
 
-    const productRepositionRouteTransactionOperation:IRouteTransactionOperation = {
-      id_route_transaction_operation: uuidv4(),
-      id_route_transaction: routeTransaction.id_route_transaction,
-      id_route_transaction_operation_type: DAYS_OPERATIONS.product_reposition,
-    };
+    const saleRouteTransactionOperation:IRouteTransactionOperation
+      = createRouteTransactionOperation(routeTransaction, DAYS_OPERATIONS.sales);
+
 
     // Creating description for each type of transaction operation.
-    const saleRouteTransactionOperationDescription:IRouteTransactionOperationDescription[] = [];
-    const productDevolutionRouteTransactionOperationDescription
-      :IRouteTransactionOperationDescription[] = [];
-    const productRepositionRouteTransactionOperationDescription
-      :IRouteTransactionOperationDescription[] = [];
+    /*
+      The information used to create the route transaction operation description
+      comes from the states that are in this component.
+    */
 
-
-    // Variable get the inventory after sale.
-    const updateInventory = productInventory.map((product) => {return {...product};});
-
-    //Extracting information from the selling process.
     // Product devolution
-    productDevolution.forEach((product) => {
-      productDevolutionRouteTransactionOperationDescription.push({
-        id_route_transaction_operation_description: uuidv4(),
-        price_at_moment: product.price,
-        amount: product.amount,
-        id_route_transaction_operation: productDevolutionRouteTransactionOperation.id_route_transaction_operation,
-        id_product: product.id_product,
-      });
-    });
+    const productDevolutionRouteTransactionOperationDescription
+      :IRouteTransactionOperationDescription[]
+      = createRouteTransactionOperationDescription(
+        productDevolutionRouteTransactionOperation,
+        productDevolution);
 
     // Sale
-    productSale.forEach((product) => {
-      saleRouteTransactionOperationDescription.push({
-        id_route_transaction_operation_description: uuidv4(),
-        price_at_moment: product.price,
-        amount: product.amount,
-        id_route_transaction_operation: saleRouteTransactionOperation.id_route_transaction_operation,
-        id_product: product.id_product,
-      });
+    const saleRouteTransactionOperationDescription
+      :IRouteTransactionOperationDescription[]
+      = createRouteTransactionOperationDescription(
+        saleRouteTransactionOperation,
+        productSale);
 
-      const index:number = updateInventory
-        .findIndex(currentProduct => { return currentProduct.id_product === product.id_product; });
-      if(index === -1) {
-        /* Do nothing */
-      } else {
-        updateInventory[index] = {
-          ...updateInventory[index],
-          amount: updateInventory[index].amount - product.amount,
-        };
-      }
-    });
+      // Product reposition
+    const productRepositionRouteTransactionOperationDescription
+      :IRouteTransactionOperationDescription[]
+      = createRouteTransactionOperationDescription(
+        productRepositionRouteTransactionOperation,
+        productReposition);
 
-    // Product reposition
-    productReposition.forEach((product) => {
-      productRepositionRouteTransactionOperationDescription.push({
-        id_route_transaction_operation_description: uuidv4(),
-        price_at_moment: product.price,
-        amount: product.amount,
-        id_route_transaction_operation: productRepositionRouteTransactionOperation.id_route_transaction_operation,
-        id_product: product.id_product,
-      });
+    /* Updating the inventory substrating it product sale and product reposition from the
+        current inventory.
 
-      const index:number = updateInventory
-      .findIndex(currentProduct => {return currentProduct.id_product === product.id_product; });
+      The intention of this is to get the inventory after the route transaction operations.
 
-      if(index === -1) {
-        /* Do nothing */
-      } else {
-        updateInventory[index] = {
-          ...updateInventory[index],
-          amount: updateInventory[index].amount - product.amount,
-        };
-      }
-    });
+      To make this, it is needed to substract the product of the concepts of "selling" and
+      "product reposition" from the current operation.
 
-    console.log("Creating transaction")
+      Once this is done, we got the inventory with the new amounts.
+
+      Note product devolution doesn't have any effect in the current inventory.
+      This concept is handler in a different way.
+    */
+    substractingProductFromCurrentInventory(
+      substractingProductFromCurrentInventory(productInventory, productReposition),
+      productSale)
+        .forEach((updatedProduct:IProductInventory) => { updateInventory.push(updatedProduct); });
+
     // Storing transaction
-     await insertRouteTransaction(routeTransaction);
-    if (productDevolutionRouteTransactionOperationDescription[0] !== undefined) {
-      console.log("Creating devolution transaction operation")
-      /* There was a movement in concept of devolution. */
-      await insertRouteTransactionOperation(productDevolutionRouteTransactionOperation);
-      await insertRouteTransactionOperationDescription(productDevolutionRouteTransactionOperationDescription);
-    }
+    Toast.show({
+      type: 'info',
+      text1:'Guardando venta',
+      text2: 'Registrando los movimientos de la venta.'});
 
-    if (saleRouteTransactionOperationDescription[0] !== undefined) {
-      console.log("Creating  transaction operation")
-      /* There was a movement in concept of sale. */
-      await insertRouteTransactionOperation(saleRouteTransactionOperation);
-      await insertRouteTransactionOperationDescription(saleRouteTransactionOperationDescription);
-    }
+    // Storing the route transaction in the database
+    console.log("Creating transaction")
 
-    if (productRepositionRouteTransactionOperationDescription[0] !== undefined) {
-      console.log("Creating reposition transaction operation")
-      /* There was a movement in concept of reposition. */
-      await insertRouteTransactionOperation(productRepositionRouteTransactionOperation);
-      await insertRouteTransactionOperationDescription(productRepositionRouteTransactionOperationDescription);
-    }
+    // Updating the status of the store
+    const foundStore:(IStore&IStoreStatusDay|undefined) = stores.find(store => store.id_store === currentOperation.id_item);
+
+    const updatedStore:IStore&IStoreStatusDay = determiningNextStatusOfStore(foundStore);
+
+    /*
+      Verifying the vendor is not making a second sale to a store that has already
+      sold (in the route).
+
+      If the current store is the current operation to do (it is the "turn" of the store
+      to be visited), then it means that after this sale, the vendor has to go to the "next
+      store" (it is needed to update the current operation).
+
+      Otherwise, it means that the vendor is visiting other store that is not the current one.
+    */
+    const nextDayOperation:IDayOperation = determinigNextOperation(currentOperation, dayOperations, stores);
+
+    try {
+    // Inserting the transaction
+    const resultInsertionRouteTransaction:IResponse<IRouteTransaction>
+      = await insertRouteTransaction(routeTransaction);
+
+    // Inserting movements of the route transaction
+    resultOperationDevolution = await insertionTransactionOperationsAndOperationDescriptions(productDevolutionRouteTransactionOperation,
+      productDevolutionRouteTransactionOperationDescription);
+
+    resultOperationReposition = await insertionTransactionOperationsAndOperationDescriptions(productRepositionRouteTransactionOperation,
+      productRepositionRouteTransactionOperationDescription);
+
+    resultOperationSale = await insertionTransactionOperationsAndOperationDescriptions(saleRouteTransactionOperation,
+      saleRouteTransactionOperationDescription);
 
     // Updating inventory
     /*
@@ -358,148 +650,121 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       in this case, this movements will be gathered until the end of shift to calculate an
       inventory to determine the "product devolution inventory".
     */
-    // Updating redux context
-    dispatch(updateProductsInventory(updateInventory));
+    Toast.show({
+      type: 'info',
+      text1:'Actualizando inventario',
+      text2: 'Registrando cambios en el inventario.'});
 
     // Updating embedded database
-    await updateProducts(updateInventory);
+    let resultUpdateProducts:IResponse<IProductInventory[]> = await updateProducts(updateInventory);
 
-    // Updating the status of the store
-    const foundStore:(IStore&IStoreStatusDay|undefined)
-      = stores.find(store => store.id_store === currentOperation.id_item);
-
-
-    if (foundStore !== undefined) {
-      /*
-        It means, the store is already plannified for this day, but we don't know if the client
-        asked to be visited or if it is a client that belongs to today.
-      */
-      if(foundStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING) {
-        /* This store doesn't belong to this day, but it was requested to be visited. */
-        // Update redux context
-        dispatch(updateStores([{
-          ...foundStore,
-          route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
-        }]));
+    // Updating store's status
+    /*
+      Once the inventory has been updated successfully, the store's status will be
+      updating depending on the context of the store in the route.
+    */
+    Toast.show({
+      type: 'info',
+      text1:'Actualizando estatus de la tienda',
+      text2: 'Cambiando el estatus de la tienda en la ruta.'});
 
 
-        // Update embedded database
-        await updateStore({
-          ...foundStore,
-          route_day_state: determineRouteDayState(foundStore.route_day_state, 4),
-        });
-      } else {
-        /* This store belongs to the route of the today*/
-        // Update redux context.
-        dispatch(updateStores([{
-          ...foundStore,
-          route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
-        }]));
+    let resultUpdatingStore = await updateStore(updatedStore);
 
+    // Updating day operations
+    let resultUpdateDayOperations:boolean = await updateDayOperations(currentOperation, nextDayOperation);
 
-        // Update embedded context.
-        await updateStore({
-          ...foundStore,
-          route_day_state: determineRouteDayState(foundStore.route_day_state, 2),
-        });
+    // Validating the process was correctly completed
+    if (apiResponseStatus(resultInsertionRouteTransaction, 201)
+    && resultOperationDevolution
+    && resultOperationReposition
+    && resultOperationSale
+    && apiResponseStatus(resultUpdateProducts, 200)
+    && apiResponseStatus(resultUpdatingStore, 200)
+    && resultUpdateDayOperations
+    ) {
+      Toast.show({
+        type: 'success',
+        text1:'Se ha registrado la venta satisfactoriamente.',
+        text2: 'Se ha registrado la venta satisfactoriamente.'});
 
-        // Updating day operations
-        /*
-          Verifying the vendor is not making a second sale to a store that has already
-          sold (in the route).
+      // Updating redux states
+      dispatch(updateProductsInventory(updateInventory));
 
-          If the current store is the current operation to do (it is the "turn" of the store
-          to be visited), then it means that after this sale, the vendor has to go to the "next
-          store" (it is needed to update the current operation).
+      /* This store doesn't belong to this day, but it was requested to be visited. */
+      // Update redux context
+      dispatch(updateStores([ updatedStore ]));
 
-          Otherwise, it means that the vendor is visiting other store that is not the current one.
-        */
-
-       /* Determining if moving to the next operation. */
-        if (currentOperation.current_operation) {
-          /* Moving to the next operation */
-          // Updating embedded database
-          const index = dayOperations.findIndex(operation => {return operation.id_item === currentOperation.id_item;});
-
-          if (index > -1) { // The operation is in the list of day operations to do.
-            if (index + 1 < dayOperations.length) { // Verifying it is not the last day operation.
-              const currentDayOperation:IDayOperation = dayOperations[index];
-              let nextDayOperation:IDayOperation = dayOperations[index + 1];
-              /*
-                The vendor can follow the order of the route but also, he can
-                sell to any store, it doesn't matter if the store is the next one or
-                not, so it is needed to "find" the next day operation, not necessarily
-                the next operation in the list.
-              */
-              // Searching the day operation (next store in status of pending)
-              // For always going to start in the next day operation.
-              for (let i = index + 1; i < dayOperations.length; i++) {
-                  // Finding in the array of stores that one that corresponds to the day operation
-                  const currentStore = stores.find((store:IStore&IStoreStatusDay) => {
-                    return dayOperations[i].id_item === store.id_store;
-                  });
-
-                  if(currentStore !== undefined) {
-                    if(currentStore.route_day_state === enumStoreStates.PENDING_TO_VISIT
-                    || currentStore.route_day_state === enumStoreStates.REQUEST_FOR_SELLING
-                    ) {
-                      /*
-                        Store gathers the criteria to be the next current operation.
-
-                        Remember that:
-                        - PENDING TO VISIT: It is the state on which the store belogns to the current
-                        workday but it hasn't been visited.
-                        - REQUEST FOR VISTING: It is the state on which the store doesn't belongs
-                        to the current workday but they asked to be visited today.
-                      */
-                      nextDayOperation = dayOperations[i];
-                      break;
-                    } else {
-                      /* There is not instructions; Store doesn't accomplish the criteria. */
-                    }
-                  } else {
-                    /* There is not instructions; Store doesn't exists in the "stores" state */
-                  }
-              }
-
-
-              // Updating redux state for the current operation
-              dispatch(setCurrentOperation(nextDayOperation));
-
-              // Updating in database that the current operation is not longer the current one
-              currentDayOperation.current_operation = 0;
-              nextDayOperation.current_operation = 1;
-
-              // Update embedded database.
-              await updateDayOperation({
-                ...currentDayOperation,
-                current_operation: 0,
-              });
-              await updateDayOperation({
-                ...nextDayOperation,
-                current_operation: 1,
-              });
-            }
-          }
-        } else {
-          /*
-            Do nothing (the vendor is making a sale for a previous or next store from the current one)
-          */
-        }
+      if (nextDayOperation.id_day_operation !== currentOperation.id_day_operation) {
+        // Updating redux state for the current operation
+        dispatch(setCurrentOperation(nextDayOperation));
       }
     } else {
-      /*
-        If the user was not in the state "stores" that means that it is an special sale
-        without a "petition to visit".
-      */
-      /*To do*/
+      Toast.show({
+        type: 'error',
+        text1:'Hubo un problema durante el registro de la venta',
+        text2: 'Hubo un problema durante el registro de la venta, porfavor, intente nuevamente.'});
+
+      // Deleting route transaction operations descriptions
+      await deleteRouteTransactionOperationDescriptionsById(productDevolutionRouteTransactionOperationDescription);
+      await deleteRouteTransactionOperationDescriptionsById(productRepositionRouteTransactionOperationDescription);
+      await deleteRouteTransactionOperationDescriptionsById(saleRouteTransactionOperationDescription);
+
+      // Deleting route transaction operations
+      await deleteRouteTransactionOperationById(productDevolutionRouteTransactionOperation);
+      await deleteRouteTransactionOperationById(saleRouteTransactionOperation);
+      await deleteRouteTransactionOperationById(productRepositionRouteTransactionOperation);
+
+      // Deleting route transaction
+      await deleteRouteTransactionById(routeTransaction);
+
+      // Recoverying inventory to before the transaction
+      await updateProducts(productInventory);
+
+      // Recoverying the store state to before the transaction
+      if (foundStore !== undefined) {
+        await updateStore(foundStore);
+      } else { /* The store was not registered in the store to visit today. */ }
+
+      // Recoverying the operations to before the transactions
+      await updateDayOperations(nextDayOperation, currentOperation);
     }
 
-      setResultSaleState(true); // The sale was completed successfully.
+    setResultSaleState(true); // The sale was completed successfully.
     } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1:'Hubo un problema durante el registro de la venta',
+        text2: 'Hubo un problema durante el registro de la venta, porfavor, intente nuevamente.'});
+
+        // Deleting route transaction operations descriptions
+        await deleteRouteTransactionOperationDescriptionsById(productDevolutionRouteTransactionOperationDescription);
+        await deleteRouteTransactionOperationDescriptionsById(productRepositionRouteTransactionOperationDescription);
+        await deleteRouteTransactionOperationDescriptionsById(saleRouteTransactionOperationDescription);
+
+        // Deleting route transaction operations
+        await deleteRouteTransactionOperationById(productDevolutionRouteTransactionOperation);
+        await deleteRouteTransactionOperationById(saleRouteTransactionOperation);
+        await deleteRouteTransactionOperationById(productRepositionRouteTransactionOperation);
+
+        // Deleting route transaction
+        await deleteRouteTransactionById(routeTransaction);
+
+        // Recoverying inventory to before the transaction
+        await updateProducts(productInventory);
+
+        // Recoverying the store state to before the transaction
+        if (foundStore !== undefined) {
+          await updateStore(foundStore);
+        } else { /* The store was not registered in the store to visit today. */ }
+
+        // Recoverying the operations to before the transactions
+        await updateDayOperations(nextDayOperation, currentOperation);
       setResultSaleState(false); // Something was wrong during the sale.
     }
   };
+
+  
 
   const handlerOnSuccessfullCompletionSale = async () => {
     navigation.navigate('routeOperationMenu');
@@ -513,10 +778,12 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
   const handlerOnPrintTicket = async () => {
     try {
-      await printTicketBluetooth(
-        getTicketSale(productDevolution,productReposition, productSale));
+      await printTicketBluetooth(getTicketSale(productDevolution,productReposition, productSale));
     } catch(error) {
-      await getPrinterBluetoothConnction();
+      Toast.show({
+        type: 'error',
+        text1:'Hubo un problema de conexción con la impresora.',
+        text2: 'No se encontro la impresora, porfavor intente conectarla con el telefono he intente nuevamente.'});
     }
   };
 

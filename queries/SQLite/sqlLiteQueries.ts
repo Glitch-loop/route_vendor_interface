@@ -1245,3 +1245,66 @@ export async function deleteAllRouteTransactionOperationDescriptions():Promise<I
     return createApiResponse<null>(500, null, null, 'Failed deleting route transaction operation descriptions.');
   }
 }
+
+export async function deleteRouteTransactionById(routeTransaction:IRouteTransaction)
+:Promise<IResponse<null>> {
+  try {
+    const { id_route_transaction } = routeTransaction;
+
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS} WHERE id_route_transaction = ?;`, [id_route_transaction]);
+    });
+
+    return createApiResponse<null>(200, null, null, 'Route transaction deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting route transaction.');
+  }
+}
+
+export async function deleteRouteTransactionOperationById(routeTransactionOperation:IRouteTransactionOperation)
+:Promise<IResponse<null>> {
+  try {
+    const { id_route_transaction_operation } = routeTransactionOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx
+      .executeSql(`DELETE FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS} WHERE id_route_transaction_operation = ?;`,
+        [id_route_transaction_operation]);
+    });
+
+    return createApiResponse<null>(200, null, null, 'Route transaction operation description deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting route transaction operation.');
+  }
+}
+
+export async function deleteRouteTransactionOperationDescriptionsById(routeTransactionOperationDescription
+:IRouteTransactionOperationDescription[]):Promise<IResponse<null>> {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    const totalOperationDescriptions:number = routeTransactionOperationDescription.length;
+
+    await sqlite.transaction(async (tx) => {
+      for (let i = 0; i < totalOperationDescriptions; i++) {
+        const { id_route_transaction_operation_description } = routeTransactionOperationDescription[i];
+        try {
+          await tx
+          .executeSql(`DELETE FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS} WHERE id_route_transaction_operation_description = ?;`, 
+          [ id_route_transaction_operation_description ]);
+        } catch (error) {
+          return createApiResponse<null>(500, null, null, 'Failed deleting route transaction operation description (loop level).');
+        }
+      }
+    });
+
+    return createApiResponse<null>(200, null, null, 'Route transactions operations description deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting route transaction operation description (function level).');
+  }
+}
