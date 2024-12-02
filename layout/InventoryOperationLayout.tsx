@@ -554,10 +554,10 @@ async function startShiftInventoryOperationProcess(
       dispatch(setArrayDayOperations(dayOperationsOfStores));
 
       // Setting as the new "current operation" the first store of the route.
-      dispatch(setNextOperation());
+      //dispatch(setNextOperation());
 
       Toast.show({
-        type: 'info',
+        type: 'success',
         text1: 'Se ha registrado el inventario inicial con exito.',
         text2: 'El proceso para registrar el inventario inicial ha sido completado exitosamente.',
       });
