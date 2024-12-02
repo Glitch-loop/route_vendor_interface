@@ -557,7 +557,7 @@ async function startShiftInventoryOperationProcess(
       dispatch(setNextOperation());
 
       Toast.show({
-        type: 'success',
+        type: 'info',
         text1: 'Se ha registrado el inventario inicial con exito.',
         text2: 'El proceso para registrar el inventario inicial ha sido completado exitosamente.',
       });
@@ -600,6 +600,7 @@ async function startShiftInventoryOperationProcess(
       return false;
     }
   } catch (error) {
+    console.log(error)
     Toast.show({
       type: 'error',
       text1: 'Ha habido un error durante el registro del inventario inicial.',

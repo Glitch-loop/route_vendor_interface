@@ -66,14 +66,26 @@ export function apiResponseProcess<T>(
   // toastMessageError?:string
 ):T{
 
-  const {
-    showSuccessMessage,
-    toastTitleSuccess,
-    toastMessageSuccess,
-    showErrorMessage,
-    toastTitleError,
-    toastMessageError,
-  } = configProcess;
+  // Variables used to determine what to print.
+  let showSuccessMessage:boolean = false;
+  let toastTitleSuccess:string = '';
+  let toastMessageSuccess:string = '';
+  let showErrorMessage:boolean = false;
+  let toastTitleError:string = '';
+  let toastMessageError:string = '';
+
+  // Variables to set configurations for toasts.
+  if (configProcess) {
+    // User provided a configuration
+    showSuccessMessage = configProcess.showSuccessMessage;
+    toastTitleSuccess = configProcess.toastTitleSuccess;
+    toastMessageSuccess = configProcess.toastMessageSuccess;
+    showErrorMessage = configProcess.showErrorMessage;
+    toastTitleError = configProcess.toastTitleError;
+    toastMessageError = configProcess.toastMessageError;
+  } else {
+    // User didn't provide a configuration.
+  }
 
   let title:string = '';
   let message:string = '';

@@ -764,8 +764,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     }
   };
 
-  
-
   const handlerOnSuccessfullCompletionSale = async () => {
     navigation.navigate('routeOperationMenu');
   };
