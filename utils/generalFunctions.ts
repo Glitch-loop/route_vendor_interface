@@ -24,6 +24,18 @@ export function convertingDictionaryInArray(dictionary:any) {
   return newArray;
 }
 
+export function convertingArrayInDictionary(arrData:any[], fieldForKey:string) {
+  const newDict:any = {};
+
+  for (let  i = 0; i < arrData.length; i++) {
+    const key = arrData[i][fieldForKey];
+
+    newDict[key] = arrData[i];
+  }
+
+  return newDict;
+}
+
 export function addingInformationParticularFieldOfObject(
   dictionary: any,
   idField: string,

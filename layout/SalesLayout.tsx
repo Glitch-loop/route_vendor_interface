@@ -320,6 +320,7 @@ async function updateDayOperations(currentOperation: IDayOperation, nextDayOpera
     }
 
     return resultProcess;
+
   } catch (error) {
     return false;
   }
@@ -397,14 +398,15 @@ async function insertionTransactionOperationsAndOperationDescriptions(
     let resultInsertion:boolean = true;
     if (routeTransactionOperationDescription[0] !== undefined) {
       /* There was a movement in concept of devolution. */
-      let resultInsertionOperationDevolution:IResponse<IRouteTransactionOperation>
+      let resultInsertionOperation:IResponse<IRouteTransactionOperation>
         = await insertRouteTransactionOperation(routeTransactionOperation);
-      let resultInsertionOperationDescriptionDevolution
+      let resultInsertionOperationDescription
       :IResponse<IRouteTransactionOperationDescription[]>
         = await insertRouteTransactionOperationDescription(routeTransactionOperationDescription);
 
-        if (apiResponseStatus(resultInsertionOperationDevolution, 201)
-        && apiResponseStatus(resultInsertionOperationDescriptionDevolution, 201)) {
+        if (apiResponseStatus(resultInsertionOperation, 201)
+        && apiResponseStatus(resultInsertionOperationDescription, 201)) {
+          console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
           resultInsertion = true;
         } else {
           Toast.show({
@@ -413,14 +415,17 @@ async function insertionTransactionOperationsAndOperationDescriptions(
             text2: 'Ha habido un error al insertar una de las descripciones de la venta'});
           resultInsertion = false;
         }
+
     } else {
       /* It means, that there is not movements for the current operation,
          so, it won't be registered  */
+      console.log("There is not records to register")
       resultInsertion = true;
     }
 
     return resultInsertion;
   } catch (error) {
+    console.log("Error in transaction operation description: ", error)
     Toast.show({
       type: 'error',
       text1:'Ha habido un error durante el registro de la venta',
@@ -627,10 +632,16 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     const nextDayOperation:IDayOperation = determinigNextOperation(currentOperation, dayOperations, stores);
 
     try {
+
+    console.log("Transaction")
     // Inserting the transaction
     const resultInsertionRouteTransaction:IResponse<IRouteTransaction>
-      = await insertRouteTransaction(routeTransaction);
-
+    = await insertRouteTransaction(routeTransaction);
+    
+    console.log("Transaction operation")
+    // Inserting route transaction operations
+    
+    console.log("Transaction operation description")
     // Inserting movements of the route transaction
     resultOperationDevolution = await insertionTransactionOperationsAndOperationDescriptions(productDevolutionRouteTransactionOperation,
       productDevolutionRouteTransactionOperationDescription);
@@ -641,6 +652,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     resultOperationSale = await insertionTransactionOperationsAndOperationDescriptions(saleRouteTransactionOperation,
       saleRouteTransactionOperationDescription);
 
+      console.log("Inserting transaction operation")
     // Updating inventory
     /*
       Sales and product reposition will directly be substracted from the inventory
@@ -656,6 +668,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       text2: 'Registrando cambios en el inventario.'});
 
     // Updating embedded database
+    console.log("Updating product")
     let resultUpdateProducts:IResponse<IProductInventory[]> = await updateProducts(updateInventory);
 
     // Updating store's status
@@ -669,11 +682,21 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       text2: 'Cambiando el estatus de la tienda en la ruta.'});
 
 
+    console.log("Updating store")
     let resultUpdatingStore = await updateStore(updatedStore);
 
     // Updating day operations
+    console.log("Update day operations")
     let resultUpdateDayOperations:boolean = await updateDayOperations(currentOperation, nextDayOperation);
 
+
+    console.log("resultInsertionRouteTransaction: ", apiResponseStatus(resultInsertionRouteTransaction, 201))
+    console.log("resultOperationDevolution: ", resultOperationDevolution)
+    console.log("resultOperationReposition: ", resultOperationReposition)
+    console.log("resultOperationSale: ", resultOperationSale)
+    console.log("resultUpdateProducts: ", apiResponseStatus(resultUpdateProducts, 200))
+    console.log("resultUpdatingStore: ", apiResponseStatus(resultUpdatingStore, 200))
+    console.log("resultUpdateDayOperations: ", resultUpdateDayOperations)
     // Validating the process was correctly completed
     if (apiResponseStatus(resultInsertionRouteTransaction, 201)
     && resultOperationDevolution
@@ -683,6 +706,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     && apiResponseStatus(resultUpdatingStore, 200)
     && resultUpdateDayOperations
     ) {
+      console.log("Updating states")
       Toast.show({
         type: 'success',
         text1:'Se ha registrado la venta satisfactoriamente.',
@@ -699,7 +723,10 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
         // Updating redux state for the current operation
         dispatch(setCurrentOperation(nextDayOperation));
       }
+
+      setResultSaleState(true); // The sale falied.
     } else {
+      console.log("eroereor que ndoando")
       Toast.show({
         type: 'error',
         text1:'Hubo un problema durante el registro de la venta',
@@ -728,10 +755,12 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
       // Recoverying the operations to before the transactions
       await updateDayOperations(nextDayOperation, currentOperation);
+
+      setResultSaleState(false); // The sale falied.
     }
 
-    setResultSaleState(true); // The sale was completed successfully.
     } catch (error) {
+      console.log("error")
       Toast.show({
         type: 'error',
         text1:'Hubo un problema durante el registro de la venta',

@@ -600,7 +600,6 @@ async function startShiftInventoryOperationProcess(
       return false;
     }
   } catch (error) {
-    console.log(error)
     Toast.show({
       type: 'error',
       text1: 'Ha habido un error durante el registro del inventario inicial.',

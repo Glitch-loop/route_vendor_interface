@@ -741,7 +741,7 @@ export async function updateDayOperation(dayOperation: IDayOperation)
       ]);
     });
 
-    return createApiResponse<IDayOperation>(201, dayOperation, null, 'Day operation updated successfully.');
+    return createApiResponse<IDayOperation>(200, dayOperation, null, 'Day operation updated successfully.');
   } catch(error) {
 
     return createApiResponse<IDayOperation>(500, dayOperation, null, 'Failed updating day operation.');
@@ -809,8 +809,7 @@ export async function getInventoryOperation(id_inventory_operation:string):Promi
   }
 }
 
-export async function getAllInventoryOperations()
-:Promise<IResponse<IInventoryOperation[]>> {
+export async function getAllInventoryOperations():Promise<IResponse<IInventoryOperation[]>> {
   try {
     const inventoryOperations:IInventoryOperation[] = [];
 
@@ -824,13 +823,14 @@ export async function getAllInventoryOperations()
     });
 
 
-    return createApiResponse<IInventoryOperation[]>(200, inventoryOperations, null);
+    return createApiResponse<IInventoryOperation[]>(200, inventoryOperations, 'All the inventory operations were retrieved successfully.');
   } catch(error) {
     return createApiResponse<IInventoryOperation[]>(500, [], null, 'Failed retrieving the inventory operations.');
   }
 }
 
-export async function insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperation>> {
+export async function insertInventoryOperation(inventoryOperation: IInventoryOperation)
+:Promise<IResponse<IInventoryOperation>> {
   try {
     const {
       id_inventory_operation,
@@ -863,7 +863,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
 }
 
 export async function getInventoryOperationDescription(id_inventory_operation:string)
-  :Promise<IResponse<IInventoryOperationDescription[]>> {
+:Promise<IResponse<IInventoryOperationDescription[]>> {
   try {
     const inventoryOperation:IInventoryOperationDescription[] = [];
 
@@ -876,9 +876,29 @@ export async function getInventoryOperationDescription(id_inventory_operation:st
       }
     });
 
-    return createApiResponse<IInventoryOperationDescription[]>(201, inventoryOperation, null, 'Inventory operation description inserted successfully.');
+    return createApiResponse<IInventoryOperationDescription[]>(200, inventoryOperation, null, 'The inventory operation description was retrieved successfully.');
   } catch(error) {
-    return createApiResponse<IInventoryOperationDescription[]>(500, [], null, 'Failed insterting inventory operation description.');
+    return createApiResponse<IInventoryOperationDescription[]>(500, [], null, 'Failed retrieving the inventory operation description.');
+  }
+}
+
+export async function getAllInventoryOperationDescription():Promise<IResponse<IInventoryOperationDescription[]>> {
+  try {
+    const inventoryOperation:IInventoryOperationDescription[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite
+      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        inventoryOperation.push(record.rows.item(index));
+      }
+    });
+
+    return createApiResponse<IInventoryOperationDescription[]>(200, inventoryOperation, null, 'All the inventory operations descriptions were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<IInventoryOperationDescription[]>(500, [], null, 'Failed retrieving all the inventory operation descriptions.');
   }
 }
 
@@ -1162,6 +1182,66 @@ export async function getRouteTransactionOperationDescriptions(id_route_transact
     return createApiResponse<IRouteTransactionOperationDescription[]>(200, transactionsOperationDescriptions, null, null);
   } catch(error) {
     return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null, 'Failed retrieving the transaction operations description of the route transaction operation');
+  }
+}
+
+export async function getAllRouteTransactions():Promise<IResponse<IRouteTransaction[]>> {
+  try {
+    const routeTransactions:IRouteTransaction[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite
+      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        routeTransactions.push(record.rows.item(index));
+      }
+    });
+
+    return createApiResponse<IRouteTransaction[]>(200, routeTransactions, null, 'All the route transactions were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<IRouteTransaction[]>(500, [], null, 'Failed retrieving all the route transactions.');
+  }
+}
+
+export async function getAllRouteTransactionsOperations():Promise<IResponse<IRouteTransactionOperation[]>> {
+  try {
+    const routeTransactionsOperations:IRouteTransactionOperation[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite
+      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        routeTransactionsOperations.push(record.rows.item(index));
+      }
+    });
+
+    return createApiResponse<IRouteTransactionOperation[]>(200, routeTransactionsOperations, null, 'All the route transactions operations were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<IRouteTransactionOperation[]>(500, [], null, 'Failed retrieving all the route transactions operations.');
+  }
+}
+
+export async function getAllRouteTransactionsOperationDescriptions():Promise<IResponse<IRouteTransactionOperationDescription[]>> {
+  try {
+    const routeTransactionsOperationsDescriptions:IRouteTransactionOperationDescription[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite
+      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        routeTransactionsOperationsDescriptions.push(record.rows.item(index));
+      }
+    });
+
+    return createApiResponse<IRouteTransactionOperationDescription[]>(200, routeTransactionsOperationsDescriptions, null, 'All the route transactions operations descriptions were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null, 'Failed retrieving all the route transactions operation descriptions.');
   }
 }
 
