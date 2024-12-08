@@ -326,6 +326,7 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
     id_inventory_operation: '',
     sign_confirmation: '',
     date: '',
+    state: 1,
     audit: 0,
     id_type_of_operation: '',
     id_work_day: '',
@@ -340,6 +341,7 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
       inventoryOperation.sign_confirmation = '1';
       inventoryOperation.date = timestamp_format();
       inventoryOperation.audit = 0;
+      inventoryOperation.state = 1;
       inventoryOperation.id_type_of_operation = idTypeOperation;
       inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
     }

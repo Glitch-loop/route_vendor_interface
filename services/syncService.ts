@@ -1,10 +1,21 @@
-import { IDay, IDayGeneralInformation, IInventoryOperation, IInventoryOperationDescription, IResponse, IRoute, IRouteDay, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription } from '../interfaces/interfaces';
+import { current } from '@reduxjs/toolkit';
+import { IDay, IDayGeneralInformation, IInventoryOperation, IInventoryOperationDescription, IResponse, IRoute, IRouteDay, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription, ISyncRecord } from '../interfaces/interfaces';
 import {
   getAllInventoryOperations,
   getAllInventoryOperationDescription,
   getAllRouteTransactions,
   getAllRouteTransactionsOperations,
   getAllRouteTransactionsOperationDescriptions,
+  insertSyncQueueRecord,
+  insertSyncQueueRecords,
+  deleteSyncQueueRecords,
+  deleteAllSyncQueueRecords,
+  getAllSyncQueueRecords,
+  insertSyncHistoricRecord,
+  insertSyncHistoricRecords,
+  deleteSyncHistoricRecordById,
+  getAllSyncHistoricRecords,
+
  } from '../queries/SQLite/sqlLiteQueries';
 
 import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
@@ -44,12 +55,11 @@ function setLeftOperation(setArray:any[], universeDictionary:any, itemKey:string
 }
 
 /*
-  This function is to sycing the central database with the local database.
+  Function that deterimnes missing records in the main database.
 */
 async function determingRecordsToBeSyncronized() {
   try {
     const reduxState = store.getState();
-
     const routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = reduxState.routeDay;
 
     // Variables used to store information related to central database.
@@ -69,7 +79,7 @@ async function determingRecordsToBeSyncronized() {
     let localRegisteredRouteTransactionOperationDescriptions:any = {};
 
     // Variable to concatenate all the records to synchronize
-    let recordsToSyncing:any[] = [];
+    let syncQueue:any[] = [];
 
     /* Extracting information from central database */
     /* Inventory operations */
@@ -182,7 +192,7 @@ async function determingRecordsToBeSyncronized() {
       if there is a match, that item of the dictionary will be deleted (because it is in the central
       database). At the end of the loop, we will have all remaining records that needs to be synchronized.
     */
-   recordsToSyncing = recordsToSyncing.concat(
+   syncQueue = syncQueue.concat(
       /* Inventory operations */
       setLeftOperation(registeredInventoryOperations,
          localRegisteredInventoryOperations,
@@ -210,86 +220,152 @@ async function determingRecordsToBeSyncronized() {
   }
 }
 
-async function syncingRecordWithCentralDatabase() {
-  const reduxState:any[] = [];
-  const totalRecords:number = reduxState.length;
 
-  const recordsToSync:any[] = reduxState.map(element => {return element;});
-  const pendingRecordsToSync:any[] = [];
-
-  /* Since it is a relational database, the process of syncing the records has
-  priotization, so it is needed to identify the type of records and sort them
-  before syncing with the database. */
-
-  /*
-  Order between records (interfaces)
-  1.
-    IInventoryOperation
-    IRouteTransaction
-  2.
-    IInventoryOperationDescription
-    IRouteTransactionOperation
-  3.
-    IRouteTransactionOperationDescription
-  */
-
+/* Function to sync records with the main database. */
+async function syncingRecordWithCentralDatabase():Promise<void> {
+  const recordsCorrectlyProcessed:ISyncRecord[] = [];
   try {
-    // Sorting elements by internfaces
-    recordsToSync.sort((a:any, b:any) => {
-      let AisFirstLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
-      let AisSecondLevel:number = Number(isTypeIInventoryOperationDescription(a)
-                                || isTypeIRouteTransactionOperation(a));
-      let AisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+    const responseSynRecords:IResponse<ISyncRecord[]> = await getAllSyncQueueRecords();
+    if (apiResponseStatus(responseSynRecords, 200)) {
+      const syncQueue:ISyncRecord[] = getDataFromApiResponse(responseSynRecords)
+      .map((record:ISyncRecord) => {
+        return {
+          id_record: record.id_record,
+          status: record.status,
+          payload: JSON.parse(record.payload),
+          table: record.table,
+          action: record.action,
+        };
+      });
 
-      let BisFirstLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
-      let BisSecondLevel:number = Number(isTypeIInventoryOperationDescription(b)
-                                || isTypeIRouteTransactionOperation(b));
-      let BisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+      /* Since it is a relational database, the process of syncing the records has
+      priotization, so it is needed to identify the type of records and sort them
+      before syncing with the database.
 
-      let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + AisThirdLevel * 3;
-      let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + BisThirdLevel * 3;
+      Order between records (interfaces):
+      1.
+        IInventoryOperation
+        IRouteTransaction
+      2.
+        IInventoryOperationDescription
+        IRouteTransactionOperation
+      3.
+        IRouteTransactionOperationDescription
+      */
+      // Sorting elements by internfaces (descending order)
+      syncQueue.sort((recordA:ISyncRecord, recordB:ISyncRecord) => {
+        const a:any = recordA.payload;
+        const b:any = recordB.payload;
+  
+        let AisFirstLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
+        let AisSecondLevel:number = Number(isTypeIInventoryOperationDescription(a)
+                                  || isTypeIRouteTransactionOperation(a));
+        let AisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+  
+        let BisFirstLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
+        let BisSecondLevel:number = Number(isTypeIInventoryOperationDescription(b)
+                                  || isTypeIRouteTransactionOperation(b));
+        let BisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+  
+        let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + AisThirdLevel * 3;
+        let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + BisThirdLevel * 3;
+  
+        if(ACardinality > BCardinality) {
+          return -1;
+        }
+  
+        if (ACardinality < BCardinality) {
+          return 1;
+        }
+  
+        return 0;
+      });
 
-      if(ACardinality < BCardinality) {
-        return -1;
+      // Trying to synchronize records with main database.
+      for(let i = 0; i < syncQueue.length; i++) {
+        let response:IResponse<null> = createApiResponse(500, null, null, null);
+        const currentRecordToSync:ISyncRecord|undefined = syncQueue[i];
+        if (currentRecordToSync === undefined) {
+          /* There is not instructions */
+          response = createApiResponse(500, null, null, null);
+        } else {
+          const currentRecord:any = currentRecordToSync.payload;
+          const currentAction:any = currentRecordToSync.action;
+
+          if (isTypeIInventoryOperation(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertInventoryOperation(currentRecord);
+            } else if (currentAction === 'UPDATE') {
+              response = await repository.updateInventoryOperation(currentRecord);
+              // TODO
+            } else {
+              /* Other operation*/
+            }
+          } else if (isTypeIInventoryOperationDescription(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertInventoryOperationDescription([ currentRecord ]);
+            } else if (currentAction === 'UPDATE') {
+              // TODO
+            } else {
+              /* Other operation*/
+            }
+          } else if (isTypeIRouteTransaction(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertRouteTransaction(currentRecord);
+            } else if (currentAction === 'UPDATE') {
+              response = await repository.updateRouteTransaction(currentRecord);
+            } else {
+              /* Other operation*/
+            }
+          } else if (isTypeIRouteTransactionOperation(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertRouteTransactionOperation(currentRecord);
+            } else if (currentAction === 'UPDATE') {
+              // TODO
+            } else {
+              /* Other operation*/
+            }
+          } else if (isTypeIRouteTransactionOperationDescription(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertRouteTransactionOperationDescription([ currentRecord ]);
+            } else if (currentAction === 'UPDATE') {
+              // TODO
+            } else {
+              /* Other operation*/
+            }
+          } else {
+            /* The record is not recognized. */
+            response = createApiResponse(500, null, null, null);
+          }
+        }
+
+        // Determinig if the record was syncing successfully.
+        if(apiResponseStatus(response, 201)) {
+          /* The records was successfully synczed; It is not needed to store in the syncing queue
+            table */
+          if (currentRecordToSync === undefined) {
+            /* For some reason it was stored a undefined element*/
+          } else {
+            recordsCorrectlyProcessed.push({
+              id_record: currentRecordToSync.id_record,
+              status: 'SUCCESS',
+              payload: JSON.parse(currentRecordToSync.payload),
+              table: currentRecordToSync.table,
+              action: currentRecordToSync.action,
+            });
+          }
+        } else {
+          /* Something was wrong during insertion; There is not extra instructions for the record. */
+        }
       }
 
-      if (ACardinality > BCardinality) {
-        return 1;
-      }
-
-      return 0;
-    });
-
-    // Trying to insert with the main database.
-    for (let i = 0; i < totalRecords; i++) {
-      const record:any = reduxState[i];
-      let response:IResponse<null>;
-      if (isTypeIInventoryOperation(record)) {
-        response = await repository.insertInventoryOperation(record);
-      } else if (isTypeIInventoryOperationDescription(record)) {
-        response = await repository.insertInventoryOperationDescription([ record ]);
-      } else if (isTypeIRouteTransaction(record)) {
-        response = await repository.insertRouteTransaction(record);
-      } else if (isTypeIRouteTransactionOperation(record)) {
-        response = await repository.insertRouteTransactionOperation(record);
-      } else if (isTypeIRouteTransactionOperationDescription(record)) {
-        response = await repository.insertRouteTransactionOperationDescription([ record ]);
-      } else {
-        /* The record is not recognized. */
-        response = createApiResponse(500, null, null, null);
-      }
-
-      // Determinig if the record was syncing successfully.
-      if(apiResponseStatus(response, 201)) {
-        /* The record was inserted successfully. */
-      } else {
-        /* Something was wrong during insertion, so the current record is inserted into the pending
-        records to sync. */
-        pendingRecordsToSync.push(record);
-      }
+      // Updating local database according with the result of the synchronizations
+      await insertSyncHistoricRecords(recordsCorrectlyProcessed);
+      await deleteSyncQueueRecords(recordsCorrectlyProcessed);
+    } else {
+      /* Something was wrong during records retrieving; There is no extra instructions*/
     }
   } catch (error) {
-    /* Something was wrong during execution. */
   }
 }
 

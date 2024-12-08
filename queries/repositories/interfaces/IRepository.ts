@@ -33,12 +33,14 @@ export interface IRepository {
 
   // Related to products (inventory operations)
   insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>>;
+  updateInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>>;
   getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IResponse<IInventoryOperation[]>>;
   insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<null>>;
   getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperationDescription[]>>;
 
   // Related to route transactions
   insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>;
+  updateRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>;
   getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):Promise<IResponse<IRouteTransaction[]>>;
   insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<null>>;
   getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<IRouteTransactionOperation[]>>;

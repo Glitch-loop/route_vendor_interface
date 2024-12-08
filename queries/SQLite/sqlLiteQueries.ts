@@ -14,6 +14,8 @@ import {
   routeTransactionOperationDescriptionsEmbeddedTable,
   inventoryOperationsEmbeddedTable,
   productOperationDescriptionsEmbeddedTable,
+  syncQueueEmbeddedTable,
+  syncHistoricEmbeddedTable,
 } from './embeddedDatabase';
 
 // Interfaces
@@ -33,6 +35,7 @@ import {
   IInventoryOperationDescription,
   IStoreStatusDay,
   IResponse,
+  ISyncRecord,
 } from '../../interfaces/interfaces';
 import { createApiResponse } from '../../utils/apiResponse';
 
@@ -50,6 +53,8 @@ export async function createEmbeddedDatabase():Promise<IResponse<null>> {
       routeTransactionOperationDescriptionsEmbeddedTable,
       inventoryOperationsEmbeddedTable,
       productOperationDescriptionsEmbeddedTable,
+      syncQueueEmbeddedTable,
+      syncHistoricEmbeddedTable,
     ];
 
     const sqlite = await createSQLiteConnection();
@@ -89,6 +94,8 @@ export async function dropEmbeddedDatabase():Promise<IResponse<null>> {
       EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS,
       EMBEDDED_TABLES.INVENTORY_OPERATIONS,
       EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS,
+      EMBEDDED_TABLES.SYNC_QUEUE,
+      EMBEDDED_TABLES.SYNC_HISTORIC,
     ];
 
     const sqlite = await createSQLiteConnection();
@@ -103,7 +110,6 @@ export async function dropEmbeddedDatabase():Promise<IResponse<null>> {
         }
       });
     });
-
 
     return createApiResponse(200, null, null, 'Embedded database dropped successfully.');
   } catch(error) {
@@ -1386,5 +1392,234 @@ export async function deleteRouteTransactionOperationDescriptionsById(routeTrans
     return createApiResponse<null>(200, null, null, 'Route transactions operations description deleted successfully.');
   } catch(error) {
     return createApiResponse<null>(500, null, null, 'Failed deleting route transaction operation description (function level).');
+  }
+}
+
+// Related to synchronizaion
+export async function insertSyncQueueRecord(recordToSync: ISyncRecord):Promise<IResponse<null>> {
+  try {
+    const {
+      id_record,
+      status,
+      payload,
+      table,
+      action,
+    } = recordToSync;
+
+    if (typeof payload === 'string') {
+      /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
+      const sqlite = await createSQLiteConnection();
+      await sqlite.transaction(async (tx) => {
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table, action) VALUES (?, ?, ?, ?, ?)`, [
+          id_record,
+          status,
+          payload,
+          table,
+          action,
+        ]);
+      });
+      return createApiResponse<null>(201, null, null, 'Record has been inserted successfully.');
+    } else {
+      return createApiResponse<null>(400, null, null, 'Failed inserting record in the sync queue: Payload must be a string.');
+    }
+  } catch (error) {
+    return createApiResponse<null>(500, null, null, 'Failed inserting record in the sync queue.');
+  }
+}
+
+export async function insertSyncQueueRecords(recordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
+  const insertedRecordsToSync:ISyncRecord[] = [];
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      let totalRecordsToSync:number = recordsToSync.length;
+      for (let  i = 0; i < totalRecordsToSync; i++){
+        const {
+          id_record,
+          status,
+          payload,
+          table,
+          action,
+        } = recordsToSync[i];
+
+        if (typeof payload === 'string') {
+          /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
+          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table, action) VALUES (?, ?, ?, ?, ?)`, [
+            id_record,
+            status,
+            payload,
+            table,
+            action,
+          ]);
+
+          insertedRecordsToSync.push(recordsToSync[i]);
+        } else {
+          return createApiResponse<ISyncRecord[]>(400, insertedRecordsToSync, null, 'Failed inserting record in the sync queue: Payload must be a string.');
+        }
+      }
+    });
+    return createApiResponse<ISyncRecord[]>(201, insertedRecordsToSync, null, 'Record to sync has been inserted successfully.');
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(500, insertedRecordsToSync, null, 'Failed insterting day operations.');
+  }
+}
+
+export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
+  const deletedRecordsToSync:ISyncRecord[] = [];
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      let totalRecordsToSync:number = deleteRecordsToSync.length;
+      for (let  i = 0; i < totalRecordsToSync; i++){
+        const { id_record } = deleteRecordsToSync[i];
+        await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ?`, [ id_record ]);
+        deletedRecordsToSync.push(deleteRecordsToSync[i]);
+      }
+    });
+    return createApiResponse<ISyncRecord[]>(200, deletedRecordsToSync, null, 'Record to sync has been inserted successfully.');
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(500, deletedRecordsToSync, null, 'Failed insterting day operations.');
+  }
+}
+
+export async function deleteAllSyncQueueRecords():Promise<IResponse<null>> {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx
+      .executeSql(`DELETE FROM ${EMBEDDED_TABLES.SYNC_QUEUE};`);
+    });
+
+    return createApiResponse<null>(200, null, null, 'Records to sync deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting records to sync.');
+  }
+}
+
+export async function getAllSyncQueueRecords():Promise<IResponse<ISyncRecord[]>> {
+  try {
+    const syncQueueRecords:ISyncRecord[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        syncQueueRecords.push(record.rows.item(index));
+      }
+    });
+    return createApiResponse<ISyncRecord[]>(200, syncQueueRecords, 'All the sync queue records were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(500, [], null, 'Failed retrieving the sync queue records.');
+  }
+}
+
+export async function insertSyncHistoricRecord(recordToSync: ISyncRecord):Promise<IResponse<null>> {
+  try {
+    const {
+      id_record,
+      status,
+      payload,
+      table,
+      action,
+    } = recordToSync;
+
+    if (typeof payload === 'string') {
+      /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
+      const sqlite = await createSQLiteConnection();
+      await sqlite.transaction(async (tx) => {
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table, action) VALUES (?, ?, ?, ?, ?)`, [
+          id_record,
+          status,
+          payload,
+          table,
+          action,
+        ]);
+      });
+      return createApiResponse<null>(201, null, null, 'Record has been inserted successfully.');
+    } else {
+      return createApiResponse<null>(400, null, null, 'Failed inserting record in the sync historic: Payload must be a string.');
+    }
+  } catch (error) {
+    return createApiResponse<null>(500, null, null, 'Failed inserting record in the sync historic.');
+  }
+}
+
+export async function insertSyncHistoricRecords(recordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
+  const insertedRecordsToSync:ISyncRecord[] = [];
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      let totalRecordsToSync:number = recordsToSync.length;
+      for (let  i = 0; i < totalRecordsToSync; i++){
+        const {
+          id_record,
+          status,
+          payload,
+          table,
+          action,
+        } = recordsToSync[i];
+
+        if (typeof payload === 'string') {
+          /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
+          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table, action) VALUES (?, ?, ?, ?, ?)`, [
+            id_record,
+            status,
+            payload,
+            table,
+            action,
+          ]);
+
+          insertedRecordsToSync.push(recordsToSync[i]);
+        } else {
+          return createApiResponse<ISyncRecord[]>(400, insertedRecordsToSync, null, 'Failed inserting record in the sync historic: Payload must be a string.');
+        }
+      }
+    });
+    return createApiResponse<ISyncRecord[]>(201, insertedRecordsToSync, null, 'Record has been inserted successfully.');
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(500, insertedRecordsToSync, null, 'Failed insterting record in the sync historic.');
+  }
+}
+
+export async function deleteSyncHistoricRecordById(recordsToSync: ISyncRecord)
+:Promise<IResponse<null>> {
+  try {
+    const { id_record } = recordsToSync;
+
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.SYNC_HISTORIC} WHERE id_record = ?;`, [id_record]);
+    });
+
+    return createApiResponse<null>(200, null, null, 'Historic record deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting historic record.');
+  }
+}
+
+
+export async function getAllSyncHistoricRecords():Promise<IResponse<ISyncRecord[]>> {
+  try {
+    const syncQueueRecords:ISyncRecord[] = [];
+
+    const sqlite = await createSQLiteConnection();
+    const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_HISTORIC}`);
+
+    result.forEach((record:any) => {
+      for (let index = 0; index < record.rows.length; index++) {
+        syncQueueRecords.push(record.rows.item(index));
+      }
+    });
+
+    return createApiResponse<ISyncRecord[]>(200, syncQueueRecords, 'All the sync historic records were retrieved successfully.');
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(500, [], null, 'Failed retrieving the sync historic records.');
   }
 }

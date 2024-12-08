@@ -137,3 +137,23 @@ export const productOperationDescriptionsEmbeddedTable = `
     id_product                        TEXT NOT NULL
   );   
 `;
+
+export const syncQueueEmbeddedTable = `
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_QUEUE} (
+    id_record TEXT NOT NULL UNIQUE,
+    status    TEXT NOT NULL,
+    payload   TEXT NOT NULL,
+    table     TEXT NOT NULL,
+    action    TEXT NOT NULL
+  );   
+`;
+
+export const syncHistoricEmbeddedTable = `
+  CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_HISTORIC} (
+    id_record TEXT NOT NULL UNIQUE,
+    status    TEXT NOT NULL,
+    payload   TEXT NOT NULL,
+    table     TEXT NOT NULL,
+    action    TEXT NOT NULL
+  );   
+`;

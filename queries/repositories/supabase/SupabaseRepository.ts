@@ -210,12 +210,13 @@ export class SupabaseRepository implements IRepository {
   // TODO: Related to users
 
   // Related to products (inventory operations)
-  async insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>> {
+  async insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>> {
     try {
       const {
         id_inventory_operation,
         sign_confirmation,
         date,
+        state,
         audit,
         id_type_of_operation,
         id_work_day,
@@ -227,9 +228,43 @@ export class SupabaseRepository implements IRepository {
         sign_confirmation: sign_confirmation,
         date: date,
         audit: audit,
+        state: state,
         id_type_of_operation: id_type_of_operation,
         id_work_day: id_work_day,
       });
+
+      if (error) {
+        return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
+      } else {
+        return createApiResponse<null>(201, null, null, 'Inventory operation inserted successfully.');
+      }
+    } catch(error) {
+      return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
+    }
+  }
+
+  async updateInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>> {
+    try {
+      const {
+        id_inventory_operation,
+        sign_confirmation,
+        date,
+        state,
+        audit,
+        id_type_of_operation,
+        id_work_day,
+      } = inventoryOperation;
+
+      const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS)
+      .update({
+        sign_confirmation: sign_confirmation,
+        date: date,
+        audit: audit,
+        state: state,
+        id_type_of_operation: id_type_of_operation,
+        id_work_day: id_work_day,
+      })
+      .eq('id_inventory_operation', id_inventory_operation);
 
       if (error) {
         return createApiResponse<void>(500, null, null,'Failed inserting the inventory operation.');
@@ -344,6 +379,40 @@ export class SupabaseRepository implements IRepository {
       }
     } catch(error) {
       return createApiResponse<void>(500, null, null, 'Failed inserting route transaction.');
+    }
+  }
+
+  async updateRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>{
+    try {
+      const {
+        id_route_transaction,
+        date,
+        state,
+        cash_received,
+        id_work_day,
+        id_store,
+        id_payment_method,
+      } = transactionOperation;
+
+      const { data, error } = await supabase
+      .from(TABLES.ROUTE_TRANSACTIONS)
+      .update({
+        date: date,
+        state: state,
+        cash_received: cash_received,
+        id_work_day: id_work_day,
+        id_store: id_store,
+        id_payment_method: id_payment_method,
+      })
+      .eq('id_route_transaction', id_route_transaction);
+
+      if (error) {
+        return createApiResponse<void>(500, null, null,'Failed updating route transaction.');
+      } else {
+        return createApiResponse<void>(201, data, null, 'Route transaction updated successfully.');
+      }
+    } catch(error) {
+      return createApiResponse<void>(500, null, null, 'Failed updating route transaction.');
     }
   }
 
@@ -464,37 +533,6 @@ export class SupabaseRepository implements IRepository {
     } catch(error) {
       return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null,
         'Failed getting all route transactions operation description of a route transaction operation.');
-    }
-  }
-
-  async updateTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<void>> {
-    try {
-      const {
-        id_route_transaction,
-        date,
-        state,
-        id_work_day,
-        id_store,
-        id_payment_method,
-      } = routeTransaction;
-
-      const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTIONS)
-      .update({
-        date: date,
-        state: state,
-        id_work_day: id_work_day,
-        id_store: id_store,
-        id_payment_method: id_payment_method,
-      })
-      .eq('id_work_day', id_route_transaction);
-      
-      if (error) {
-        return createApiResponse<void>(500, null, null,'Failed updating route transaction.');
-      } else {
-        return createApiResponse<void>(2000, null, null, 'Route transaction updated successfully.');
-      }
-    } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed updating route transaction.');
     }
   }
 }

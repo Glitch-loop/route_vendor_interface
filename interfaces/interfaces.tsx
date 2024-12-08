@@ -113,6 +113,7 @@ export interface IInventoryOperation {
   id_inventory_operation: string;
   sign_confirmation: string;
   date: string;
+  state: number;
   audit: number;
   id_type_of_operation: string;
   id_work_day: string;
@@ -143,23 +144,33 @@ export interface IRouteTransaction {
 }
 
 export interface IRouteTransactionOperation {
-  id_route_transaction_operation: string;
-  id_route_transaction: string;
-  id_route_transaction_operation_type: string;
+  id_route_transaction_operation:       string;
+  id_route_transaction:                 string;
+  id_route_transaction_operation_type:  string;
 }
 
 export interface IRouteTransactionOperationDescription {
   id_route_transaction_operation_description: string;
-  price_at_moment: number;
-  amount: number;
-  id_route_transaction_operation: string;
-  id_product: string;
+  price_at_moment:                            number;
+  amount:                                     number;
+  id_route_transaction_operation:             string;
+  id_product:                                 string;
 }
 
 // Responses
 export interface IResponse<T> {
   responseCode: number;
-  data: T;
-  message?: string;
-  error?: string;
+  data:         T;
+  message?:     string;
+  error?:       string;
+}
+
+
+// Related to syncing process
+export interface ISyncRecord {
+  id_record:  string,
+  status:     'PENDING'|'SUCCESS'|'FAILED',
+  payload:    any,
+  table:      string,
+  action:     'INSERT'|'UPDATE'|'DELETE',
 }
