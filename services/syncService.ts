@@ -10,12 +10,18 @@ import {
 import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 import { IRepository } from '../queries/repositories/interfaces/IRepository';
 
-
 import store from '../redux/store';
-import { getDataFromApiResponse } from '../utils/apiResponse';
+import { apiResponseStatus, createApiResponse, getDataFromApiResponse } from '../utils/apiResponse';
 import { convertingArrayInDictionary } from '../utils/generalFunctions';
 
-
+// Import guards
+import {
+  isTypeIInventoryOperation,
+  isTypeIInventoryOperationDescription,
+  isTypeIRouteTransaction,
+  isTypeIRouteTransactionOperation,
+  isTypeIRouteTransactionOperationDescription,
+} from '../utils/guards';
 
 
 const repository:IRepository = RepositoryFactory.createRepository('supabase');
@@ -197,16 +203,97 @@ async function determingRecordsToBeSyncronized() {
         'id_route_transaction_operation_description')
     );
 
-
-    // Saving in the state to 
+    // Saving in redux state to start synchronization.
 
   } catch (error) {
-    console.log(error);
+    /* Something was wrong during execution. */
   }
-
 }
 
+async function syncingRecordWithCentralDatabase() {
+  const reduxState:any[] = [];
+  const totalRecords:number = reduxState.length;
+
+  const recordsToSync:any[] = reduxState.map(element => {return element;});
+  const pendingRecordsToSync:any[] = [];
+
+  /* Since it is a relational database, the process of syncing the records has
+  priotization, so it is needed to identify the type of records and sort them
+  before syncing with the database. */
+
+  /*
+  Order between records (interfaces)
+  1.
+    IInventoryOperation
+    IRouteTransaction
+  2.
+    IInventoryOperationDescription
+    IRouteTransactionOperation
+  3.
+    IRouteTransactionOperationDescription
+  */
+
+  try {
+    // Sorting elements by internfaces
+    recordsToSync.sort((a:any, b:any) => {
+      let AisFirstLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
+      let AisSecondLevel:number = Number(isTypeIInventoryOperationDescription(a)
+                                || isTypeIRouteTransactionOperation(a));
+      let AisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+
+      let BisFirstLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
+      let BisSecondLevel:number = Number(isTypeIInventoryOperationDescription(b)
+                                || isTypeIRouteTransactionOperation(b));
+      let BisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+
+      let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + AisThirdLevel * 3;
+      let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + BisThirdLevel * 3;
+
+      if(ACardinality < BCardinality) {
+        return -1;
+      }
+
+      if (ACardinality > BCardinality) {
+        return 1;
+      }
+
+      return 0;
+    });
+
+    // Trying to insert with the main database.
+    for (let i = 0; i < totalRecords; i++) {
+      const record:any = reduxState[i];
+      let response:IResponse<null>;
+      if (isTypeIInventoryOperation(record)) {
+        response = await repository.insertInventoryOperation(record);
+      } else if (isTypeIInventoryOperationDescription(record)) {
+        response = await repository.insertInventoryOperationDescription([ record ]);
+      } else if (isTypeIRouteTransaction(record)) {
+        response = await repository.insertRouteTransaction(record);
+      } else if (isTypeIRouteTransactionOperation(record)) {
+        response = await repository.insertRouteTransactionOperation(record);
+      } else if (isTypeIRouteTransactionOperationDescription(record)) {
+        response = await repository.insertRouteTransactionOperationDescription([ record ]);
+      } else {
+        /* The record is not recognized. */
+        response = createApiResponse(500, null, null, null);
+      }
+
+      // Determinig if the record was syncing successfully.
+      if(apiResponseStatus(response, 201)) {
+        /* The record was inserted successfully. */
+      } else {
+        /* Something was wrong during insertion, so the current record is inserted into the pending
+        records to sync. */
+        pendingRecordsToSync.push(record);
+      }
+    }
+  } catch (error) {
+    /* Something was wrong during execution. */
+  }
+}
 
 export {
   determingRecordsToBeSyncronized,
-}
+  syncingRecordWithCentralDatabase,
+};

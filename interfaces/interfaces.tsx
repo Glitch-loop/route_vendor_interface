@@ -17,8 +17,7 @@ export interface IProduct {
   order_to_show: number;
 }
 
-export interface IProductInventory
-extends IProduct {
+export interface IProductInventory extends IProduct {
   amount: number;
 }
 
@@ -44,7 +43,6 @@ export interface ICoordinates {
   latitude: number;
   longitude: number;
 }
-
 
 export interface IUser {
   id_vendor: string;
@@ -157,7 +155,6 @@ export interface IRouteTransactionOperationDescription {
   id_route_transaction_operation: string;
   id_product: string;
 }
-
 
 // Responses
 export interface IResponse<T> {

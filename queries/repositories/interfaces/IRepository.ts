@@ -26,23 +26,23 @@ export interface IRepository {
   getStoresByArrID(arr_id_stores: string[]): Promise<IResponse<IStore[]>>;
 
   // Related to the work day information
-  insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>>;
-  updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>>;
+  insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>>;
+  updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>>;
 
   // TODO: Related to users
 
   // Related to products (inventory operations)
-  insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>>;
+  insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>>;
   getAllInventoryOperationsOfWorkDay(workDay: IDayGeneralInformation):Promise<IResponse<IInventoryOperation[]>>;
-  insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<void>>;
+  insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<null>>;
   getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperationDescription[]>>;
 
   // Related to route transactions
-  insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>;
+  insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>;
   getAllRouteTransactionsOfWorkDay(workDay: IDayGeneralInformation):Promise<IResponse<IRouteTransaction[]>>;
-  insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<void>>;
+  insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<null>>;
   getAllRouteTransactionOperationsOfRouteTransaction(routeTransaction: IRouteTransaction):Promise<IResponse<IRouteTransactionOperation[]>>;
-  insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<void>>;
+  insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<null>>;
   getAllRouteTransactionOperationsDescriptionOfRouteTransactionOperation(routeTransactionOperation:IRouteTransactionOperation):Promise<IResponse<IRouteTransactionOperationDescription[]>>;
-  updateTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>;
+  updateTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>;
 }
