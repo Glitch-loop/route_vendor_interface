@@ -8,11 +8,6 @@ import tw from 'twrnc';
 // Queries
 // Main database
 import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
-// import {
-//   getAllProducts,
-//   getAllStoresInARouteDay,
-//   getStoresByArrID,
-// } from '../queries/queries';
 
 // Embedded database
 import {
@@ -42,7 +37,9 @@ import {
   deleteAllRouteTransactionOperations,
   deleteAllRouteTransactionOperationDescriptions,
   deleteInventoryOperationDescriptionsById,
-  deleteInventoryOperationsById
+  deleteInventoryOperationsById,
+  insertSyncQueueRecord,
+  insertSyncQueueRecords,
 
 } from '../queries/SQLite/sqlLiteQueries';
 
@@ -85,6 +82,7 @@ import {
   IRouteTransactionOperation,
   IResponse,
   IProduct,
+  ISyncRecord,
  } from '../interfaces/interfaces';
 
 // Utils
@@ -102,6 +100,8 @@ import {
   getDataFromApiResponse,
 } from '../utils/apiResponse';
 import Toast from 'react-native-toast-message';
+import TABLES from '../utils/tables';
+import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
 
 // Initializing database
 const databaseRepository = RepositoryFactory.createRepository('supabase');
@@ -517,6 +517,19 @@ async function startShiftInventoryOperationProcess(
     const resultInsertDayOperations:IResponse<IDayOperation[]>
       = await insertDayOperations(dayOperationsOfStores);
 
+
+    // Sending operations to sync background process to sync them with the main database.
+    const resultInsertSyncRecordGeneralDayInformation:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'INSERT'));
+
+    // Inventory operations
+    const resultInsertSyncRecordInventoryOperation:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+      // Inventory operation descriptions
+    const resultInsertSyncRecordInventoryOperationDescriptions:IResponse<ISyncRecord[]>
+      = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
+
     /*
       At this point the records needed to start a database have been created.
       In the workflow of the application, the first operation has been completed (starting
@@ -532,7 +545,10 @@ async function startShiftInventoryOperationProcess(
     && apiResponseProcess(resultInsertDayOperation, 201)
     && apiResponseProcess(resultInsertDayOperations, 201)
     && apiResponseProcess(resultGetStoresInTheRoute, 200)
-    && apiResponseProcess(resultGetStoresOfRoute, 200)) {
+    && apiResponseProcess(resultGetStoresOfRoute, 200)
+    && apiResponseProcess(resultInsertSyncRecordGeneralDayInformation, 201)
+    && apiResponseProcess(resultInsertSyncRecordInventoryOperation, 201)
+    && apiResponseProcess(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
       /* The process has been finished successfully */
       /* Once the information has been stored in the embedded database, store the information
           in the states of the application.

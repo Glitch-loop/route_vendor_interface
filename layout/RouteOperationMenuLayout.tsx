@@ -26,6 +26,7 @@ import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
+import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -56,10 +57,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       setIsDayWorkClosed(true);
     }
 
-
-    dayOperations.forEach((dayOperation) => {
-      console.log("item: ", dayOperation.id_item, "- current Operation: ", dayOperation.current_operation)
-    })
     const backAction = () => {
       /*
         In this particular case, the "back handler" of the phone should not do anything.
@@ -120,21 +117,43 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
   // Related with to the end of  the day.
   const finishWorkDay = async ():Promise<void> => {
-    // Storing the information in the main database.
-    // Dropping database for freeing space.
-    await dropEmbeddedDatabase();
+    try {
+      // Storing the information in the main database.
+      const resultSyncingProcess:boolean = await syncingRecordsWithCentralDatabase();
 
-    // Creating database with new information.
-    await createEmbeddedDatabase();
+      if (resultSyncingProcess) {
+        Toast.show({
+          type: 'success',
+          text1:'Se ha guardado toda la inforamción correctamente',
+          text2: 'Se ha sincronizado toda la información correctamente con la base de datos.'});
 
-    // Resetting the navigation stack (avoiding user go back to the route operation).
-    navigation.reset({
-      index: 0, // Set the index of the new state (0 means first screen)
-      routes: [{ name: 'routeSelection' }], // Array of route objects, with the route to navigate to
-    });
+        // Dropping database for freeing space.
+        await dropEmbeddedDatabase();
 
-    // Redirecting to main menu.
-    navigation.navigate('routeSelection');
+        // Creating database with new information.
+        await createEmbeddedDatabase();
+
+        // Resetting the navigation stack (avoiding user go back to the route operation).
+        navigation.reset({
+          index: 0, // Set the index of the new state (0 means first screen)
+          routes: [{ name: 'routeSelection' }], // Array of route objects, with the route to navigate to
+        });
+
+        // Redirecting to main menu.
+        navigation.navigate('routeSelection');
+
+      } else {
+        Toast.show({
+          type: 'error',
+          text1:'Ha habido un error al momento de guardar la información, asegurate de tener conexión a internet para completar el proceso',
+          text2: 'Ha habido un error durante el sincronizado.'});
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1:'Ha habido un error al momento de guardar la información, asegurate de tener conexión a internet para completar el proceso',
+        text2: 'Ha habido un error durante el sincronizado.'});
+    }
   };
 
   const onShowDialog = ():void => {

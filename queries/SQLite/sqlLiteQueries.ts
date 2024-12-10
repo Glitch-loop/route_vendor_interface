@@ -1406,7 +1406,7 @@ export async function insertSyncQueueRecord(recordToSync: ISyncRecord):Promise<I
       action,
     } = recordToSync;
 
-    if (typeof payload === 'string') {
+    if (typeof payload === 'string' && id_record !== '') {
       /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
       const sqlite = await createSQLiteConnection();
       await sqlite.transaction(async (tx) => {
@@ -1443,7 +1443,7 @@ export async function insertSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
           action,
         } = recordsToSync[i];
 
-        if (typeof payload === 'string') {
+        if (typeof payload === 'string' && id_record !== '') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
           await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table, action) VALUES (?, ?, ?, ?, ?)`, [
             id_record,

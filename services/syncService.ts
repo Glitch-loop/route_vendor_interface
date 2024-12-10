@@ -222,8 +222,9 @@ async function determingRecordsToBeSyncronized() {
 
 
 /* Function to sync records with the main database. */
-async function syncingRecordWithCentralDatabase():Promise<void> {
+async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   const recordsCorrectlyProcessed:ISyncRecord[] = [];
+  let resultOfSyncProcess:boolean = false;
   try {
     const responseSynRecords:IResponse<ISyncRecord[]> = await getAllSyncQueueRecords();
     if (apiResponseStatus(responseSynRecords, 200)) {
@@ -362,14 +363,30 @@ async function syncingRecordWithCentralDatabase():Promise<void> {
       // Updating local database according with the result of the synchronizations
       await insertSyncHistoricRecords(recordsCorrectlyProcessed);
       await deleteSyncQueueRecords(recordsCorrectlyProcessed);
+
+      if (recordsCorrectlyProcessed.length === syncQueue.length) {
+        /* If The records correctly processed are equal to the number of records in the sync queue
+        then it means that all the pending process where synchronized successfully. */
+        resultOfSyncProcess = true;
+      } else {
+        /* For some reasone there were records that were not capable to be synchronized. */
+        resultOfSyncProcess = false;
+      }
+
     } else {
       /* Something was wrong during records retrieving; There is no extra instructions*/
+      resultOfSyncProcess = false;
     }
+
+    return resultOfSyncProcess;
   } catch (error) {
+    /* Something was wrong during syncing process. */
+    resultOfSyncProcess = false;
+    return resultOfSyncProcess;
   }
 }
 
 export {
   determingRecordsToBeSyncronized,
-  syncingRecordWithCentralDatabase,
+  syncingRecordsWithCentralDatabase,
 };

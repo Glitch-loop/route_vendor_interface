@@ -121,7 +121,7 @@ export class SupabaseRepository implements IRepository {
   }
 
   // Related to the work day information
-  async insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>> {
+  async insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>> {
     try {
       const {
         id_work_day,
@@ -154,17 +154,17 @@ export class SupabaseRepository implements IRepository {
       });
 
       if (error) {
-        return createApiResponse<void>(500, null, null,
+        return createApiResponse<null>(500, null, null,
           'Failed inserting the work day.');
       } else {
-        return createApiResponse<void>(201, data, null, 'Work day created successfully.');
+        return createApiResponse<null>(201, null, null, 'Work day created successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed inserting the work day.');
+      return createApiResponse<null>(500, null, null, 'Failed inserting the work day.');
     }
   }
 
-  async updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<void>>{
+  async updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>>{
     try {
       const {
         id_work_day,
@@ -198,12 +198,12 @@ export class SupabaseRepository implements IRepository {
       .eq('id_work_day', id_work_day);
 
       if (error) {
-        return createApiResponse<void>(500, null, null,'Failed updating the work day.');
+        return createApiResponse<null>(500, null, null,'Failed updating the work day.');
       } else {
-        return createApiResponse<void>(200, data, null, 'Work day updated successfully.');
+        return createApiResponse<null>(200, null, null, 'Work day updated successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed updating the work day.');
+      return createApiResponse<null>(500, null, null, 'Failed updating the work day.');
     }
   }
 
@@ -243,7 +243,7 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
-  async updateInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<void>> {
+  async updateInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>> {
     try {
       const {
         id_inventory_operation,
@@ -267,12 +267,12 @@ export class SupabaseRepository implements IRepository {
       .eq('id_inventory_operation', id_inventory_operation);
 
       if (error) {
-        return createApiResponse<void>(500, null, null,'Failed inserting the inventory operation.');
+        return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
       } else {
-        return createApiResponse<void>(201, data, null, 'Inventory operation inserted successfully.');
+        return createApiResponse<null>(201, data, null, 'Inventory operation inserted successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed inserting the inventory operation.');
+      return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
     }
   }
 
@@ -293,7 +293,7 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
-  async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<void>> {
+  async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<null>> {
     try {
       inventoryOperationDescription
       .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
@@ -316,18 +316,18 @@ export class SupabaseRepository implements IRepository {
         });
 
         if (error) {
-          return createApiResponse<void>(500, null, null,
+          return createApiResponse<null>(500, null, null,
             'Failed inserting an operation description.');
         } else {
           /* There is not instruaciton; The process continues*/
         }
       });
 
-      return createApiResponse<void>(201, null, null,
+      return createApiResponse<null>(201, null, null,
         'Inventory operation description inserted successfully.');
 
     } catch (error) {
-      return createApiResponse<void>(500, null, null,
+      return createApiResponse<null>(500, null, null,
         'Failed inserting an operation description.');
     }
   }
@@ -349,7 +349,7 @@ export class SupabaseRepository implements IRepository {
   }
 
   // Related to route transactions
-  async insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>{
+  async insertRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>{
     try {
       const {
         id_route_transaction,
@@ -373,16 +373,16 @@ export class SupabaseRepository implements IRepository {
         id_payment_method: id_payment_method,
       });
       if (error) {
-        return createApiResponse<void>(500, null, null,'Failed inserting route transaction.');
+        return createApiResponse<null>(500, null, null,'Failed inserting route transaction.');
       } else {
-        return createApiResponse<void>(201, data, null, 'Route transaction inserted successfully.');
+        return createApiResponse<null>(201, data, null, 'Route transaction inserted successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed inserting route transaction.');
+      return createApiResponse<null>(500, null, null, 'Failed inserting route transaction.');
     }
   }
 
-  async updateRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<void>>{
+  async updateRouteTransaction(transactionOperation: IRouteTransaction):Promise<IResponse<null>>{
     try {
       const {
         id_route_transaction,
@@ -407,12 +407,12 @@ export class SupabaseRepository implements IRepository {
       .eq('id_route_transaction', id_route_transaction);
 
       if (error) {
-        return createApiResponse<void>(500, null, null,'Failed updating route transaction.');
+        return createApiResponse<null>(500, null, null,'Failed updating route transaction.');
       } else {
-        return createApiResponse<void>(201, data, null, 'Route transaction updated successfully.');
+        return createApiResponse<null>(201, data, null, 'Route transaction updated successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed updating route transaction.');
+      return createApiResponse<null>(500, null, null, 'Failed updating route transaction.');
     }
   }
 
@@ -435,7 +435,7 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
-  async insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<void>>{
+  async insertRouteTransactionOperation(transactionOperation: IRouteTransactionOperation):Promise<IResponse<null>>{
     try {
       const {
         id_route_transaction_operation,
@@ -452,12 +452,12 @@ export class SupabaseRepository implements IRepository {
       });
 
       if (error) {
-        return createApiResponse<void>(500, null, null,'Failed inserting route transaction route transaction operation.');
+        return createApiResponse<null>(500, null, null,'Failed inserting route transaction route transaction operation.');
       } else {
-        return createApiResponse<void>(201, data, null, 'Route transaction operation inserted successfully.');
+        return createApiResponse<null>(201, data, null, 'Route transaction operation inserted successfully.');
       }
     } catch(error) {
-      return createApiResponse<void>(500, null, null, 'Failed inserting route transaction route transaction operation.');
+      return createApiResponse<null>(500, null, null, 'Failed inserting route transaction route transaction operation.');
     }
   }
 
@@ -478,7 +478,7 @@ export class SupabaseRepository implements IRepository {
     }
   }
 
-  async insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<void>> {
+  async insertRouteTransactionOperationDescription(transactionOperationDescription: IRouteTransactionOperationDescription[]):Promise<IResponse<null>> {
     try {
       transactionOperationDescription.forEach(async (transactionDescription:IRouteTransactionOperationDescription)=> {
         try {
@@ -501,20 +501,20 @@ export class SupabaseRepository implements IRepository {
           });
 
           if (error) {
-            return createApiResponse<void>(500, null, null,
+            return createApiResponse<null>(500, null, null,
               'Failed inserting route transaction operation description.');
           } else {
             /* There is not instructions*/
           }
         } catch (error) {
-          return createApiResponse<void>(500, null, null,
+          return createApiResponse<null>(500, null, null,
             'Failed inserting route transaction operation description.');
         }
       });
 
-      return createApiResponse<void>(201, null, null, 'Route transaction operation description inserted successfully.');
+      return createApiResponse<null>(201, null, null, 'Route transaction operation description inserted successfully.');
     } catch(error) {
-      return createApiResponse<void>(500, null, null,
+      return createApiResponse<null>(500, null, null,
         'Failed inserting route transaction operation description.');
     }
   }
