@@ -406,7 +406,6 @@ async function insertionTransactionOperationsAndOperationDescriptions(
 
         if (apiResponseStatus(resultInsertionOperation, 201)
         && apiResponseStatus(resultInsertionOperationDescription, 201)) {
-          console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
           resultInsertion = true;
         } else {
           Toast.show({

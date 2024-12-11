@@ -1465,6 +1465,20 @@ export async function insertSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
   }
 }
 
+export async function deleteSyncQueueRecord(recordToSync: ISyncRecord):Promise<IResponse<null>> {
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      const { id_record } = recordToSync;
+      await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ?`, [ id_record ]);
+    });
+    return createApiResponse<null>(200, null, null, 'Record to sync has been deleted successfully.');
+  } catch(error) {
+    return createApiResponse<null>(500, null, null, 'Failed deleting day operations.');
+  }
+}
+
 export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
   const deletedRecordsToSync:ISyncRecord[] = [];
   try {
@@ -1478,9 +1492,9 @@ export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[])
         deletedRecordsToSync.push(deleteRecordsToSync[i]);
       }
     });
-    return createApiResponse<ISyncRecord[]>(200, deletedRecordsToSync, null, 'Record to sync has been inserted successfully.');
+    return createApiResponse<ISyncRecord[]>(200, deletedRecordsToSync, null, 'Record to sync has been deleted successfully.');
   } catch(error) {
-    return createApiResponse<ISyncRecord[]>(500, deletedRecordsToSync, null, 'Failed insterting day operations.');
+    return createApiResponse<ISyncRecord[]>(500, deletedRecordsToSync, null, 'Failed deleting day operations.');
   }
 }
 

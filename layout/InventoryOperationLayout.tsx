@@ -40,6 +40,8 @@ import {
   deleteInventoryOperationsById,
   insertSyncQueueRecord,
   insertSyncQueueRecords,
+  deleteSyncQueueRecord,
+  deleteSyncQueueRecords,
 
 } from '../queries/SQLite/sqlLiteQueries';
 
@@ -405,6 +407,14 @@ async function startShiftInventoryOperationProcess(
   currentOperation: IDayOperation,
   dispatch: AppDispatch,
 ):Promise<boolean> {
+  const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay = creatingNewWorkDay(cashInventory, routeDay);
+
+  const inventoryOperation:IInventoryOperation
+  = creatingInventoryOperation(dayGeneralInformation, DAYS_OPERATIONS.start_shift_inventory);
+
+  const inventoryOperationDescription:IInventoryOperationDescription[]
+  = creatingInventoryOperationDescription(inventory, inventoryOperation);
+
   try {
     /*
       When the vendor clicks "accept", he accepts to perform the currnet day.
@@ -427,9 +437,6 @@ async function startShiftInventoryOperationProcess(
       text1: 'Comenzando registro de inventario inicial.',
       text2: 'Registrando inventario inicial y consultando información para la ruta.',
     });
-
-    const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
-      = creatingNewWorkDay(cashInventory, routeDay);
 
     // Storing information in embedded database.
     const resultInsertionWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
@@ -465,12 +472,6 @@ async function startShiftInventoryOperationProcess(
       text1: 'Registrando el inventario inicial.',
       text2: 'Registrando la información que compone el inventario inicial.',
     });
-
-    const inventoryOperation:IInventoryOperation
-      = creatingInventoryOperation(dayGeneralInformation, DAYS_OPERATIONS.start_shift_inventory);
-
-    const inventoryOperationDescription:IInventoryOperationDescription[]
-      = creatingInventoryOperationDescription(inventory, inventoryOperation);
 
     // Inventory operation.
     /* Due to this information is low read data, it is going to be stored only in the embedded database. */
@@ -615,6 +616,16 @@ async function startShiftInventoryOperationProcess(
       // Deleting all the day operations (the list of actions for the vendor)
       await deleteAllDayOperations();
 
+      // Deleting records to sync
+      await deleteSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'INSERT'));
+
+      // Inventory operations
+      await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+      // Inventory operation descriptions
+      await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+        'PENDING', 'INSERT'));
+
       return false;
     }
   } catch (error) {
@@ -643,6 +654,17 @@ async function startShiftInventoryOperationProcess(
 
     // Deleting all the day operations (the list of actions for the vendor)
     await deleteAllDayOperations();
+
+    // Deleting records to sync
+    await deleteSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'INSERT'));
+
+
+    // Inventory operations
+    await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+    // Inventory operation descriptions
+    await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+      'PENDING', 'INSERT'));
 
     return false;
   }
@@ -750,12 +772,23 @@ async function intermediateInventoryOperationProcess(
     // Store information in embedded database.
     const resultInsertionAllDayOperations:IResponse<IDayOperation[]> = await insertDayOperations(newListDayOperations);
 
+    // Sending operations to sync background process to sync them with the main database.
+
+    // Inventory operations
+    const resultInsertSyncRecordInventoryOperation:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+    // Inventory operation descriptions
+    const resultInsertSyncRecordInventoryOperationDescriptions:IResponse<ISyncRecord[]>
+      = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
 
     if (apiResponseProcess(resultInsertionInventoryOperation, 201)
     &&  apiResponseProcess(resultInsertionInventoryOperationDescription, 201)
     &&  apiResponseProcess(resultUpdatingInventory, 200)
     &&  apiResponseProcess(resultDeletionAllDayOperations, 200)
-    &&  apiResponseProcess(resultInsertionAllDayOperations, 201)) {
+    &&  apiResponseProcess(resultInsertionAllDayOperations, 201)
+    &&  apiResponseProcess(resultInsertSyncRecordInventoryOperation, 201)
+    &&  apiResponseProcess(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
       /* There was not an error during the process. */
       /* At this point, the inventory operation has been finished and registered. */
 
@@ -812,6 +845,13 @@ async function intermediateInventoryOperationProcess(
 
       await insertDayOperations(dayOperations);
       /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
+
+      // Inventory operations
+      await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+      // Inventory operation descriptions
+      await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+        'PENDING', 'INSERT'));
       return false;
     }
 
@@ -839,6 +879,13 @@ async function intermediateInventoryOperationProcess(
 
     /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
 
+    // Inventory operations
+    await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+    // Inventory operation descriptions
+    await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+      'PENDING', 'INSERT'));
+
     return false;
   }
 }
@@ -852,6 +899,10 @@ async function endShiftInventoryOperationProcess(
   currentOperation:IDayOperation,
   dispatch: AppDispatch,
 ):Promise<boolean> {
+  // Updating the records with the remainded data.
+  const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+  = finishingWorkDay(cashInventory, routeDay);
+
   // Creating the inventory operation (this inventory operation is tied to the "work day").
   const inventoryOperation:IInventoryOperation
     = creatingInventoryOperation(routeDay, DAYS_OPERATIONS.end_shift_inventory);
@@ -930,9 +981,6 @@ async function endShiftInventoryOperationProcess(
       text2: 'Guardando información necesaria para terminar el dia correctamente.',
     });
     /* Storing the end shift inventory of money and getting the date when the route was finished. */
-    const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
-      = finishingWorkDay(cashInventory, routeDay);
-
     // Storing information in embedded database.
     const resultFinishingWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
       = await updateWorkDay(dayGeneralInformation);
@@ -954,13 +1002,28 @@ async function endShiftInventoryOperationProcess(
     const resultInsertionDayOperations:IResponse<IDayOperation[]>
       = await insertDayOperations(listDayOperations);
 
+    // Sending operations to sync background process to sync them with the main database.
+    const resultUpadteSyncRecordGeneralDayInformation:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'UPDATE'));
+
+    // Inventory operations
+    const resultInsertSyncRecordInventoryOperation:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+      // Inventory operation descriptions
+    const resultInsertSyncRecordInventoryOperationDescriptions:IResponse<ISyncRecord[]>
+      = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
+
     /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
     if (apiResponseStatus(resultInsertionInventoryOperation, 201)
     &&  apiResponseStatus(resultInsertionInventoryOperationDescriptions, 201)
     &&  apiResponseStatus(resultUpdatingInventory, 200)
     &&  apiResponseStatus(resultFinishingWorkDay, 200)
     &&  apiResponseStatus(resultdeletionAllDayOperations, 200)
-    &&  apiResponseStatus(resultInsertionDayOperations, 201)) {
+    &&  apiResponseStatus(resultInsertionDayOperations, 201)
+    &&  apiResponseStatus(resultUpadteSyncRecordGeneralDayInformation, 200)
+    &&  apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201)
+    &&  apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
       // Updating redux context
       dispatch(addProductsInventory(inventory));
 
@@ -998,6 +1061,16 @@ async function endShiftInventoryOperationProcess(
       await insertDayOperations(dayOperations);
       /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
 
+      // Deleting records to sync
+      await deleteSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'UPDATE'));
+
+      // Inventory operations
+      await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+      // Inventory operation descriptions
+      await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+        'PENDING', 'INSERT'));
+
       return false;
     }
   } catch (error) {
@@ -1022,6 +1095,16 @@ async function endShiftInventoryOperationProcess(
 
     await insertDayOperations(dayOperations);
     /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
+
+    // Deleting records to sync
+    await deleteSyncQueueRecord(createSyncItem(dayGeneralInformation, 'PENDING', 'UPDATE'));
+
+    // Inventory operations
+    await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
+
+    // Inventory operation descriptions
+    await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
+      'PENDING', 'INSERT'));
 
     return false;
   }
