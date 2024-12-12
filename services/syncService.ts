@@ -1,5 +1,11 @@
-import { current } from '@reduxjs/toolkit';
+// Libraries
+import store from '../redux/store';
+import BackgroundFetch from 'react-native-background-fetch';
+
+// Interfaces
 import { IDay, IDayGeneralInformation, IInventoryOperation, IInventoryOperationDescription, IResponse, IRoute, IRouteDay, IRouteTransaction, IRouteTransactionOperation, IRouteTransactionOperationDescription, ISyncRecord } from '../interfaces/interfaces';
+
+// SQL queries
 import {
   getAllInventoryOperations,
   getAllInventoryOperationDescription,
@@ -21,7 +27,7 @@ import {
 import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 import { IRepository } from '../queries/repositories/interfaces/IRepository';
 
-import store from '../redux/store';
+// Utils
 import { apiResponseStatus, createApiResponse, getDataFromApiResponse } from '../utils/apiResponse';
 import { convertingArrayInDictionary } from '../utils/generalFunctions';
 
@@ -402,7 +408,28 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   }
 }
 
+
+async function createBackgroundSyncProcess() {
+  BackgroundFetch.configure({
+    minimumFetchInterval: 15, // Execute every 15 minutes (minimum for iOS)
+    stopOnTerminate: false,   // Continue running even after the app is terminated
+    startOnBoot: true,        // Automatically restart on device reboot
+    enableHeadless: true,     // Allow execution in headless mode (no UI)
+    requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
+  },
+  async (taskId:string) => {
+    await syncingRecordsWithCentralDatabase();
+    BackgroundFetch.finish(taskId);
+  },
+  (error) => {
+    console.error('[BackgroundFetch] Failed to configure:', error);
+  });
+
+  BackgroundFetch.start()
+}
+
 export {
   determingRecordsToBeSyncronized,
   syncingRecordsWithCentralDatabase,
+  createBackgroundSyncProcess,
 };

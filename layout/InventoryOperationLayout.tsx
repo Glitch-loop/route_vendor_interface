@@ -104,6 +104,7 @@ import {
 import Toast from 'react-native-toast-message';
 import TABLES from '../utils/tables';
 import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
+import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 
 // Initializing database
 const databaseRepository = RepositoryFactory.createRepository('supabase');
@@ -574,6 +575,10 @@ async function startShiftInventoryOperationProcess(
 
       // Setting as the new "current operation" the first store of the route.
       //dispatch(setNextOperation());
+
+      // Executing a synchronization process to register the start shift inventory
+      // Note: In case of failure, the background process will eventually synchronize the records.
+      syncingRecordsWithCentralDatabase();
 
       Toast.show({
         type: 'success',

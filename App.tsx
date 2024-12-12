@@ -12,6 +12,7 @@ import { PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+
 // Redux context
 import { Provider } from 'react-redux';
 import store from './redux/store';
@@ -36,6 +37,7 @@ import {
 // Services
 import { getPrinterBluetoothConnection } from './services/printerService';
 import { requestGeolocalizationPermissionsProcess } from './services/geolocationService';
+import { createBackgroundSyncProcess } from './services/syncService';
 
 export type RootStackParamList = {
   routeSelection: undefined;
@@ -60,7 +62,7 @@ async function appInitialization() {
     // Creating database
     await createEmbeddedDatabase();
 
-
+    await createBackgroundSyncProcess();
     // Verifying permissions
     // Connecting to the printer
     //await getPrinterBluetoothConnection();

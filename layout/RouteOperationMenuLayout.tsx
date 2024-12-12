@@ -148,13 +148,13 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
         Toast.show({
           type: 'error',
           text1:'Ha habido un error al momento de guardar la información, asegurate de tener conexión a internet para completar el proceso',
-          text2: 'Ha habido un error durante el sincronizado.'});
+          text2: 'Ha habido un error durante el sincronizado con la base de datos.'});
       }
     } catch (error) {
       Toast.show({
         type: 'error',
         text1:'Ha habido un error al momento de guardar la información, asegurate de tener conexión a internet para completar el proceso',
-        text2: 'Ha habido un error durante el sincronizado.'});
+        text2: 'Ha habido un error durante el sincronizado con la base de datos.'});
     }
   };
 
