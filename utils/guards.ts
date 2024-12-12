@@ -16,8 +16,14 @@ import {
   IRouteTransactionOperation,
   IProduct,
   IRouteTransactionOperationDescription,
+  IDayGeneralInformation,
+  IDay,
+  IRouteDay,
+  IRoute,
  } from '../interfaces/interfaces';
 
+
+// Type guards
 // Related to general information
 export function isTypeICurrency(obj: any): obj is ICurrency {
   return 'id_denomination' in obj;
@@ -67,4 +73,14 @@ export function isTypeIRouteTransactionOperation(obj: any): obj is IRouteTransac
 export function isTypeIRouteTransactionOperationDescription(obj: any):
 obj is IRouteTransactionOperationDescription {
   return 'id_route_transaction_operation_description' in obj;
+}
+
+// Intersection guards
+// Related to work day
+export function isTypeWorkDayInstersection(obj: any): obj is
+IRoute&IDayGeneralInformation&IDay&IRouteDay {
+  return 'id_route' in obj
+  && 'id_route_day' in obj
+  && 'day_name'     in obj
+  && 'id_work_day' in obj;
 }

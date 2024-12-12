@@ -32,6 +32,8 @@ import ConfirmationBand from '../ConfirmationBand';
 
 // Embedded Database
 import {
+  deleteSyncQueueRecord,
+  insertSyncQueueRecord,
   updateProducts,
   updateTransaction,
 } from '../../queries/SQLite/sqlLiteQueries';
@@ -40,6 +42,7 @@ import {
 import { printTicketBluetooth } from '../../services/printerService';
 import Toast from 'react-native-toast-message';
 import { apiResponseStatus } from '../../utils/apiResponse';
+import { createSyncItem } from '../../utils/syncFunctions';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -249,12 +252,21 @@ const SummarizeTransaction = ({
 
         /* Updating inventory */
         // Updating embedded database
+        /* Note:
+            Since 'newInventory' is a table that stores the inventory of the day (something that is
+            going to vary throughout the time) this is not synced with the database.
+        */
         const resultUpdationProductInventory:IResponse<IProductInventory[]>
           = await updateProducts(newInventory);
 
+        // Adding records to sync with database
+          const resultUpdateSyncTransaction
+            = await insertSyncQueueRecord(createSyncItem(updatedTransaction, 'PENDING', 'UPDATE'));
+
 
         if (apiResponseStatus(resultUpdationTransaction, 200)
-        && apiResponseStatus(resultUpdationProductInventory, 200)) {
+        && apiResponseStatus(resultUpdationProductInventory, 200)
+        && apiResponseStatus(resultUpdateSyncTransaction, 200)) {
           // Updating redux context
           dispatch(updateProductsInventory(newInventory));
 
@@ -273,6 +285,9 @@ const SummarizeTransaction = ({
           /* Ensuring the product inventory is in the previous state of the transaction cancelation operation */
           await updateProducts(productInventory);
 
+          // Deleting records to sync
+          await deleteSyncQueueRecord(createSyncItem(currentTransaction, 'PENDING', 'UPDATE'));
+
           Toast.show({type: 'error',
             text1:'Ha habido un error durante la cancelación de la transacción.',
             text2: 'Ha hanido un error durante la cancelación de la transacción.'});
@@ -288,6 +303,9 @@ const SummarizeTransaction = ({
 
       /* Ensuring the product inventory is in the previous state of the transaction cancelation operation */
       await updateProducts(productInventory);
+
+      // Deleting records to sync
+      await deleteSyncQueueRecord(createSyncItem(currentTransaction, 'PENDING', 'UPDATE'));
 
       Toast.show({type: 'error',
         text1:'Ha habido un error durante la cancelación de la transacción.',

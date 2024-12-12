@@ -32,6 +32,7 @@ import {
   isTypeIRouteTransaction,
   isTypeIRouteTransactionOperation,
   isTypeIRouteTransactionOperationDescription,
+  isTypeWorkDayInstersection,
 } from '../utils/guards';
 
 
@@ -331,6 +332,14 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               response = await repository.insertRouteTransactionOperationDescription([ currentRecord ]);
             } else if (currentAction === 'UPDATE') {
               // TODO
+            } else {
+              /* Other operation*/
+            }
+          } else if (isTypeWorkDayInstersection(currentRecord)) {
+            if (currentAction === 'INSERT') {
+              response = await repository.insertWorkDay(currentRecord);
+            } else if (currentAction === 'UPDATE') {
+              response = await repository.updateWorkDay(currentRecord);
             } else {
               /* Other operation*/
             }

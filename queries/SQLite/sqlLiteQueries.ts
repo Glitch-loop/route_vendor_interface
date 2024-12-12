@@ -1470,8 +1470,11 @@ export async function deleteSyncQueueRecord(recordToSync: ISyncRecord):Promise<I
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      const { id_record } = recordToSync;
-      await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ?`, [ id_record ]);
+      const {
+        id_record,
+        action,
+       } = recordToSync;
+      await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND state = ?`, [ id_record, action ]);
     });
     return createApiResponse<null>(200, null, null, 'Record to sync has been deleted successfully.');
   } catch(error) {
@@ -1487,8 +1490,8 @@ export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[])
     await sqlite.transaction(async (tx) => {
       let totalRecordsToSync:number = deleteRecordsToSync.length;
       for (let  i = 0; i < totalRecordsToSync; i++){
-        const { id_record } = deleteRecordsToSync[i];
-        await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ?`, [ id_record ]);
+        const { id_record, action } = deleteRecordsToSync[i];
+        await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND action = ?`, [ id_record, action ]);
         deletedRecordsToSync.push(deleteRecordsToSync[i]);
       }
     });

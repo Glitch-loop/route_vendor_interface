@@ -1011,8 +1011,8 @@ async function endShiftInventoryOperationProcess(
       = await insertSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
 
       // Inventory operation descriptions
-    const resultInsertSyncRecordInventoryOperationDescriptions:IResponse<ISyncRecord[]>
-      = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
+    const resultInsertSyncRecordInventoryOperationDescriptions
+    :IResponse<ISyncRecord[]> = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
 
     /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
     if (apiResponseStatus(resultInsertionInventoryOperation, 201)
