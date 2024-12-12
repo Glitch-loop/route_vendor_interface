@@ -227,7 +227,8 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   const recordsCorrectlyProcessed:ISyncRecord[] = [];
   let resultOfSyncProcess:boolean = false;
   try {
-    const responseSynRecords:IResponse<ISyncRecord[]> = await getAllSyncQueueRecords();
+    const responseSynRecords:IResponse<ISyncRecord[]>
+      = await getAllSyncQueueRecords();
     if (apiResponseStatus(responseSynRecords, 200)) {
       const syncQueue:ISyncRecord[] = getDataFromApiResponse(responseSynRecords)
       .map((record:ISyncRecord) => {

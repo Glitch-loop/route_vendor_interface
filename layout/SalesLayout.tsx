@@ -22,6 +22,7 @@ import {
   IRouteTransactionOperationDescription,
   IStore,
   IStoreStatusDay,
+  ISyncRecord,
 } from '../interfaces/interfaces';
 
 // Utils
@@ -61,14 +62,19 @@ import {
   deleteRouteTransactionById,
   deleteRouteTransactionOperationById,
   deleteRouteTransactionOperationDescriptionsById,
+  deleteSyncQueueRecord,
+  deleteSyncQueueRecords,
   insertRouteTransaction,
   insertRouteTransactionOperation,
   insertRouteTransactionOperationDescription,
+  insertSyncQueueRecord,
+  insertSyncQueueRecords,
   updateDayOperation,
   updateProducts,
   updateStore,
 } from '../queries/SQLite/sqlLiteQueries';
 import { apiResponseStatus } from '../utils/apiResponse';
+import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
 
 const initialStateStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -434,6 +440,39 @@ async function insertionTransactionOperationsAndOperationDescriptions(
 
 }
 
+async function insertionSyncRecordTransactionOperationAndOperationDescriptions(
+  routeTransactionOperation:IRouteTransactionOperation,
+  routeTransactionOperationDescription:IRouteTransactionOperationDescription[]
+) {
+  try {
+    let resultInsertion:boolean = true;
+    if (routeTransactionOperationDescription[0] !== undefined) {
+      /* There was a movement in concept of devolution. */
+      let resultInsertionOperation:IResponse<null>
+        = await insertSyncQueueRecord(createSyncItem(routeTransactionOperation, 'PENDING', 'INSERT'));
+      let resultInsertionOperationDescription
+      :IResponse<ISyncRecord[]>
+        = await insertSyncQueueRecords(createSyncItems(routeTransactionOperationDescription, 'PENDING', 'INSERT'));
+
+        if (apiResponseStatus(resultInsertionOperation, 201)
+        && apiResponseStatus(resultInsertionOperationDescription, 201)) {
+          resultInsertion = true;
+        } else {
+          resultInsertion = false;
+        }
+
+    } else {
+      /* It means, that there is not movements for the current operation,
+         so, it won't be registered  */
+      resultInsertion = true;
+    }
+
+    return resultInsertion;
+  } catch (error) {
+    return false;
+  }
+}
+
 const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
   // Auxiliar variables
   // Getting information from parameters
@@ -686,7 +725,32 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
     // Updating day operations
     console.log("Update day operations")
-    let resultUpdateDayOperations:boolean = await updateDayOperations(currentOperation, nextDayOperation);
+    let resultUpdateDayOperations:boolean
+      = await updateDayOperations(currentOperation, nextDayOperation);
+
+    /* Adding records to sync */
+    /*
+      From all the information created in the process, only the records regarded to the transaction
+      itself will be synced with the database.
+    */
+    // Adding transaction
+    const resultSyncInsertionRouteTransaction:IResponse<null>
+      = await insertSyncQueueRecord(createSyncItem(routeTransaction, 'PENDING', 'INSERT'));
+
+    // Adding route operations and their route description
+    const resultSyncOperationDevolution:boolean
+      = await insertionSyncRecordTransactionOperationAndOperationDescriptions(productDevolutionRouteTransactionOperation,
+      productDevolutionRouteTransactionOperationDescription);
+
+
+    const resultSyncOperationReposition:boolean
+      = await insertionSyncRecordTransactionOperationAndOperationDescriptions(productRepositionRouteTransactionOperation,
+      productRepositionRouteTransactionOperationDescription);
+
+    const resultSyncOperationSale:boolean
+      = await insertionSyncRecordTransactionOperationAndOperationDescriptions(
+        saleRouteTransactionOperation, saleRouteTransactionOperationDescription);
+
 
 
     console.log("resultInsertionRouteTransaction: ", apiResponseStatus(resultInsertionRouteTransaction, 201))
@@ -704,6 +768,10 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     && apiResponseStatus(resultUpdateProducts, 200)
     && apiResponseStatus(resultUpdatingStore, 200)
     && resultUpdateDayOperations
+    && apiResponseStatus(resultSyncInsertionRouteTransaction, 201)
+    && resultSyncOperationDevolution
+    && resultSyncOperationReposition
+    && resultSyncOperationSale
     ) {
       console.log("Updating states")
       Toast.show({
@@ -755,6 +823,21 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       // Recoverying the operations to before the transactions
       await updateDayOperations(nextDayOperation, currentOperation);
 
+      // Deleting sync records
+      await deleteSyncQueueRecord(createSyncItem(routeTransaction, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(productDevolutionRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(productDevolutionRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(productRepositionRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(productRepositionRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(saleRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(saleRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+
       setResultSaleState(false); // The sale falied.
     }
 
@@ -765,29 +848,45 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
         text1:'Hubo un problema durante el registro de la venta',
         text2: 'Hubo un problema durante el registro de la venta, porfavor, intente nuevamente.'});
 
-        // Deleting route transaction operations descriptions
-        await deleteRouteTransactionOperationDescriptionsById(productDevolutionRouteTransactionOperationDescription);
-        await deleteRouteTransactionOperationDescriptionsById(productRepositionRouteTransactionOperationDescription);
-        await deleteRouteTransactionOperationDescriptionsById(saleRouteTransactionOperationDescription);
+      // Deleting route transaction operations descriptions
+      await deleteRouteTransactionOperationDescriptionsById(productDevolutionRouteTransactionOperationDescription);
+      await deleteRouteTransactionOperationDescriptionsById(productRepositionRouteTransactionOperationDescription);
+      await deleteRouteTransactionOperationDescriptionsById(saleRouteTransactionOperationDescription);
 
-        // Deleting route transaction operations
-        await deleteRouteTransactionOperationById(productDevolutionRouteTransactionOperation);
-        await deleteRouteTransactionOperationById(saleRouteTransactionOperation);
-        await deleteRouteTransactionOperationById(productRepositionRouteTransactionOperation);
+      // Deleting route transaction operations
+      await deleteRouteTransactionOperationById(productDevolutionRouteTransactionOperation);
+      await deleteRouteTransactionOperationById(saleRouteTransactionOperation);
+      await deleteRouteTransactionOperationById(productRepositionRouteTransactionOperation);
 
-        // Deleting route transaction
-        await deleteRouteTransactionById(routeTransaction);
+      // Deleting route transaction
+      await deleteRouteTransactionById(routeTransaction);
 
-        // Recoverying inventory to before the transaction
-        await updateProducts(productInventory);
+      // Recoverying inventory to before the transaction
+      await updateProducts(productInventory);
 
-        // Recoverying the store state to before the transaction
-        if (foundStore !== undefined) {
-          await updateStore(foundStore);
-        } else { /* The store was not registered in the store to visit today. */ }
+      // Recoverying the store state to before the transaction
+      if (foundStore !== undefined) {
+        await updateStore(foundStore);
+      } else { /* The store was not registered in the store to visit today. */ }
 
-        // Recoverying the operations to before the transactions
-        await updateDayOperations(nextDayOperation, currentOperation);
+      // Recoverying the operations to before the transactions
+      await updateDayOperations(nextDayOperation, currentOperation);
+
+      // Deleting sync records
+      await deleteSyncQueueRecord(createSyncItem(routeTransaction, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(productDevolutionRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(productDevolutionRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(productRepositionRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(productRepositionRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecord(
+        createSyncItem(saleRouteTransactionOperation, 'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(saleRouteTransactionOperationDescription, 'PENDING', 'INSERT'));
+
       setResultSaleState(false); // Something was wrong during the sale.
     }
   };

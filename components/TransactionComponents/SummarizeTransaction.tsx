@@ -266,7 +266,7 @@ const SummarizeTransaction = ({
 
         if (apiResponseStatus(resultUpdationTransaction, 200)
         && apiResponseStatus(resultUpdationProductInventory, 200)
-        && apiResponseStatus(resultUpdateSyncTransaction, 200)) {
+        && apiResponseStatus(resultUpdateSyncTransaction, 201)) {
           // Updating redux context
           dispatch(updateProductsInventory(newInventory));
 
