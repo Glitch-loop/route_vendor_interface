@@ -243,44 +243,50 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
 
       /* Since it is a relational database, the process of syncing the records has
       priotization, so it is needed to identify the type of records and sort them
-      before syncing with the database.
+      (according with their prioritization) before syncing with the database.
 
       Order between records (interfaces):
-      1.
+      1. Work day
+      2.
         IInventoryOperation
         IRouteTransaction
-      2.
+      3.
         IInventoryOperationDescription
         IRouteTransactionOperation
-      3.
+      4.
         IRouteTransactionOperationDescription
       */
       // Sorting elements by internfaces (descending order)
       syncQueue.sort((recordA:ISyncRecord, recordB:ISyncRecord) => {
         const a:any = recordA.payload;
         const b:any = recordB.payload;
-  
-        let AisFirstLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
-        let AisSecondLevel:number = Number(isTypeIInventoryOperationDescription(a)
-                                  || isTypeIRouteTransactionOperation(a));
-        let AisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
-  
-        let BisFirstLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
-        let BisSecondLevel:number = Number(isTypeIInventoryOperationDescription(b)
-                                  || isTypeIRouteTransactionOperation(b));
-        let BisThirdLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
-  
-        let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + AisThirdLevel * 3;
-        let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + BisThirdLevel * 3;
-  
+
+        let AisFirstLevel:number = Number(isTypeWorkDayInstersection(a));
+        let AisSecondLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
+        let AisThirdLevel:number = Number(isTypeIInventoryOperationDescription(a)
+        || isTypeIRouteTransactionOperation(a));
+        let AisFourthLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
+
+        let BisFirstLevel:number = Number(isTypeWorkDayInstersection(b));
+        let BisSecondLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
+        let BisThirdLevel:number = Number(isTypeIInventoryOperationDescription(b)
+        || isTypeIRouteTransactionOperation(b));
+        let BisFourthLevel:number = Number(isTypeIRouteTransactionOperationDescription(b));
+
+
+
+        let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + (AisThirdLevel * 3) + (AisFourthLevel * 4);
+
+        let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + (BisThirdLevel * 3) + (BisFourthLevel * 4);
+
         if(ACardinality > BCardinality) {
           return -1;
         }
-  
+
         if (ACardinality < BCardinality) {
           return 1;
         }
-  
+
         return 0;
       });
 

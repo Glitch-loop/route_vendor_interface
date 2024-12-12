@@ -121,6 +121,8 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       // Storing the information in the main database.
       const resultSyncingProcess:boolean = await syncingRecordsWithCentralDatabase();
 
+      /* The user only will be capable to finish the day if all the records were correctly
+      synchronized with the database. */
       if (resultSyncingProcess) {
         Toast.show({
           type: 'success',
