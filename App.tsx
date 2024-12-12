@@ -35,7 +35,6 @@ import {
 
 // Services
 import { getPrinterBluetoothConnection } from './services/printerService';
-
 import { requestGeolocalizationPermissionsProcess } from './services/geolocationService';
 
 export type RootStackParamList = {
@@ -53,7 +52,7 @@ export type RootStackParamList = {
 */
 
 
-async function databaseInitialization() {
+async function appInitialization() {
   try {
     // Dropping database
     // await dropEmbeddedDatabase();
@@ -68,7 +67,6 @@ async function databaseInitialization() {
 
     // Geolocalization permissions
     await requestGeolocalizationPermissionsProcess();
-
   } catch (error) {
     console.log('Error: ', error);
   }
@@ -79,7 +77,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function App(): React.JSX.Element {
   useEffect(() => {
     // Initializing database
-    databaseInitialization();
+    appInitialization();
   },[]);
 
 
