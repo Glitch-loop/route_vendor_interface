@@ -232,6 +232,7 @@ async function determingRecordsToBeSyncronized() {
 async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   const recordsCorrectlyProcessed:ISyncRecord[] = [];
   let resultOfSyncProcess:boolean = false;
+  console.log("sincronizando")
   try {
     const responseSynRecords:IResponse<ISyncRecord[]>
       = await getAllSyncQueueRecords();
@@ -242,7 +243,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
           id_record: record.id_record,
           status: record.status,
           payload: JSON.parse(record.payload),
-          table: record.table,
+          table_name: record.table_name,
           action: record.action,
         };
       });
@@ -373,7 +374,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               id_record: currentRecordToSync.id_record,
               status: 'SUCCESS',
               payload: JSON.parse(currentRecordToSync.payload),
-              table: currentRecordToSync.table,
+              table_name: currentRecordToSync.table_name,
               action: currentRecordToSync.action,
             });
           }
@@ -389,21 +390,25 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
       if (recordsCorrectlyProcessed.length === syncQueue.length) {
         /* If The records correctly processed are equal to the number of records in the sync queue
         then it means that all the pending process where synchronized successfully. */
+        console.log("Todo fue procesado correctamente")
         resultOfSyncProcess = true;
       } else {
         /* For some reasone there were records that were not capable to be synchronized. */
+        console.log("Hubo datos sin procesar")
         resultOfSyncProcess = false;
       }
 
     } else {
       /* Something was wrong during records retrieving; There is no extra instructions*/
+      console.log("Algo salio mal al momento de recuperar la informacion")
       resultOfSyncProcess = false;
     }
-
+    console.log("resultado sincronizacion: ", resultOfSyncProcess)
     return resultOfSyncProcess;
   } catch (error) {
     /* Something was wrong during syncing process. */
     resultOfSyncProcess = false;
+    console.log("error durante sincronizacion")
     return resultOfSyncProcess;
   }
 }
@@ -425,7 +430,7 @@ async function createBackgroundSyncProcess() {
     console.error('[BackgroundFetch] Failed to configure:', error);
   });
 
-  BackgroundFetch.start()
+  BackgroundFetch.start();
 }
 
 export {

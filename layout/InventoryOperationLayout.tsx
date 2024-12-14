@@ -102,7 +102,7 @@ import {
   getDataFromApiResponse,
 } from '../utils/apiResponse';
 import Toast from 'react-native-toast-message';
-import TABLES from '../utils/tables';
+
 import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
 import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 

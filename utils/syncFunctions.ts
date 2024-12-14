@@ -10,25 +10,25 @@ export function createSyncItem(data:any,
     id_record:  '',
     status:     'FAILED',
     payload:    {},
-    table:      '',
+    table_name:      '',
     action:     'INSERT',
   };
 
   if (isTypeIInventoryOperation(data)) {
     syncItem.id_record = data.id_inventory_operation;
-    syncItem.table = TABLES.INVENTORY_OPERATIONS;
+    syncItem.table_name = TABLES.INVENTORY_OPERATIONS;
   } else if (isTypeIInventoryOperationDescription(data)) {
     syncItem.id_record = data.id_product_operation_description;
-    syncItem.table = TABLES.INVENTORY_OPERATION_TYPES;
+    syncItem.table_name = TABLES.INVENTORY_OPERATION_TYPES;
   } else if (isTypeIRouteTransaction(data)) {
     syncItem.id_record = data.id_route_transaction;
-    syncItem.table = TABLES.ROUTE_TRANSACTIONS;
+    syncItem.table_name = TABLES.ROUTE_TRANSACTIONS;
   } else if (isTypeIRouteTransactionOperation(data)) {
     syncItem.id_record = data.id_route_transaction_operation;
-    syncItem.table = TABLES.ROUTE_TRANSACTION_OPERATIONS;
+    syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS;
   } else if (isTypeIRouteTransactionOperationDescription(data)) {
     syncItem.id_record = data.id_route_transaction_operation_description;
-    syncItem.table = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
+    syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
   } else if (isTypeIRouteTransactionOperationDescription(data)) {
     /* TODO: GENERAL TYPE INFORMATION*/
   } else {
@@ -59,27 +59,35 @@ export function createSyncItems(arrData:any[],
       id_record:  '',
       status:     'FAILED',
       payload:    {},
-      table:      '',
+      table_name:      '',
       action:     'INSERT',
     };
 
     let data = arrData[i];
 
+    console.log("Current record: ", data)
+    
     if (isTypeIInventoryOperation(data)) {
+      console.log("is inventory operation")
       syncItem.id_record = data.id_inventory_operation;
-      syncItem.table = TABLES.INVENTORY_OPERATIONS;
+      syncItem.table_name = TABLES.INVENTORY_OPERATIONS;
     } else if (isTypeIInventoryOperationDescription(data)) {
+      console.log("is inventory operation description")
       syncItem.id_record = data.id_product_operation_description;
-      syncItem.table = TABLES.INVENTORY_OPERATION_TYPES;
+      syncItem.table_name = TABLES.INVENTORY_OPERATION_TYPES;
     } else if (isTypeIRouteTransaction(data)) {
+      console.log("is route transaction")
       syncItem.id_record = data.id_route_transaction;
-      syncItem.table = TABLES.ROUTE_TRANSACTIONS;
+      syncItem.table_name = TABLES.ROUTE_TRANSACTIONS;
     } else if (isTypeIRouteTransactionOperation(data)) {
+      console.log("is route transaction operation")
       syncItem.id_record = data.id_route_transaction_operation;
-      syncItem.table = TABLES.ROUTE_TRANSACTION_OPERATIONS;
+      syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS;
     } else if (isTypeIRouteTransactionOperationDescription(data)) {
+      console.log("is route transaction operation description")
       syncItem.id_record = data.id_route_transaction_operation_description;
-      syncItem.table = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
+      syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
+      console.log("Registering sync record, ID: ", syncItem.id_record)
     } else {
       /* Other type of records that is not supported*/
     }

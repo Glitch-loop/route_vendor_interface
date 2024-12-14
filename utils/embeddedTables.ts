@@ -9,8 +9,8 @@ const EMBEDDED_TABLES = {
   ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS: 'route_transaction_operation_descriptions',
   INVENTORY_OPERATIONS: 'inventory_operations',
   PRODUCT_OPERATION_DESCRIPTIONS: 'product_operation_descriptions',
-  SYNC_QUEUE: 'sync_queue',
-  SYNC_HISTORIC: 'sync_historic',
+  SYNC_QUEUE: 'sync_queue_records',
+  SYNC_HISTORIC: 'sync_historic_records',
 };
 
 export default EMBEDDED_TABLES;

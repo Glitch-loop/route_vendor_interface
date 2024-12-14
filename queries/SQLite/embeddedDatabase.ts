@@ -130,7 +130,7 @@ export const inventoryOperationsEmbeddedTable = `
 
 export const productOperationDescriptionsEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS} (
-    id_product_operation_description  TEXT NOT NULL,
+    id_product_operation_description  TEXT NOT NULL UNIQUE,
     price_at_moment                   NUMERIC(6,3) NOT NULL,
     amount                            INT NOT NULL,
     id_inventory_operation            TEXT NOT NULL,
@@ -140,20 +140,20 @@ export const productOperationDescriptionsEmbeddedTable = `
 
 export const syncQueueEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_QUEUE} (
-    id_record TEXT NOT NULL UNIQUE,
-    status    TEXT NOT NULL,
-    payload   TEXT NOT NULL,
-    table     TEXT NOT NULL,
-    action    TEXT NOT NULL
+    id_record   TEXT NOT NULL UNIQUE,
+    status      TEXT NOT NULL,
+    payload     TEXT NOT NULL,
+    table_name  TEXT NOT NULL,
+    action      TEXT NOT NULL
   );   
 `;
 
 export const syncHistoricEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_HISTORIC} (
-    id_record TEXT NOT NULL UNIQUE,
-    status    TEXT NOT NULL,
-    payload   TEXT NOT NULL,
-    table     TEXT NOT NULL,
-    action    TEXT NOT NULL
+    id_record   TEXT NOT NULL UNIQUE,
+    status      TEXT NOT NULL,
+    payload     TEXT NOT NULL,
+    table_name  TEXT NOT NULL,
+    action      TEXT NOT NULL
   );   
 `;

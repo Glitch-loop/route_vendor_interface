@@ -59,6 +59,7 @@ import { updateProductsInventory } from '../redux/slices/productsInventorySlice'
 
 // Database
 import {
+  deleteAllSyncQueueRecords,
   deleteRouteTransactionById,
   deleteRouteTransactionOperationById,
   deleteRouteTransactionOperationDescriptionsById,
@@ -449,9 +450,11 @@ async function insertionSyncRecordTransactionOperationAndOperationDescriptions(
     if (routeTransactionOperationDescription[0] !== undefined) {
       /* There was a movement in concept of devolution. */
       let resultInsertionOperation:IResponse<null>
+      // Inserting operation
         = await insertSyncQueueRecord(createSyncItem(routeTransactionOperation, 'PENDING', 'INSERT'));
-      let resultInsertionOperationDescription
-      :IResponse<ISyncRecord[]>
+
+      // Inserting operation descriptions
+      let resultInsertionOperationDescription:IResponse<ISyncRecord[]>
         = await insertSyncQueueRecords(createSyncItems(routeTransactionOperationDescription, 'PENDING', 'INSERT'));
 
         if (apiResponseStatus(resultInsertionOperation, 201)
@@ -733,6 +736,8 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       From all the information created in the process, only the records regarded to the transaction
       itself will be synced with the database.
     */
+     await deleteAllSyncQueueRecords();
+
     // Adding transaction
     const resultSyncInsertionRouteTransaction:IResponse<null>
       = await insertSyncQueueRecord(createSyncItem(routeTransaction, 'PENDING', 'INSERT'));
@@ -760,6 +765,10 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
     console.log("resultUpdateProducts: ", apiResponseStatus(resultUpdateProducts, 200))
     console.log("resultUpdatingStore: ", apiResponseStatus(resultUpdatingStore, 200))
     console.log("resultUpdateDayOperations: ", resultUpdateDayOperations)
+    console.log("route trans: ", apiResponseStatus(resultSyncInsertionRouteTransaction, 201))
+    console.log("resultSyncOperationDevolution: ", resultSyncOperationDevolution)
+    console.log("resultSyncOperationReposition: ", resultSyncOperationReposition)
+    console.log("resultSyncOperationSale: ", resultSyncOperationSale)
     // Validating the process was correctly completed
     if (apiResponseStatus(resultInsertionRouteTransaction, 201)
     && resultOperationDevolution

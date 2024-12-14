@@ -31,7 +31,7 @@ export function isTypeICurrency(obj: any): obj is ICurrency {
 
 // Related to product inventory
 export function isTypeIProductInventory(obj: any): obj is IProduct {
-  return 'id_product' in obj;
+  return 'id_product' in obj && 'product_name' in obj;
 }
 
 export function isTypeIProduct(obj: any): obj is IProductInventory {
@@ -40,7 +40,7 @@ export function isTypeIProduct(obj: any): obj is IProductInventory {
 
 // Related to store
 export function isTypeIStore(obj: any): obj is IStore {
-  return 'id_store' in obj;
+  return 'id_store' in obj && 'status_store' in obj;
 }
 
 export function isTypeIRouteStore(obj: any): obj is IStore&IStoreStatusDay {
@@ -49,7 +49,8 @@ export function isTypeIRouteStore(obj: any): obj is IStore&IStoreStatusDay {
 
 // Related to inventory operation
 export function isTypeIInventoryOperation(obj: any): obj is IInventoryOperation {
-  return 'id_inventory_operation' in obj;
+  return 'id_inventory_operation' in obj
+      && 'id_type_of_operation' in obj;
 }
 
 export function isTypeIInventoryOperationDescription(obj: any):
@@ -59,15 +60,18 @@ obj is IInventoryOperationDescription {
 
 // Related to transactions
 export function isTypeIPaymentMethod(obj: any): obj is IPaymentMethod {
-  return 'id_payment_method' in obj;
+  return 'id_payment_method' in obj
+      && 'payment_method_name' in obj;
 }
 
 export function isTypeIRouteTransaction(obj: any): obj is IRouteTransaction {
-  return 'id_route_transaction' in obj;
+  return 'id_route_transaction' in obj
+      && 'id_work_day' in obj;
 }
 
 export function isTypeIRouteTransactionOperation(obj: any): obj is IRouteTransactionOperation {
-  return 'id_route_transaction_operation' in obj;
+  return 'id_route_transaction_operation' in obj
+      && 'id_route_transaction_operation_type' in obj;
 }
 
 export function isTypeIRouteTransactionOperationDescription(obj: any):

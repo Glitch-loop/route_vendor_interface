@@ -171,6 +171,6 @@ export interface ISyncRecord {
   id_record:  string,
   status:     'PENDING'|'SUCCESS'|'FAILED',
   payload:    any,
-  table:      string,
+  table_name:      string,
   action:     'INSERT'|'UPDATE'|'DELETE',
 }
