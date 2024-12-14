@@ -57,12 +57,14 @@ export type RootStackParamList = {
 async function appInitialization() {
   try {
     // Dropping database
-    // await dropEmbeddedDatabase();
-
+    console.log("deleting database")
+    await dropEmbeddedDatabase();
+    
     // Creating database
+    console.log("creating database")
     await createEmbeddedDatabase();
 
-    await createBackgroundSyncProcess();
+    // await createBackgroundSyncProcess();
     // Verifying permissions
     // Connecting to the printer
     //await getPrinterBluetoothConnection();

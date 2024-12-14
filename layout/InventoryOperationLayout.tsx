@@ -538,19 +538,18 @@ async function startShiftInventoryOperationProcess(
       shift inventory), so it is needed to advance to the next operation (first store of
       the route).
     */
-
     if (apiResponseStatus(resultInsertionWorkDay, 201)
-    && apiResponseProcess(resultInsertionStores, 201)
-    && apiResponseProcess(resultInventoryOperation, 201)
-    && apiResponseProcess(resultInventoryOperationDescription, 201)
-    && apiResponseProcess(resultInsertProducts, 201)
-    && apiResponseProcess(resultInsertDayOperation, 201)
-    && apiResponseProcess(resultInsertDayOperations, 201)
-    && apiResponseProcess(resultGetStoresInTheRoute, 200)
-    && apiResponseProcess(resultGetStoresOfRoute, 200)
-    && apiResponseProcess(resultInsertSyncRecordGeneralDayInformation, 201)
-    && apiResponseProcess(resultInsertSyncRecordInventoryOperation, 201)
-    && apiResponseProcess(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
+    && apiResponseStatus(resultInsertionStores, 201)
+    && apiResponseStatus(resultInventoryOperation, 201)
+    && apiResponseStatus(resultInventoryOperationDescription, 201)
+    && apiResponseStatus(resultInsertProducts, 201)
+    && apiResponseStatus(resultInsertDayOperation, 201)
+    && apiResponseStatus(resultInsertDayOperations, 201)
+    && apiResponseStatus(resultGetStoresInTheRoute, 200)
+    && apiResponseStatus(resultGetStoresOfRoute, 200)
+    && apiResponseStatus(resultInsertSyncRecordGeneralDayInformation, 201)
+    && apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201)
+    && apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
       /* The process has been finished successfully */
       /* Once the information has been stored in the embedded database, store the information
           in the states of the application.
@@ -707,8 +706,8 @@ async function intermediateInventoryOperationProcess(
       text2: 'Comenzado el registro de la operación de inventario.',
     });
     // Inserting in embedded database the new inventory operation.
-    const resultInsertionInventoryOperation:IResponse<IInventoryOperation>
-      = await insertInventoryOperation(inventoryOperation);
+     const resultInsertionInventoryOperation:IResponse<IInventoryOperation>
+       = await insertInventoryOperation(inventoryOperation);
 
     // Inserting in embedded database the descriptions of the inventory operation
     const resultInsertionInventoryOperationDescription
@@ -736,7 +735,8 @@ async function intermediateInventoryOperationProcess(
     });
 
     // Updating the inventory in embedded database with the last changes.
-    const resultUpdatingInventory:IResponse<IProductInventory[]> = await updateProducts(newInventory);
+    const resultUpdatingInventory:IResponse<IProductInventory[]>
+      = await updateProducts(newInventory);
 
     // Updating list of day operations
     // Creating a work day operation for the "shift inventory operation".
@@ -775,7 +775,8 @@ async function intermediateInventoryOperationProcess(
     const resultDeletionAllDayOperations:IResponse<null> = await deleteAllDayOperations();
 
     // Store information in embedded database.
-    const resultInsertionAllDayOperations:IResponse<IDayOperation[]> = await insertDayOperations(newListDayOperations);
+    const resultInsertionAllDayOperations:IResponse<IDayOperation[]>
+      = await insertDayOperations(newListDayOperations);
 
     // Sending operations to sync background process to sync them with the main database.
 
@@ -785,15 +786,25 @@ async function intermediateInventoryOperationProcess(
 
     // Inventory operation descriptions
     const resultInsertSyncRecordInventoryOperationDescriptions:IResponse<ISyncRecord[]>
-      = await insertSyncQueueRecords(createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
+      = await insertSyncQueueRecords(createSyncItems(
+        inventoryOperationDescription, 'PENDING', 'INSERT'));
 
-    if (apiResponseProcess(resultInsertionInventoryOperation, 201)
-    &&  apiResponseProcess(resultInsertionInventoryOperationDescription, 201)
-    &&  apiResponseProcess(resultUpdatingInventory, 200)
-    &&  apiResponseProcess(resultDeletionAllDayOperations, 200)
-    &&  apiResponseProcess(resultInsertionAllDayOperations, 201)
-    &&  apiResponseProcess(resultInsertSyncRecordInventoryOperation, 201)
-    &&  apiResponseProcess(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
+    console.log('inventory operation: ', apiResponseStatus(resultInsertionInventoryOperation, 201))
+    console.log('inventory description: ', apiResponseStatus(resultInsertionInventoryOperationDescription, 201))
+    console.log('updating inventory:', apiResponseStatus(resultUpdatingInventory, 200))
+    console.log('deletion all day operations: ', apiResponseStatus(resultDeletionAllDayOperations, 200))
+    console.log('insertion  all day operations: ', apiResponseStatus(resultInsertionAllDayOperations, 201))
+    console.log('insert sync record: ', apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201))
+    console.log('insert operation descriptions: ', apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201))
+
+    if (apiResponseStatus(resultInsertionInventoryOperation, 201)
+    &&  apiResponseStatus(resultInsertionInventoryOperationDescription, 201)
+    &&  apiResponseStatus(resultUpdatingInventory, 200)
+    &&  apiResponseStatus(resultDeletionAllDayOperations, 200)
+    &&  apiResponseStatus(resultInsertionAllDayOperations, 201)
+    &&  apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201)
+    &&  apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201)
+  ) {
       /* There was not an error during the process. */
       /* At this point, the inventory operation has been finished and registered. */
 
@@ -829,6 +840,7 @@ async function intermediateInventoryOperationProcess(
 
       return true;
     } else {
+      console.log("handling error")
       /* There was an error during the process. */
       Toast.show({
         type: 'error',
@@ -861,6 +873,7 @@ async function intermediateInventoryOperationProcess(
     }
 
   } catch (error) {
+    console.log("total error error")
     /* There were an error during the proecess. */
     Toast.show({
       type: 'error',
@@ -1824,7 +1837,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}
           confirmMessageButton={isOperation ? 'Aceptar' : 'Volver al menú'}
           cancelMessageButton={isOperation ? 'Cancelar' : 'Volver al menú'}
-          requiredValidation={isOperation}/>
+          requiredValidation={
+            false
+            //isOperation
+            }/>
       </View>
       <View style={tw`flex basis-1/6`} />
     </ScrollView>

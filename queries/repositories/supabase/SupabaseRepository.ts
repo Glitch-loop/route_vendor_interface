@@ -295,15 +295,14 @@ export class SupabaseRepository implements IRepository {
 
   async insertInventoryOperationDescription(inventoryOperationDescription: IInventoryOperationDescription[]):Promise<IResponse<null>> {
     try {
-      inventoryOperationDescription
-      .forEach(async (inventoryOperationItem:IInventoryOperationDescription)=> {
+      for (let i = 0; i < inventoryOperationDescription.length; i++) {
         const {
           id_product_operation_description,
           price_at_moment,
           amount,
           id_inventory_operation,
           id_product,
-        } = inventoryOperationItem;
+        } = inventoryOperationDescription[i];
 
         const { data, error } = await supabase
         .from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS)
@@ -320,8 +319,8 @@ export class SupabaseRepository implements IRepository {
             'Failed inserting an operation description.');
         } else {
           /* There is not instruaciton; The process continues*/
-        }
-      });
+      }
+    }
 
       return createApiResponse<null>(201, null, null,
         'Inventory operation description inserted successfully.');

@@ -736,7 +736,6 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
       From all the information created in the process, only the records regarded to the transaction
       itself will be synced with the database.
     */
-     await deleteAllSyncQueueRecords();
 
     // Adding transaction
     const resultSyncInsertionRouteTransaction:IResponse<null>
