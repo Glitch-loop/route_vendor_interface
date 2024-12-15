@@ -58,11 +58,11 @@ async function appInitialization() {
   try {
     // Dropping database
     console.log("deleting database")
-    await dropEmbeddedDatabase();
+    //await dropEmbeddedDatabase();
     
     // Creating database
     console.log("creating database")
-    await createEmbeddedDatabase();
+    //await createEmbeddedDatabase();
 
     // await createBackgroundSyncProcess();
     // Verifying permissions

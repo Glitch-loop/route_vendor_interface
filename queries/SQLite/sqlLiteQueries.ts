@@ -1505,7 +1505,7 @@ export async function deleteSyncQueueRecord(recordToSync: ISyncRecord):Promise<I
         action,
        } = recordToSync;
 
-      await tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND action = ?`, [ id_record, action ]);
+      await tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND action = ?`, [ id_record, action ]);
 
     });
     return createApiResponse<null>(200, null, null, 'Record to sync has been deleted successfully.');
@@ -1526,12 +1526,14 @@ export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[])
       for (let  i = 0; i < totalRecordsToSync; i++){
         const deleteRecordToSync = deleteRecordsToSync[i];
         const { id_record, action } = deleteRecordToSync;
-
-        tx.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND action = ?`, [ id_record, action ]).then(() => {
+        console.log("status: ", action, " - record: ", id_record)
+        tx.executeSql(`DELETE FROM ${EMBEDDED_TABLES.SYNC_QUEUE} WHERE id_record = ? AND action = ?`, [ id_record, action ]).then(() => {
           deletedRecordsToSync.push(deleteRecordToSync);
         });
       }
     });
+
+    console.log("Deleted records: ", deletedRecordsToSync.length)
     return createApiResponse<ISyncRecord[]>(
       200,
       deletedRecordsToSync,
