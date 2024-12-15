@@ -363,15 +363,26 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
 function creatingInventoryOperationDescription(inventory:IProductInventory[], inventoryOperation:IInventoryOperation):IInventoryOperationDescription[] {
   const inventoryOperationDescription:IInventoryOperationDescription[] = [];
   try {
+    const { id_inventory_operation } = inventoryOperation;
     // Extracting information from the inventory operation.
     inventory.forEach(product => {
-      inventoryOperationDescription.push({
-        id_product_operation_description: uuidv4(),
-        price_at_moment: product.price,
-        amount: product.amount,
-        id_inventory_operation: inventoryOperation.id_inventory_operation,
-        id_product: product.id_product,
-      });
+      const {
+        price,
+        amount,
+        id_product,
+      } = product;
+      if (amount > 0) {
+        inventoryOperationDescription.push({
+          id_product_operation_description: uuidv4(),
+          price_at_moment: price,
+          amount: amount,
+          id_inventory_operation: id_inventory_operation,
+          id_product: id_product,
+        });
+      } else {
+        /* It means the product doesn't have any "amount", it can mean for both
+        scenarios: inflow or outflow. */
+      }
     });
     return inventoryOperationDescription;
   } catch (error) {

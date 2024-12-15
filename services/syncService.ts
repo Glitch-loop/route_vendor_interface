@@ -363,7 +363,6 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
           if (currentRecordToSync === undefined) {
             /* For some reason it was stored a undefined element*/
           } else {
-            console.log("Payload: ", currentRecordToSync.payload)
             recordsCorrectlyProcessed.push({
               id_record: currentRecordToSync.id_record,
               status: 'SUCCESS',

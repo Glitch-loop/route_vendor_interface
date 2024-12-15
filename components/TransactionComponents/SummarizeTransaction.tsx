@@ -43,6 +43,7 @@ import { printTicketBluetooth } from '../../services/printerService';
 import Toast from 'react-native-toast-message';
 import { apiResponseStatus } from '../../utils/apiResponse';
 import { createSyncItem } from '../../utils/syncFunctions';
+import { syncingRecordsWithCentralDatabase } from '../../services/syncService';
 
 function convertOperationDescriptionToProductInventoryInterface(
   routeTransactionOperationDescription:IRouteTransactionOperationDescription[]|undefined,
@@ -276,6 +277,10 @@ const SummarizeTransaction = ({
           Toast.show({type: 'success',
             text1:'Transacción cancelada exitosamente.',
             text2: 'Se ha cancelado la transacción exitosamente.'});
+
+          // Executing a synchronization process to register the start shift inventory
+          // Note: In case of failure, the background process will eventually synchronize the records.
+          syncingRecordsWithCentralDatabase();
 
         } else {
           /* Something was wrong during the cancelation of the transaction */

@@ -1517,6 +1517,7 @@ export async function deleteSyncQueueRecord(recordToSync: ISyncRecord):Promise<I
 export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
   const deletedRecordsToSync:ISyncRecord[] = [];
   try {
+    console.log("Deleting records: ", deleteRecordsToSync.length)
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
@@ -1538,6 +1539,7 @@ export async function deleteSyncQueueRecords(deleteRecordsToSync: ISyncRecord[])
       'Record to sync has been deleted successfully.'
     );
   } catch(error) {
+    console.log("error: ", error)
     return createApiResponse<ISyncRecord[]>(
       500,
       deletedRecordsToSync,

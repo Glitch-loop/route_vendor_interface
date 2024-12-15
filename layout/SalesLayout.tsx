@@ -76,6 +76,7 @@ import {
 } from '../queries/SQLite/sqlLiteQueries';
 import { apiResponseStatus } from '../utils/apiResponse';
 import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
+import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 
 const initialStateStore:IStore&IStoreStatusDay = {
   id_store: '',
@@ -356,14 +357,22 @@ function createRouteTransactionOperationDescription(
   const { id_route_transaction_operation } = routeTransactionOperation;
 
   movementInTransaction.forEach((product) => {
-    const {price, amount, id_product} = product;
-    routeTransactionOperationDescriptions.push({
-      id_route_transaction_operation_description: uuidv4(),
-      price_at_moment: price,
-      amount: amount,
-      id_route_transaction_operation: id_route_transaction_operation,
-      id_product: id_product,
-    });
+    const {
+      price,
+      amount,
+      id_product,
+    } = product;
+    if(amount > 0) {
+      routeTransactionOperationDescriptions.push({
+        id_route_transaction_operation_description: uuidv4(),
+        price_at_moment: price,
+        amount: amount,
+        id_route_transaction_operation: id_route_transaction_operation,
+        id_product: id_product,
+      });
+    } else {
+      /* It means the product doesn't have any amount in the sale */
+    }
   });
 
   return routeTransactionOperationDescriptions;
@@ -799,6 +808,10 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
         // Updating redux state for the current operation
         dispatch(setCurrentOperation(nextDayOperation));
       }
+
+      // Executing a synchronization process to register the start shift inventory
+      // Note: In case of failure, the background process will eventually synchronize the records.
+      syncingRecordsWithCentralDatabase();
 
       setResultSaleState(true); // The sale failed.
     } else {
