@@ -800,7 +800,7 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
         dispatch(setCurrentOperation(nextDayOperation));
       }
 
-      setResultSaleState(true); // The sale falied.
+      setResultSaleState(true); // The sale failed.
     } else {
       console.log("eroereor que ndoando")
       Toast.show({

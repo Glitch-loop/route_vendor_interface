@@ -825,7 +825,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
       sign_confirmation,
       date,
       audit,
-      id_type_of_operation,
+      id_inventory_operation_type,
       id_work_day,
     } = inventoryOperation;
 
@@ -833,13 +833,13 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_type_of_operation, id_work_day) VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_inventory_operation_type, id_work_day) VALUES (?, ?, ?, ?, ?, ?);
       `, [
           id_inventory_operation,
           sign_confirmation,
           date,
           audit,
-          id_type_of_operation,
+          id_inventory_operation_type,
           id_work_day,
         ]);
     });
@@ -1411,18 +1411,20 @@ export async function insertSyncQueueRecord(recordToSync: ISyncRecord):Promise<I
       payload,
       table_name,
       action,
+      timestamp,
     } = recordToSync;
 
     if (typeof payload === 'string' && id_record !== '') {
       /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
       const sqlite = await createSQLiteConnection();
       await sqlite.transaction(async (tx) => {
-        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table_name, action) VALUES (?, ?, ?, ?, ?)`, [
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
           id_record,
           status,
           payload,
           table_name,
           action,
+          timestamp,
         ]);
       });
       return createApiResponse<null>(201, null, null, 'Record has been inserted successfully.');
@@ -1450,16 +1452,18 @@ export async function insertSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
           payload,
           table_name,
           action,
+          timestamp,
         } = recordToSync;
 
         if (typeof payload === 'string' && id_record !== '') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
-          tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table_name, action) VALUES (?, ?, ?, ?, ?)`, [
+          tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_QUEUE} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
             id_record,
             status,
             payload,
             table_name,
             action,
+            timestamp,
           ]).then(() => {
             insertedRecordsToSync.push(recordToSync);
           });
@@ -1585,18 +1589,20 @@ export async function insertSyncHistoricRecord(recordToSync: ISyncRecord):Promis
       payload,
       table_name,
       action,
+      timestamp,
     } = recordToSync;
 
     if (typeof payload === 'string') {
       /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
       const sqlite = await createSQLiteConnection();
       await sqlite.transaction(async (tx) => {
-        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action) VALUES (?, ?, ?, ?, ?)`, [
+        await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
           id_record,
           status,
           payload,
           table_name,
           action,
+          timestamp,
         ]);
       });
       return createApiResponse<null>(201, null, null, 'Record has been inserted successfully.');
@@ -1624,16 +1630,18 @@ export async function insertSyncHistoricRecords(recordsToSync: ISyncRecord[]):Pr
           payload,
           table_name,
           action,
+          timestamp,
         } = recordsToSync[i];
 
         if (typeof payload === 'string') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
-          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action) VALUES (?, ?, ?, ?, ?)`, [
+          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
             id_record,
             status,
             payload,
             table_name,
             action,
+            timestamp,
           ])
           .then(() => {
             insertedRecordsToSync.push(recordToSync);

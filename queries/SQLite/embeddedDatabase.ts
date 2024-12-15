@@ -119,12 +119,12 @@ export const routeTransactionOperationDescriptionsEmbeddedTable = `
 
 export const inventoryOperationsEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (
-    id_inventory_operation  TEXT NOT NULL UNIQUE, 
-    sign_confirmation       TEXT NOT NULL,
-    date                    DATETIME NOT NULL,
-    audit                   INT NOT NULL,
-    id_type_of_operation    TEXT NOT NULL,
-    id_work_day             TEXT NOT NULL
+    id_inventory_operation      TEXT NOT NULL UNIQUE, 
+    sign_confirmation           TEXT NOT NULL,
+    date                        DATETIME NOT NULL,
+    audit                       INT NOT NULL,
+    id_inventory_operation_type TEXT NOT NULL,
+    id_work_day                 TEXT NOT NULL
   );
 `;
 
@@ -144,7 +144,8 @@ export const syncQueueEmbeddedTable = `
     status      TEXT NOT NULL,
     payload     TEXT NOT NULL,
     table_name  TEXT NOT NULL,
-    action      TEXT NOT NULL
+    action      TEXT NOT NULL,
+    timestamp   TEXT NOT NULL
   );   
 `;
 
@@ -154,6 +155,7 @@ export const syncHistoricEmbeddedTable = `
     status      TEXT NOT NULL,
     payload     TEXT NOT NULL,
     table_name  TEXT NOT NULL,
-    action      TEXT NOT NULL
+    action      TEXT NOT NULL,
+    timestamp   TEXT NOT NULL
   );   
 `;

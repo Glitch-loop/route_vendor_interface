@@ -331,7 +331,7 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
     date: '',
     state: 1,
     audit: 0,
-    id_type_of_operation: '',
+    id_inventory_operation_type: '',
     id_work_day: '',
   };
   try {
@@ -345,7 +345,7 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
       inventoryOperation.date = timestamp_format();
       inventoryOperation.audit = 0;
       inventoryOperation.state = 1;
-      inventoryOperation.id_type_of_operation = idTypeOperation;
+      inventoryOperation.id_inventory_operation_type = idTypeOperation;
       inventoryOperation.id_work_day = dayGeneralInformation.id_work_day;
     }
 
@@ -789,14 +789,6 @@ async function intermediateInventoryOperationProcess(
       = await insertSyncQueueRecords(createSyncItems(
         inventoryOperationDescription, 'PENDING', 'INSERT'));
 
-    console.log('inventory operation: ', apiResponseStatus(resultInsertionInventoryOperation, 201))
-    console.log('inventory description: ', apiResponseStatus(resultInsertionInventoryOperationDescription, 201))
-    console.log('updating inventory:', apiResponseStatus(resultUpdatingInventory, 200))
-    console.log('deletion all day operations: ', apiResponseStatus(resultDeletionAllDayOperations, 200))
-    console.log('insertion  all day operations: ', apiResponseStatus(resultInsertionAllDayOperations, 201))
-    console.log('insert sync record: ', apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201))
-    console.log('insert operation descriptions: ', apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201))
-
     if (apiResponseStatus(resultInsertionInventoryOperation, 201)
     &&  apiResponseStatus(resultInsertionInventoryOperationDescription, 201)
     &&  apiResponseStatus(resultUpdatingInventory, 200)
@@ -804,7 +796,7 @@ async function intermediateInventoryOperationProcess(
     &&  apiResponseStatus(resultInsertionAllDayOperations, 201)
     &&  apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201)
     &&  apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201)
-  ) {
+    ) {
       /* There was not an error during the process. */
       /* At this point, the inventory operation has been finished and registered. */
 
@@ -822,6 +814,11 @@ async function intermediateInventoryOperationProcess(
           text1: 'Se ha registrado el re-stock de producto exitosamente.',
           text2: 'Se ha agregado los productos del re-stock de producto al inventario.',
         });
+
+        // Executing a synchronization process to register the start shift inventory
+        // Note: In case of failure, the background process will eventually synchronize the records.
+        syncingRecordsWithCentralDatabase();
+
       } else {
         Toast.show({
           type: 'success',
@@ -840,7 +837,6 @@ async function intermediateInventoryOperationProcess(
 
       return true;
     } else {
-      console.log("handling error")
       /* There was an error during the process. */
       Toast.show({
         type: 'error',
@@ -867,13 +863,12 @@ async function intermediateInventoryOperationProcess(
       await deleteSyncQueueRecord(createSyncItem(inventoryOperation, 'PENDING', 'INSERT'));
 
       // Inventory operation descriptions
-      await deleteSyncQueueRecords(createSyncItems(inventoryOperationDescription,
-        'PENDING', 'INSERT'));
+      await deleteSyncQueueRecords(
+        createSyncItems(inventoryOperationDescription, 'PENDING', 'INSERT'));
       return false;
     }
 
   } catch (error) {
-    console.log("total error error")
     /* There were an error during the proecess. */
     Toast.show({
       type: 'error',
@@ -995,8 +990,8 @@ async function endShiftInventoryOperationProcess(
     /* Closing work day operation */
     Toast.show({
       type: 'info',
-      text1: 'Cerrando el dia de trabajo.',
-      text2: 'Guardando información necesaria para terminar el dia correctamente.',
+      text1: 'Registrando inventario final.',
+      text2: 'Registrando información necesaria para cerrar el inventario final y terminar el dia correctamente.',
     });
     /* Storing the end shift inventory of money and getting the date when the route was finished. */
     // Storing information in embedded database.
@@ -1054,6 +1049,10 @@ async function endShiftInventoryOperationProcess(
       Toast.show({type: 'success',
         text1:'Se ha registrado el inventario final exitosamente.',
         text2: 'Se ha registrado el inventario final exitosamente.'});
+
+      // Executing a synchronization process to register the start shift inventory
+      // Note: In case of failure, the background process will eventually synchronize the records.
+      syncingRecordsWithCentralDatabase();
 
       return true;
     } else {
@@ -1168,7 +1167,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   /* States for route transaction operations */
   const [productSoldByStore, setProductSoldByStore] = useState<IProductInventory[][]>([]);
-  const [productRepositionByStore, setProductRepositionByStore] 
+  const [productRepositionByStore, setProductRepositionByStore]
     = useState<IProductInventory[][]>([]);
   const [nameOfStores, setNameOfStores] = useState<string[]>([]);
 
@@ -1327,7 +1326,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
             // Get all the descriptions for each inventory operation
             for (let i = 0; i < allInventoryOperations.length; i++) {
-              const { id_inventory_operation, id_type_of_operation } = allInventoryOperations[i];
+              const { id_inventory_operation, id_inventory_operation_type } = allInventoryOperations[i];
 
               // Get description (movements) of the current inventory oepration
               apiResponseProcess(await getInventoryOperationDescription(id_inventory_operation),
@@ -1343,11 +1342,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                 });
 
               // Determining where to store the information of the current inventory operation.
-              if (id_type_of_operation === DAYS_OPERATIONS.start_shift_inventory) {
+              if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
                 productInventoryOfInventoryOperation
                   .forEach((product:IProductInventory) =>
                     {startShiftInventoryProduct.push(product);});
-              } else if (id_type_of_operation === DAYS_OPERATIONS.restock_inventory) {
+              } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
                 restockInventoryProduct.push(productInventoryOfInventoryOperation);
               } else {
                 /* Other case of operations are ignored */

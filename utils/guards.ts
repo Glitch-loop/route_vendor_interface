@@ -50,7 +50,7 @@ export function isTypeIRouteStore(obj: any): obj is IStore&IStoreStatusDay {
 // Related to inventory operation
 export function isTypeIInventoryOperation(obj: any): obj is IInventoryOperation {
   return 'id_inventory_operation' in obj
-      && 'id_type_of_operation' in obj;
+      && 'id_inventory_operation_type' in obj;
 }
 
 export function isTypeIInventoryOperationDescription(obj: any):

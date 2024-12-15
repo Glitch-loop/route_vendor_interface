@@ -118,6 +118,11 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Related with to the end of  the day.
   const finishWorkDay = async ():Promise<void> => {
     try {
+      Toast.show({
+        type: 'info',
+        text1:'Sincronizando con base de datos, por favor espere',
+        text2: 'Sincronizando información con la base de datos, puede tardar unos pocos minutos.'});
+
       // Storing the information in the main database.
       const resultSyncingProcess:boolean = await syncingRecordsWithCentralDatabase();
 
@@ -265,7 +270,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
             <Pressable
               onPress={() => {
                 if (isDayWorkClosed) {
-                  Toast.show({type: 'error', text1:'Inventario final finalizado', text2: 'No se pueden hacer mas operaciones'});
+                  Toast.show({type: 'error', text1:'Inventario final terminado', text2: 'No se pueden hacer mas operaciones'});
                 } else {
                   // createNewClient();
                 }
@@ -294,7 +299,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
               }}
               style={tw`bg-indigo-400 px-4 py-3 rounded flex flex-row basis-1/3 justify-center`}>
               <Text style={tw`text-sm text-center`}>
-                { isDayWorkClosed ? 'Ir a menú principal' : 'Finalizar ruta' }
+                { isDayWorkClosed ? 'Finalizar ruta' : 'Finalizar ruta' }
               </Text>
             </Pressable>
         </View>

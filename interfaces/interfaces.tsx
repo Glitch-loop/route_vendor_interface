@@ -115,7 +115,7 @@ export interface IInventoryOperation {
   date: string;
   state: number;
   audit: number;
-  id_type_of_operation: string;
+  id_inventory_operation_type: string;
   id_work_day: string;
 }
 
@@ -171,6 +171,7 @@ export interface ISyncRecord {
   id_record:  string,
   status:     'PENDING'|'SUCCESS'|'FAILED',
   payload:    any,
-  table_name:      string,
+  table_name: string,
   action:     'INSERT'|'UPDATE'|'DELETE',
+  timestamp:  string
 }

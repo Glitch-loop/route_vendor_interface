@@ -146,20 +146,21 @@ export class SupabaseRepository implements IRepository {
       const { data, error } = await supabase.from(TABLES.WORK_DAYS).insert({
         id_work_day: id_work_day,
         start_date: start_date,
-        finish_date: finish_date,
-        start_petty_cash: start_petty_cash,
-        finish_petty_cash: final_petty_cash,
         id_route: id_route,
         id_vendor: id_vendor,
+        finish_date: finish_date,
+        start_petty_cash: start_petty_cash,
+        final_petty_cash: final_petty_cash,
       });
 
+      console.log("Insert work day: ", data)
       if (error) {
-        return createApiResponse<null>(500, null, null,
-          'Failed inserting the work day.');
+        return createApiResponse<null>(500, null, null, 'Failed inserting the work day.');
       } else {
         return createApiResponse<null>(201, null, null, 'Work day created successfully.');
       }
     } catch(error) {
+      console.log("Insert work day: ", error)
       return createApiResponse<null>(500, null, null, 'Failed inserting the work day.');
     }
   }
@@ -189,20 +190,23 @@ export class SupabaseRepository implements IRepository {
       const { data, error } = await supabase.from(TABLES.WORK_DAYS)
       .update({
         start_date: start_date,
-        finish_date: finish_date,
-        start_petty_cash: start_petty_cash,
-        finish_petty_cash: final_petty_cash,
         id_route: id_route,
+        finish_date: finish_date,
         id_vendor: id_vendor,
+        start_petty_cash: start_petty_cash,
+        final_petty_cash: final_petty_cash,
       })
       .eq('id_work_day', id_work_day);
 
+      console.log("Update work day: ", data)
       if (error) {
+        console.log("Update work day: ", error)
         return createApiResponse<null>(500, null, null,'Failed updating the work day.');
       } else {
         return createApiResponse<null>(200, null, null, 'Work day updated successfully.');
       }
     } catch(error) {
+      console.log("Update work day: ", error)
       return createApiResponse<null>(500, null, null, 'Failed updating the work day.');
     }
   }
@@ -216,10 +220,10 @@ export class SupabaseRepository implements IRepository {
         id_inventory_operation,
         sign_confirmation,
         date,
-        state,
         audit,
-        id_type_of_operation,
+        id_inventory_operation_type,
         id_work_day,
+        state,
       } = inventoryOperation;
 
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS)
@@ -228,17 +232,20 @@ export class SupabaseRepository implements IRepository {
         sign_confirmation: sign_confirmation,
         date: date,
         audit: audit,
+        id_inventory_operation_type: id_inventory_operation_type,
+        id_word_day: id_work_day,
         state: state,
-        id_type_of_operation: id_type_of_operation,
-        id_work_day: id_work_day,
       });
 
+      console.log("Insert inventory operation: ", data)
       if (error) {
+        console.log("Insert inventory operation: ", error)
         return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
       } else {
         return createApiResponse<null>(201, null, null, 'Inventory operation inserted successfully.');
       }
     } catch(error) {
+      console.log("Insert inventory operation: ", error)
       return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
     }
   }
@@ -249,10 +256,10 @@ export class SupabaseRepository implements IRepository {
         id_inventory_operation,
         sign_confirmation,
         date,
-        state,
         audit,
-        id_type_of_operation,
+        id_inventory_operation_type,
         id_work_day,
+        state,
       } = inventoryOperation;
 
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS)
@@ -260,18 +267,21 @@ export class SupabaseRepository implements IRepository {
         sign_confirmation: sign_confirmation,
         date: date,
         audit: audit,
-        state: state,
-        id_type_of_operation: id_type_of_operation,
+        id_inventory_operation_type: id_inventory_operation_type,
         id_work_day: id_work_day,
+        state: state,
       })
       .eq('id_inventory_operation', id_inventory_operation);
 
+      console.log("update inventory operation: ", data)
       if (error) {
+        console.log("update inventory operation: ", error)
         return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
       } else {
         return createApiResponse<null>(201, data, null, 'Inventory operation inserted successfully.');
       }
     } catch(error) {
+      console.log("update inventory operation: ", error)
       return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
     }
   }
@@ -298,8 +308,8 @@ export class SupabaseRepository implements IRepository {
       for (let i = 0; i < inventoryOperationDescription.length; i++) {
         const {
           id_product_operation_description,
-          price_at_moment,
           amount,
+          price_at_moment,
           id_inventory_operation,
           id_product,
         } = inventoryOperationDescription[i];
@@ -308,26 +318,41 @@ export class SupabaseRepository implements IRepository {
         .from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS)
         .insert({
           id_product_operation_description: id_product_operation_description,
-          price_at_moment: price_at_moment,
           amount: amount,
+          price_at_moment: price_at_moment,
           id_inventory_operation: id_inventory_operation,
           id_product: id_product,
         });
 
+        console.log("Insert inventory operation description: ", data)
         if (error) {
-          return createApiResponse<null>(500, null, null,
-            'Failed inserting an operation description.');
+          console.log("Insert inventory operation description: ", error)
+          return createApiResponse<null>(
+            500,
+            null,
+            null,
+            'Failed inserting an operation description.'
+          );
         } else {
           /* There is not instruaciton; The process continues*/
       }
     }
 
-      return createApiResponse<null>(201, null, null,
-        'Inventory operation description inserted successfully.');
+      return createApiResponse<null>(
+        201,
+        null,
+        null,
+        'Inventory operation description inserted successfully.'
+      );
 
     } catch (error) {
-      return createApiResponse<null>(500, null, null,
-        'Failed inserting an operation description.');
+      console.log("Insert inventory operation description: ", error)
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed inserting an operation description.'
+      );
     }
   }
 
@@ -336,8 +361,12 @@ export class SupabaseRepository implements IRepository {
       const { id_inventory_operation } = inventoryOperation;
       const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select().eq('id_inventory_operation', id_inventory_operation);
       if (error) {
-        return createApiResponse<IInventoryOperationDescription[]>(500, [], null,
-          'Failed getting all operation description of an inventory operation.');
+        return createApiResponse<IInventoryOperationDescription[]>(
+          500,
+          [],
+          null,
+          'Failed getting all operation description of an inventory operation.'
+        );
       } else {
         return createApiResponse<IInventoryOperationDescription[]>(200, data, null);
       }
@@ -354,10 +383,10 @@ export class SupabaseRepository implements IRepository {
         id_route_transaction,
         date,
         state,
-        cash_received,
         id_work_day,
         id_store,
         id_payment_method,
+        cash_received,
       } = transactionOperation;
 
       const { data, error } = await supabase
@@ -366,10 +395,10 @@ export class SupabaseRepository implements IRepository {
         id_route_transaction: id_route_transaction,
         date: date,
         state: state,
-        cash_received: cash_received,
         id_work_day: id_work_day,
         id_store: id_store,
         id_payment_method: id_payment_method,
+        cash_received: cash_received,
       });
       if (error) {
         return createApiResponse<null>(500, null, null,'Failed inserting route transaction.');
@@ -398,10 +427,10 @@ export class SupabaseRepository implements IRepository {
       .update({
         date: date,
         state: state,
-        cash_received: cash_received,
         id_work_day: id_work_day,
         id_store: id_store,
         id_payment_method: id_payment_method,
+        cash_received: cash_received,
       })
       .eq('id_route_transaction', id_route_transaction);
 

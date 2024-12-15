@@ -40,6 +40,7 @@ import {
   isTypeIRouteTransactionOperationDescription,
   isTypeWorkDayInstersection,
 } from '../utils/guards';
+import { calculateSyncPriority } from '../utils/syncFunctions';
 
 
 const repository:IRepository = RepositoryFactory.createRepository('supabase');
@@ -236,8 +237,9 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   try {
     const responseSynRecords:IResponse<ISyncRecord[]>
       = await getAllSyncQueueRecords();
-    if (apiResponseStatus(responseSynRecords, 200)) {
-      const syncQueue:ISyncRecord[] = getDataFromApiResponse(responseSynRecords)
+
+      if (apiResponseStatus(responseSynRecords, 200)) {
+        const syncQueue:ISyncRecord[] = getDataFromApiResponse(responseSynRecords)
       .map((record:ISyncRecord) => {
         return {
           id_record: record.id_record,
@@ -245,56 +247,40 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
           payload: JSON.parse(record.payload),
           table_name: record.table_name,
           action: record.action,
+          timestamp: record.timestamp,
         };
       });
 
-      /* Since it is a relational database, the process of syncing the records has
-      priotization, so it is needed to identify the type of records and sort them
-      (according with their prioritization) before syncing with the database.
+      console.log("records to syncronize: ", syncQueue.length)
 
-      Order between records (interfaces):
-      1. Work day
-      2.
-        IInventoryOperation
-        IRouteTransaction
-      3.
-        IInventoryOperationDescription
-        IRouteTransactionOperation
-      4.
-        IRouteTransactionOperationDescription
+      /*
+        Since it is a relational database, the process of syncing the records has
+        priotization, so it is needed to identify the type of records and sort them
+        (according with their prioritization) before syncing with the database.
+
+        Prioritization is given by "calculateSyncPriority" function. The function
+        takes account 3 factors (type of record, type of action and time when was
+        inserted).
+
+        Note: At moment of design the sync mechanism the prioritization has
+        an ascending order (being "1" the most important).
+        In this way, if in a future it is needed to add new type of records or
+        type of action it has just to be appended at the end of the list of
+        prioritization (in its respective factor).
+        So, at in the sorting function the "smallest number" will mean that is
+        most important and therefore it has to be synced first.
       */
       // Sorting elements by internfaces (descending order)
       syncQueue.sort((recordA:ISyncRecord, recordB:ISyncRecord) => {
-        const a:any = recordA.payload;
-        const b:any = recordB.payload;
-
-        let AisFirstLevel:number = Number(isTypeWorkDayInstersection(a));
-        let AisSecondLevel:number = Number(isTypeIInventoryOperation(a) || isTypeIRouteTransaction(a));
-        let AisThirdLevel:number = Number(isTypeIInventoryOperationDescription(a)
-        || isTypeIRouteTransactionOperation(a));
-        let AisFourthLevel:number = Number(isTypeIRouteTransactionOperationDescription(a));
-
-        let BisFirstLevel:number = Number(isTypeWorkDayInstersection(b));
-        let BisSecondLevel:number = Number(isTypeIInventoryOperation(b) || isTypeIRouteTransaction(b));
-        let BisThirdLevel:number = Number(isTypeIInventoryOperationDescription(b)
-        || isTypeIRouteTransactionOperation(b));
-        let BisFourthLevel:number = Number(isTypeIRouteTransactionOperationDescription(b));
-
-
-
-        let ACardinality:number = (AisFirstLevel * 1) + (AisSecondLevel * 2) + (AisThirdLevel * 3) + (AisFourthLevel * 4);
-
-        let BCardinality:number = (BisFirstLevel * 1) + (BisSecondLevel * 2) + (BisThirdLevel * 3) + (BisFourthLevel * 4);
-
-        if(ACardinality > BCardinality) {
-          return -1;
-        }
-
-        if (ACardinality < BCardinality) {
+        const a:number = calculateSyncPriority(recordA);
+        const b:number = calculateSyncPriority(recordB);
+        if(a > b) {
           return 1;
+        } else if (a < b) {
+          return -1;
+        } else {
+          return 0;
         }
-
-        return 0;
       });
 
       // Trying to synchronize records with main database.
@@ -309,6 +295,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
           const currentAction:any = currentRecordToSync.action;
 
           if (isTypeIInventoryOperation(currentRecord)) {
+            console.log("Type of record: inventory operation")
             if (currentAction === 'INSERT') {
               response = await repository.insertInventoryOperation(currentRecord);
             } else if (currentAction === 'UPDATE') {
@@ -318,6 +305,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /* Other operation*/
             }
           } else if (isTypeIInventoryOperationDescription(currentRecord)) {
+            console.log("Type of record: inventory operation description")
             if (currentAction === 'INSERT') {
               response = await repository.insertInventoryOperationDescription([ currentRecord ]);
             } else if (currentAction === 'UPDATE') {
@@ -326,6 +314,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /* Other operation*/
             }
           } else if (isTypeIRouteTransaction(currentRecord)) {
+            console.log("Type of record: route transaction")
             if (currentAction === 'INSERT') {
               response = await repository.insertRouteTransaction(currentRecord);
             } else if (currentAction === 'UPDATE') {
@@ -334,6 +323,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /* Other operation*/
             }
           } else if (isTypeIRouteTransactionOperation(currentRecord)) {
+            console.log("Type of record: route transaction operation")
             if (currentAction === 'INSERT') {
               response = await repository.insertRouteTransactionOperation(currentRecord);
             } else if (currentAction === 'UPDATE') {
@@ -342,6 +332,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /* Other operation*/
             }
           } else if (isTypeIRouteTransactionOperationDescription(currentRecord)) {
+            console.log("Type of record: route transaction operation description")
             if (currentAction === 'INSERT') {
               response = await repository.insertRouteTransactionOperationDescription([ currentRecord ]);
             } else if (currentAction === 'UPDATE') {
@@ -350,6 +341,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /* Other operation*/
             }
           } else if (isTypeWorkDayInstersection(currentRecord)) {
+            console.log("Type of record: general work day")
             if (currentAction === 'INSERT') {
               response = await repository.insertWorkDay(currentRecord);
             } else if (currentAction === 'UPDATE') {
@@ -364,18 +356,21 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
         }
 
         // Determinig if the record was syncing successfully.
-        if(apiResponseStatus(response, 201)) {
+        if(apiResponseStatus(response, 201) || apiResponseStatus(response, 200)) {
+          console.log("the request was successfully processed")
           /* The records was successfully synczed; It is not needed to store in the syncing queue
             table */
           if (currentRecordToSync === undefined) {
             /* For some reason it was stored a undefined element*/
           } else {
+            console.log("Payload: ", currentRecordToSync.payload)
             recordsCorrectlyProcessed.push({
               id_record: currentRecordToSync.id_record,
               status: 'SUCCESS',
-              payload: JSON.parse(currentRecordToSync.payload),
+              payload: currentRecordToSync.payload,
               table_name: currentRecordToSync.table_name,
               action: currentRecordToSync.action,
+              timestamp: currentRecordToSync.timestamp,
             });
           }
         } else {
@@ -383,6 +378,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
         }
       }
 
+      console.log("Records correctly synced: ", recordsCorrectlyProcessed.length);
       // Updating local database according with the result of the synchronizations
       await insertSyncHistoricRecords(recordsCorrectlyProcessed);
       await deleteSyncQueueRecords(recordsCorrectlyProcessed);
@@ -408,7 +404,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   } catch (error) {
     /* Something was wrong during syncing process. */
     resultOfSyncProcess = false;
-    console.log("error durante sincronizacion")
+    console.log("error durante sincronizacion: ", error)
     return resultOfSyncProcess;
   }
 }
