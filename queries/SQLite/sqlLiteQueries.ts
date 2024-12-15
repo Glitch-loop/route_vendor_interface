@@ -1502,7 +1502,6 @@ export async function updateSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
 
     await sqlite.transaction(async (tx) => {
       let totalRecordsToSync:number = recordsToSync.length;
-      console.log("records to update: ", totalRecordsToSync)
       for (let i = 0; i < totalRecordsToSync; i++) {
         const recordToSync:ISyncRecord = recordsToSync[i];
         const {
@@ -1513,9 +1512,7 @@ export async function updateSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
           action,
           timestamp,
         } = recordToSync;
-        
-        console.log("id_record: ", id_record)
-        console.log("payload: ", payload)
+
         if (typeof payload === 'string' && id_record !== '') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
           tx.executeSql(`UPDATE ${EMBEDDED_TABLES.SYNC_QUEUE} 
@@ -1695,7 +1692,7 @@ export async function insertSyncHistoricRecords(recordsToSync: ISyncRecord[]):Pr
 
     await sqlite.transaction(async (tx) => {
       let totalRecordsToSync:number = recordsToSync.length;
-      for (let  i = 0; i < totalRecordsToSync; i++){
+      for (let  i = 0; i < totalRecordsToSync; i++) {
         const recordToSync = recordsToSync[i];
 
         const {
@@ -1709,7 +1706,7 @@ export async function insertSyncHistoricRecords(recordsToSync: ISyncRecord[]):Pr
 
         if (typeof payload === 'string') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
-          await tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
+          tx.executeSql(`INSERT INTO ${EMBEDDED_TABLES.SYNC_HISTORIC} (id_record, status, payload,table_name, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, [
             id_record,
             status,
             payload,

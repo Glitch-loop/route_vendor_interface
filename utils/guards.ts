@@ -83,7 +83,6 @@ obj is IRouteTransactionOperationDescription {
 // Related to work day
 export function isTypeWorkDayInstersection(obj: any): obj is
 IRoute&IDayGeneralInformation&IDay&IRouteDay {
-  console.log("is day name", 'day_name'     in obj)
   return 'id_route' in obj
   && 'id_route_day' in obj
   && 'day_name'     in obj
