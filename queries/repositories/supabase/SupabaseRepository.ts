@@ -22,6 +22,23 @@ import {
 import 'react-native-url-polyfill/auto';
 import { createApiResponse } from '../../../utils/apiResponse';
 
+/*
+  Converts the SQL code error to the most appropiate
+  HTTP status code.
+*/
+function determinigSQLSupabaseError(error:any):number {
+  let httpStatusCode:number = 500;
+  if('code' in error) {
+    if(error.code === '23505') { // Duplicate keys
+      httpStatusCode = 409; // Conflict
+    } else {
+      httpStatusCode = 500;
+    }
+  }
+  console.log("error: ", httpStatusCode);
+  return httpStatusCode;
+}
+
 export class SupabaseRepository implements IRepository {
   client:any;
 
@@ -155,7 +172,12 @@ export class SupabaseRepository implements IRepository {
 
       console.log("Insert work day: ", data)
       if (error) {
-        return createApiResponse<null>(500, null, null, 'Failed inserting the work day.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed inserting the work day.'
+        );
       } else {
         return createApiResponse<null>(201, null, null, 'Work day created successfully.');
       }
@@ -201,7 +223,12 @@ export class SupabaseRepository implements IRepository {
       console.log("Update work day: ", data)
       if (error) {
         console.log("Update work day: ", error)
-        return createApiResponse<null>(500, null, null,'Failed updating the work day.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed updating the work day.'
+        );
       } else {
         return createApiResponse<null>(200, null, null, 'Work day updated successfully.');
       }
@@ -237,16 +264,31 @@ export class SupabaseRepository implements IRepository {
         state: state,
       });
 
-      console.log("Insert inventory operation: ", data)
+      console.log("Insert inventory operation (data): ", data)
       if (error) {
-        console.log("Insert inventory operation: ", error)
-        return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
+        console.log("Insert inventory operation (error): ", error)
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed inserting the inventory operation.'
+        );
       } else {
-        return createApiResponse<null>(201, null, null, 'Inventory operation inserted successfully.');
+        return createApiResponse<null>(
+          201,
+          null,
+          null,
+          'Inventory operation inserted successfully.'
+        );
       }
     } catch(error) {
-      console.log("Insert inventory operation: ", error)
-      return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
+      console.log("Insert inventory operation (error): ", error)
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed inserting the inventory operation.'
+      );
     }
   }
 
@@ -276,13 +318,27 @@ export class SupabaseRepository implements IRepository {
       console.log("update inventory operation: ", data)
       if (error) {
         console.log("update inventory operation: ", error)
-        return createApiResponse<null>(500, null, null,'Failed inserting the inventory operation.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed inserting the inventory operation.'
+        );
       } else {
-        return createApiResponse<null>(201, data, null, 'Inventory operation inserted successfully.');
+        return createApiResponse<null>(
+          201,
+          data,
+          null,
+          'Inventory operation inserted successfully.'
+        );
       }
     } catch(error) {
       console.log("update inventory operation: ", error)
-      return createApiResponse<null>(500, null, null, 'Failed inserting the inventory operation.');
+      return createApiResponse<null>(
+        500,
+        null,
+        null,'Failed inserting the inventory operation.'
+      );
     }
   }
 
@@ -292,14 +348,27 @@ export class SupabaseRepository implements IRepository {
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS).select().eq('id_work_day', id_work_day);
 
       if (error) {
-        return createApiResponse<IInventoryOperation[]>(500, [], null,
-          'Failed getting all inventory operations of the day.');
+        return createApiResponse<IInventoryOperation[]>(
+          determinigSQLSupabaseError(error),
+          [], 
+          null,
+          'Failed getting all inventory operations of the day.'
+        );
       } else {
-        return createApiResponse<IInventoryOperation[]>(200, data, null);
+        return createApiResponse<IInventoryOperation[]>(
+          200,
+          data,
+          null,
+          ''
+        );
       }
     } catch(error) {
-      return createApiResponse<IInventoryOperation[]>(500, [], null, 
-        'Failed getting all inventory operations of the day.');
+      return createApiResponse<IInventoryOperation[]>(
+        500,
+        [],
+        null,
+        'Failed getting all inventory operations of the day.'
+      );
     }
   }
 
@@ -324,11 +393,11 @@ export class SupabaseRepository implements IRepository {
           id_product: id_product,
         });
 
-        console.log("Insert inventory operation description: ", data)
+        console.log("Insert inventory operation description (data): ", data)
         if (error) {
-          console.log("Insert inventory operation description: ", error)
+          console.log("Insert inventory operation description (error): ", error)
           return createApiResponse<null>(
-            500,
+            determinigSQLSupabaseError(error),
             null,
             null,
             'Failed inserting an operation description.'
@@ -359,20 +428,31 @@ export class SupabaseRepository implements IRepository {
   async getAllInventoryOperationDescriptionsOfInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<IInventoryOperationDescription[]>> {
     try {
       const { id_inventory_operation } = inventoryOperation;
-      const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select().eq('id_inventory_operation', id_inventory_operation);
+      const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS)
+        .select().eq('id_inventory_operation', id_inventory_operation);
+
       if (error) {
         return createApiResponse<IInventoryOperationDescription[]>(
-          500,
+          determinigSQLSupabaseError(error),
           [],
           null,
           'Failed getting all operation description of an inventory operation.'
         );
       } else {
-        return createApiResponse<IInventoryOperationDescription[]>(200, data, null);
+        return createApiResponse<IInventoryOperationDescription[]>(
+          200,
+          data,
+          null,
+          ''
+        );
       }
     } catch(error) {
-      return createApiResponse<IInventoryOperationDescription[]>(500, [], null,
-        'Failed getting all operation description of an inventory operation.');
+      return createApiResponse<IInventoryOperationDescription[]>(
+        500,
+        [],
+        null,
+        'Failed getting all operation description of an inventory operation.'
+      );
     }
   }
 
@@ -401,12 +481,27 @@ export class SupabaseRepository implements IRepository {
         cash_received: cash_received,
       });
       if (error) {
-        return createApiResponse<null>(500, null, null,'Failed inserting route transaction.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed inserting route transaction.'
+        );
       } else {
-        return createApiResponse<null>(201, data, null, 'Route transaction inserted successfully.');
+        return createApiResponse<null>(
+          201,
+          data,
+          null,
+          'Route transaction inserted successfully.'
+        );
       }
     } catch(error) {
-      return createApiResponse<null>(500, null, null, 'Failed inserting route transaction.');
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed inserting route transaction.'
+      );
     }
   }
 
@@ -435,12 +530,27 @@ export class SupabaseRepository implements IRepository {
       .eq('id_route_transaction', id_route_transaction);
 
       if (error) {
-        return createApiResponse<null>(500, null, null,'Failed updating route transaction.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed updating route transaction.'
+        );
       } else {
-        return createApiResponse<null>(201, data, null, 'Route transaction updated successfully.');
+        return createApiResponse<null>(
+          201,
+          data,
+          null,
+          'Route transaction updated successfully.'
+        );
       }
     } catch(error) {
-      return createApiResponse<null>(500, null, null, 'Failed updating route transaction.');
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed updating route transaction.'
+      );
     }
   }
 
@@ -452,14 +562,22 @@ export class SupabaseRepository implements IRepository {
         .select().eq('id_work_day', id_work_day);
 
       if (error) {
-        return createApiResponse<IRouteTransaction[]>(500, [], null,
-          'Failed getting all route transactions of the day.');
+        return createApiResponse<IRouteTransaction[]>(
+          determinigSQLSupabaseError(error),
+          [],
+          null,
+          'Failed getting all route transactions of the day.'
+        );
       } else {
         return createApiResponse<IRouteTransaction[]>(200, data, null);
       }
     } catch(error) {
-      return createApiResponse<IRouteTransaction[]>(500, [], null,
-        'Failed getting all route transactions of the day.');
+      return createApiResponse<IRouteTransaction[]>(
+        500,
+        [],
+        null,
+        'Failed getting all route transactions of the day.'
+      );
     }
   }
 
@@ -480,12 +598,27 @@ export class SupabaseRepository implements IRepository {
       });
 
       if (error) {
-        return createApiResponse<null>(500, null, null,'Failed inserting route transaction route transaction operation.');
+        return createApiResponse<null>(
+          determinigSQLSupabaseError(error),
+          null,
+          null,
+          'Failed inserting route transaction route transaction operation.'
+        );
       } else {
-        return createApiResponse<null>(201, data, null, 'Route transaction operation inserted successfully.');
+        return createApiResponse<null>(
+          201,
+          data,
+          null,
+          'Route transaction operation inserted successfully.'
+        );
       }
     } catch(error) {
-      return createApiResponse<null>(500, null, null, 'Failed inserting route transaction route transaction operation.');
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed inserting route transaction route transaction operation.'
+      );
     }
   }
 
@@ -495,14 +628,22 @@ export class SupabaseRepository implements IRepository {
       const { data, error } = await supabase.from(TABLES.ROUTE_TRANSACTION_OPERATIONS).select()
         .eq('id_route_transaction', id_route_transaction);
       if (error) {
-        return createApiResponse<IRouteTransactionOperation[]>(500, [], null,
-          'Failed getting all route transactions operation of a route transaction.');
+        return createApiResponse<IRouteTransactionOperation[]>(
+          determinigSQLSupabaseError(error),
+          [],
+          null,
+          'Failed getting all route transactions operation of a route transaction.'
+        );
       } else {
         return createApiResponse<IRouteTransactionOperation[]>(200, data, null);
       }
     } catch(error) {
-      return createApiResponse<IRouteTransactionOperation[]>(500, [], null,
-        'Failed getting all route transactions operation of a route transaction.');
+      return createApiResponse<IRouteTransactionOperation[]>(
+        500,
+        [],
+        null,
+        'Failed getting all route transactions operation of a route transaction.'
+      );
     }
   }
 
@@ -529,21 +670,38 @@ export class SupabaseRepository implements IRepository {
           });
 
           if (error) {
-            return createApiResponse<null>(500, null, null,
-              'Failed inserting route transaction operation description.');
+            return createApiResponse<null>(
+              determinigSQLSupabaseError(error),
+              null,
+              null,
+              'Failed inserting route transaction operation description.'
+            );
           } else {
             /* There is not instructions*/
           }
         } catch (error) {
-          return createApiResponse<null>(500, null, null,
-            'Failed inserting route transaction operation description.');
+          return createApiResponse<null>(
+            determinigSQLSupabaseError(error),
+            null,
+            null,
+            'Failed inserting route transaction operation description.'
+          );
         }
       });
 
-      return createApiResponse<null>(201, null, null, 'Route transaction operation description inserted successfully.');
+      return createApiResponse<null>(
+        201,
+        null,
+        null,
+        'Route transaction operation description inserted successfully.'
+      );
     } catch(error) {
-      return createApiResponse<null>(500, null, null,
-        'Failed inserting route transaction operation description.');
+      return createApiResponse<null>(
+        500,
+        null,
+        null,
+        'Failed inserting route transaction operation description.'
+      );
     }
   }
 
@@ -553,14 +711,26 @@ export class SupabaseRepository implements IRepository {
       const { data, error } = await supabase.from(TABLES.PRODUCT_OPERATION_DESCRIPTIONS).select()
         .eq('id_route_transaction_operation', id_route_transaction_operation);
       if (error) {
-        return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null,
-          'Failed getting all route transactions operation description of a route transaction operation.');
+        return createApiResponse<IRouteTransactionOperationDescription[]>(
+          determinigSQLSupabaseError(error),
+          [],
+          null,
+          'Failed getting all route transactions operation description of a route transaction operation.'
+        );
       } else {
-        return createApiResponse<IRouteTransactionOperationDescription[]>(200, data, null);
+        return createApiResponse<IRouteTransactionOperationDescription[]>(
+          200,
+          data,
+          null
+        );
       }
     } catch(error) {
-      return createApiResponse<IRouteTransactionOperationDescription[]>(500, [], null,
-        'Failed getting all route transactions operation description of a route transaction operation.');
+      return createApiResponse<IRouteTransactionOperationDescription[]>(
+        500,
+        [],
+        null,
+        'Failed getting all route transactions operation description of a route transaction operation.'
+      );
     }
   }
 }

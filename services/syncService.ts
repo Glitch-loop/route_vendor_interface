@@ -21,6 +21,7 @@ import {
   insertSyncHistoricRecords,
   deleteSyncHistoricRecordById,
   getAllSyncHistoricRecords,
+  updateSyncQueueRecords,
 
  } from '../queries/SQLite/sqlLiteQueries';
 
@@ -232,6 +233,7 @@ async function determingRecordsToBeSyncronized() {
 /* Function to sync records with the main database. */
 async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   const recordsCorrectlyProcessed:ISyncRecord[] = [];
+  const recordsWronglyProcessed:ISyncRecord[] = [];
   let resultOfSyncProcess:boolean = false;
   console.log("sincronizando")
   try {
@@ -373,11 +375,65 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
             });
           }
         } else {
-          /* Something was wrong during insertion; There is not extra instructions for the record. */
+          /* Something was wrong during insertion. */
+          if(apiResponseStatus(response, 409)) { // Conflict
+            /*
+              It is probably the record already exists in the central database.
+
+              For this case, it is considered that was successfully synchronized.
+            */
+            recordsCorrectlyProcessed.push({
+              id_record: currentRecordToSync.id_record,
+              status: 'SUCCESS',
+              payload: currentRecordToSync.payload,
+              table_name: currentRecordToSync.table_name,
+              action: currentRecordToSync.action,
+              timestamp: currentRecordToSync.timestamp,
+            });
+          } else {
+            /*
+              It cannot be determinated why the record cannot be synced.
+
+              If status is "PENDING" it is going to be changed to failed for one more 
+              opportunity.
+
+              Otherwise, it is going to change to failed to delete it from the queue.
+            */
+            if(currentRecordToSync.status === 'FAILED') {
+              /*
+                The records was already processed and twice.
+                It is appended to "recordsCorrectlyProcessed" for being deleted and
+                moved to the historic sync table.
+              */
+              recordsCorrectlyProcessed.push({
+                id_record: currentRecordToSync.id_record,
+                status: 'FAILED',
+                payload: currentRecordToSync.payload,
+                table_name: currentRecordToSync.table_name,
+                action: currentRecordToSync.action,
+                timestamp: currentRecordToSync.timestamp,
+              });
+            } else {
+              /*
+                Record couldn't be processed and is updated to "failed" for one more opportunity
+              */
+             recordsWronglyProcessed.push({
+              id_record: currentRecordToSync.id_record,
+              status: 'FAILED',
+              payload: currentRecordToSync.payload,
+              table_name: currentRecordToSync.table_name,
+              action: currentRecordToSync.action,
+              timestamp: currentRecordToSync.timestamp,
+             })
+            }
+          }
         }
       }
 
       console.log("Records correctly synced: ", recordsCorrectlyProcessed.length);
+      // Updating records for an other opportunity
+      await updateSyncQueueRecords(recordsWronglyProcessed);
+
       // Updating local database according with the result of the synchronizations
       await insertSyncHistoricRecords(recordsCorrectlyProcessed);
       await deleteSyncQueueRecords(recordsCorrectlyProcessed);

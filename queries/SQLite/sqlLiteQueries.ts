@@ -1495,6 +1495,73 @@ export async function insertSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
   }
 }
 
+export async function updateSyncQueueRecords(recordsToSync: ISyncRecord[]):Promise<IResponse<ISyncRecord[]>> {
+  const insertedRecordsToSync:ISyncRecord[] = [];
+  try {
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      let totalRecordsToSync:number = recordsToSync.length;
+      for (let  i = 0; i < totalRecordsToSync; i++) {
+        const recordToSync:ISyncRecord = recordsToSync[i];
+        const {
+          id_record,
+          status,
+          payload,
+          table_name,
+          action,
+          timestamp,
+        } = recordToSync;
+
+        if (typeof payload === 'string' && id_record !== '') {
+          /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
+          tx.executeSql(`UPDATE ${EMBEDDED_TABLES.SYNC_QUEUE} 
+            SET
+            status = ?, 
+            payload = ?,
+            table_name = ?, 
+            action = ?, 
+            timestamp = ? 
+            WHERE id_record = ? and action = ?;
+            `, [
+            status,
+            payload,
+            table_name,
+            action,
+            timestamp,
+            id_record,
+            action,
+          ]).then(() => {
+            insertedRecordsToSync.push(recordToSync);
+          });
+
+        } else {
+          return createApiResponse<ISyncRecord[]>(
+            400,
+            insertedRecordsToSync,
+            null,
+            'Failed inserting record in the sync queue: Payload must be a string.'
+          );
+        }
+      }
+    });
+
+    return createApiResponse<ISyncRecord[]>(
+      201,
+      insertedRecordsToSync,
+      null,
+      'Record to sync has been inserted successfully.'
+    );
+  } catch(error) {
+    return createApiResponse<ISyncRecord[]>(
+      500,
+      insertedRecordsToSync,
+      null,
+      'Failed insterting day operations.'
+    );
+  }
+}
+
 export async function deleteSyncQueueRecord(recordToSync: ISyncRecord):Promise<IResponse<null>> {
   try {
     const sqlite = await createSQLiteConnection();
