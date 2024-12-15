@@ -1502,7 +1502,8 @@ export async function updateSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
 
     await sqlite.transaction(async (tx) => {
       let totalRecordsToSync:number = recordsToSync.length;
-      for (let  i = 0; i < totalRecordsToSync; i++) {
+      console.log("records to update: ", totalRecordsToSync)
+      for (let i = 0; i < totalRecordsToSync; i++) {
         const recordToSync:ISyncRecord = recordsToSync[i];
         const {
           id_record,
@@ -1512,7 +1513,9 @@ export async function updateSyncQueueRecords(recordsToSync: ISyncRecord[]):Promi
           action,
           timestamp,
         } = recordToSync;
-
+        
+        console.log("id_record: ", id_record)
+        console.log("payload: ", payload)
         if (typeof payload === 'string' && id_record !== '') {
           /* Since "payload" can be of different type of interfaces, it is needed to guarantee that it is a string to avoid column type issues in the embedded database. */
           tx.executeSql(`UPDATE ${EMBEDDED_TABLES.SYNC_QUEUE} 

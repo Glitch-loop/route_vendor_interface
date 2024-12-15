@@ -82,7 +82,6 @@ export function createSyncItem(data:any,
   return syncItem;
 }
 
-
 export function createSyncItems(arrData:any[],
   status:'PENDING'|'SUCCESS'|'FAILED',
   action:'INSERT'|'UPDATE'|'DELETE'):ISyncRecord[] {
@@ -120,8 +119,6 @@ export function createSyncItems(arrData:any[],
 
   return recordsToSync;
 }
-
-
 
 /*
   To avoid "logic collision" at the moment of insert (or make any other movement)

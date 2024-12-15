@@ -290,11 +290,14 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
         let response:IResponse<null> = createApiResponse(500, null, null, null);
         const currentRecordToSync:ISyncRecord|undefined = syncQueue[i];
         if (currentRecordToSync === undefined) {
+          console.log("error undefined")
           /* There is not instructions */
           response = createApiResponse(500, null, null, null);
         } else {
           const currentRecord:any = currentRecordToSync.payload;
           const currentAction:any = currentRecordToSync.action;
+          console.log(currentRecord)
+          console.log(currentAction)
 
           if (isTypeIInventoryOperation(currentRecord)) {
             console.log("Type of record: inventory operation")
@@ -350,13 +353,17 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               response = await repository.updateWorkDay(currentRecord);
             } else {
               /* Other operation*/
+              console.log("nooooo")
             }
           } else {
+            console.log("not recognized: ", isTypeWorkDayInstersection(currentRecord))
+            
             /* The record is not recognized. */
             response = createApiResponse(500, null, null, null);
           }
         }
 
+        console.log("this response: ", response)
         // Determinig if the record was syncing successfully.
         if(apiResponseStatus(response, 201) || apiResponseStatus(response, 200)) {
           console.log("the request was successfully processed")
@@ -368,7 +375,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
             recordsCorrectlyProcessed.push({
               id_record: currentRecordToSync.id_record,
               status: 'SUCCESS',
-              payload: currentRecordToSync.payload,
+              payload: JSON.stringify(currentRecordToSync.payload),
               table_name: currentRecordToSync.table_name,
               action: currentRecordToSync.action,
               timestamp: currentRecordToSync.timestamp,
@@ -385,7 +392,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
             recordsCorrectlyProcessed.push({
               id_record: currentRecordToSync.id_record,
               status: 'SUCCESS',
-              payload: currentRecordToSync.payload,
+              payload: JSON.stringify(currentRecordToSync.payload),
               table_name: currentRecordToSync.table_name,
               action: currentRecordToSync.action,
               timestamp: currentRecordToSync.timestamp,
@@ -408,7 +415,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               recordsCorrectlyProcessed.push({
                 id_record: currentRecordToSync.id_record,
                 status: 'FAILED',
-                payload: currentRecordToSync.payload,
+                payload: JSON.stringify(currentRecordToSync.payload),
                 table_name: currentRecordToSync.table_name,
                 action: currentRecordToSync.action,
                 timestamp: currentRecordToSync.timestamp,
@@ -417,14 +424,15 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
               /*
                 Record couldn't be processed and is updated to "failed" for one more opportunity
               */
+             console.log("second opportunity")
              recordsWronglyProcessed.push({
               id_record: currentRecordToSync.id_record,
               status: 'FAILED',
-              payload: currentRecordToSync.payload,
+              payload: JSON.stringify(currentRecordToSync.payload),
               table_name: currentRecordToSync.table_name,
               action: currentRecordToSync.action,
               timestamp: currentRecordToSync.timestamp,
-             })
+             });
             }
           }
         }
@@ -432,6 +440,7 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
 
       console.log("Records correctly synced: ", recordsCorrectlyProcessed.length);
       // Updating records for an other opportunity
+      console.log("records to update: ", recordsWronglyProcessed)
       await updateSyncQueueRecords(recordsWronglyProcessed);
 
       // Updating local database according with the result of the synchronizations
