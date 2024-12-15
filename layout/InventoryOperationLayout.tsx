@@ -1039,7 +1039,7 @@ async function endShiftInventoryOperationProcess(
     &&  apiResponseStatus(resultFinishingWorkDay, 200)
     &&  apiResponseStatus(resultdeletionAllDayOperations, 200)
     &&  apiResponseStatus(resultInsertionDayOperations, 201)
-    &&  apiResponseStatus(resultUpadteSyncRecordGeneralDayInformation, 200)
+    &&  apiResponseStatus(resultUpadteSyncRecordGeneralDayInformation, 201)
     &&  apiResponseStatus(resultInsertSyncRecordInventoryOperation, 201)
     &&  apiResponseStatus(resultInsertSyncRecordInventoryOperationDescriptions, 201)) {
       // Updating redux context
@@ -1689,10 +1689,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           }
         } else {
           /*
-            There is not instructions; If the process fails, the information that is currently
-            stored in memory can be used to try again, that is the reason of why it is not being
-            redirected to the route operation menu.
+            In case of error, the user can make another petition to process the inventory.
+            The information that is currently stored in memory can be used to try again,
+            that is the reason of why it is not being redirected to the route operation menu.
           */
+          setIsInventoryAccepted(false);
         }
       } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
         processResult = await endShiftInventoryOperationProcess(cashInventory, routeDay, currentInventory, inventory, dayOperations, currentOperation, dispatch);
@@ -1705,9 +1706,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           navigation.navigate('routeOperationMenu');
         } else {
           /*
-            Since it is the final inventory, the information that is in the screen can be used
-            to try again.
+            In case of error, the user can make another petition to process the inventory.
+            The information that is currently stored in memory can be used to try again,
+            that is the reason of why it is not being redirected to the route operation menu.
           */
+            setIsInventoryAccepted(false);
         }
       } else {
         /* At the moment, there is not a default case */

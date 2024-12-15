@@ -757,7 +757,8 @@ const SalesLayout = ({ route, navigation }:{ route:any, navigation:any }) => {
 
 
 
-    console.log("resultInsertionRouteTransaction: ", apiResponseStatus(resultInsertionRouteTransaction, 201))
+    console.log("resultInsertionRouteTransaction: ",
+      apiResponseStatus(resultInsertionRouteTransaction, 201))
     console.log("resultOperationDevolution: ", resultOperationDevolution)
     console.log("resultOperationReposition: ", resultOperationReposition)
     console.log("resultOperationSale: ", resultOperationSale)

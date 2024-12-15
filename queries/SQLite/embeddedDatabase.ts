@@ -140,7 +140,7 @@ export const productOperationDescriptionsEmbeddedTable = `
 
 export const syncQueueEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_QUEUE} (
-    id_record   TEXT NOT NULL UNIQUE,
+    id_record   TEXT NOT NULL,
     status      TEXT NOT NULL,
     payload     TEXT NOT NULL,
     table_name  TEXT NOT NULL,
@@ -150,7 +150,7 @@ export const syncQueueEmbeddedTable = `
 
 export const syncHistoricEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.SYNC_HISTORIC} (
-    id_record   TEXT NOT NULL UNIQUE,
+    id_record   TEXT NOT NULL,
     status      TEXT NOT NULL,
     payload     TEXT NOT NULL,
     table_name  TEXT NOT NULL,
