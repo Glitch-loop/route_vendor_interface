@@ -1311,8 +1311,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setFinalOperation(true);
             setIssueInventory(true);
             /*
-              End shift inventory is an special case. This inventory visualization intends to show the summarize of
-              all the inventory operations that were made during the route.
+              End shift inventory is an special case. This inventory visualization intends to show
+              the summarize of all the inventory operations that were made during the route.
 
               In this way, it is needed to get all the inventory operations of the day (inflow and remaining of product):
               - Initial inventory
@@ -1334,13 +1334,18 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               inventoryOperations.forEach((currentInventoryOperation:IInventoryOperation) => {
                 allInventoryOperations.push(currentInventoryOperation);
               });
-
+            console.log("----------------------------------")
             // Get all the descriptions for each inventory operation
             for (let i = 0; i < allInventoryOperations.length; i++) {
-              const { id_inventory_operation, id_inventory_operation_type } = allInventoryOperations[i];
+              const {
+                id_inventory_operation,
+                id_inventory_operation_type,
+              }
+              = allInventoryOperations[i];
 
+              console.log("Getting descriptions of the current operation")
               // Get description (movements) of the current inventory oepration
-              apiResponseProcess(await getInventoryOperationDescription(id_inventory_operation),
+              productInventoryOfInventoryOperation = apiResponseProcess(await getInventoryOperationDescription(id_inventory_operation),
                 settingOperationDescriptionsFinalInventory)
                 .map((inventoryOperationDescription:IInventoryOperationDescription) =>
                 {
@@ -1352,14 +1357,21 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                   };
                 });
 
+              console.log("Determining the inventory operation")
               // Determining where to store the information of the current inventory operation.
               if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
+                console.log("Start shift inventory")
                 productInventoryOfInventoryOperation
                   .forEach((product:IProductInventory) =>
-                    {startShiftInventoryProduct.push(product);});
+                    {
+                      console.log(product.product_name)
+                      startShiftInventoryProduct.push(product);
+                    });
               } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
+                console.log("Re-stock inventory inventory")
                 restockInventoryProduct.push(productInventoryOfInventoryOperation);
               } else {
+                console.log("there is not")
                 /* Other case of operations are ignored */
               }
             }
@@ -1491,6 +1503,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
                     }
                   });
               }
+
               // Storing the information of the current store within the rest of the stores.
               productRepositionInventoryProductByStore.push(
                 convertingDictionaryInArray(productsInventoryOfRepositionOfStore));

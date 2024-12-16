@@ -135,7 +135,7 @@ async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]>
       text1:'Error durante la consulta de las rutas',
       text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente',
     });
-    console.log('Something was wrong');
+
     return [];
   }
 }
