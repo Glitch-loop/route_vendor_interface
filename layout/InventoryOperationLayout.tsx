@@ -1,6 +1,6 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Text, BackHandler } from 'react-native';
+import { View, ScrollView, Text, BackHandler, Pressable } from 'react-native';
 import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 import tw from 'twrnc';
@@ -105,6 +105,8 @@ import Toast from 'react-native-toast-message';
 
 import { createSyncItem, createSyncItems } from '../utils/syncFunctions';
 import { syncingRecordsWithCentralDatabase } from '../services/syncService';
+import ActionButton from '../components/SalesLayout/ActionButton';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Initializing database
 const databaseRepository = RepositoryFactory.createRepository('supabase');
@@ -1148,11 +1150,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const stores = useSelector((state: RootState) => state.stores);
 
   // Defining states
-  /* States that will store the movements in the operation. */
+  /* States related to 'movements' in the operation. */
   const [inventory, setInventory] = useState<IProductInventory[]>([]);
   const [cashInventory, setCashInventory] = useState<ICurrency[]>(initialMXNCurrencyState());
 
-  /* State to store infomration related to the product to be taken for the route. */
+  /* States related to the recommendation for the inventory to be taken. */
   const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
 
   /*
@@ -1161,7 +1163,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   */
   const [currentInventory, setCurrentInventory] = useState<IProductInventory[]>([]);
 
-  /* States for inventory operation visualization. */
+  /* States related to the configuration for inventory operation visualization. */
   const [initialShiftInventory, setInitialShiftInventory] = useState<IProductInventory[]>([]);
   const [restockInventories, setRestockInventories] = useState<IProductInventory[][]>([]);
   const [finalShiftInventory, setFinalShiftInventory] = useState<IProductInventory[]>([]);
@@ -1173,7 +1175,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [inventoryOutflow, setInventoryOutflow] = useState<boolean>(false);
   const [finalOperation, setFinalOperation] = useState<boolean>(false);
   const [issueInventory, setIssueInventory] = useState<boolean>(false);
+  const [isInventoryOperationModifiable, setIsInventoryOperationModifiable] = useState<boolean>(false);
 
+  /* States related to the layout logic */
   const [isOperation, setIsOperation] = useState<boolean>(true);
 
   /* States for route transaction operations */
@@ -1215,7 +1219,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       setInventory(productInventory);
     });
 
-    if (currentOperation.id_item) { // It is a inventory operation visualization.
+    if (currentOperation.id_item) { // It is an inventory operation visualization.
       let currentProductInventory:IProductInventory[] = [];
 
       // Variables used for final shift inventory
@@ -1539,6 +1543,60 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           } else {
             /* Other inventory operation */
           }
+
+          // Determining if there is possible to make modifications to the inventory operation.
+          let isCurrentInventoryOperationModifiable:boolean = false;
+
+          const index = dayOperations.findIndex((dayOperation) => {
+            return dayOperation.id_day_operation === currentOperation.id_day_operation;
+          });
+
+          if (index !== -1) {
+            if (index < dayOperations.length - 1) {
+              /* Last operation of day operations, that means that it is modificable. */
+              isCurrentInventoryOperationModifiable = true;
+            } else {
+              // Verifying it is the last inventory operation (excluding product devolution inventory)
+              let isNextOperationCurrentOne:boolean = false;
+              let isAnotherInventoryOperationAbove:boolean = false;
+
+              if (dayOperations[index + 1].current_operation === 1) {
+                isNextOperationCurrentOne = true;
+              } else {
+                isNextOperationCurrentOne = false;
+              }
+
+              // Checking if there is another inventory operation above.
+              for(let i = index + 1; i < dayOperations.length; i++) {
+                const dayOperation:IDayOperation = dayOperations[i];
+                if (dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                  isAnotherInventoryOperationAbove = true;
+                } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+                  isAnotherInventoryOperationAbove = true;
+                } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+                  isAnotherInventoryOperationAbove = true;
+                } else {
+                  /* Other operations that doesn't affetc */
+                }
+              }
+
+              if(isAnotherInventoryOperationAbove === false && isNextOperationCurrentOne === true) {
+                isCurrentInventoryOperationModifiable = true;
+              } else {
+                isCurrentInventoryOperationModifiable = false;
+              }
+            }
+          } else {
+            /* It means the record was not found in the array. */
+            isCurrentInventoryOperationModifiable = false;
+          }
+
+          if(isCurrentInventoryOperationModifiable === true) {
+            setIsInventoryOperationModifiable(true);
+          } else {
+            setIsInventoryOperationModifiable(false);
+          }
+
       })
       .catch(() => {
         Toast.show({
@@ -1761,18 +1819,68 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     }
   };
 
+  const setInterfaceToModifyCurrentInventory = () => {
+    const {id_type_operation} = currentOperation;
+    let currentInventoryOperation:IProductInventory[] = [];
+
+    if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+      currentInventoryOperation = initialShiftInventory;
+    } else if (id_type_operation === DAYS_OPERATIONS.restock_inventory
+            || id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+      currentInventoryOperation = restockInventories[0];
+    } else if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+      currentInventoryOperation = finalShiftInventory;
+    } else {
+      /* Other invalid day operation */
+    }
+
+    // Reseting states for making the end shift inventory.
+    const newInventoryOperation = inventory.map((proudct:IProductInventory) => {
+      let amountForInventory:number = 0;
+
+      const productOfOperation:IProductInventory|undefined = currentInventoryOperation.find((productOperation:IProductInventory) => {
+        return productOperation.id_product === proudct.id_product;
+      });
+
+      if(productOfOperation === undefined) {
+        amountForInventory = 0;
+      } else {
+        amountForInventory = productOfOperation.amount;
+      }
+
+      return {
+        ...proudct,
+        amount: amountForInventory,
+      };
+    });
+    setInventory(newInventoryOperation);
+    setIsOperation(true);
+    setIsInventoryAccepted(false); // State to avoid double-click
+  };
+
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
       <View style={tw`mt-3 w-full flex basis-1/6`}>
         <RouteHeader onGoBack={handlerGoBack}/>
       </View>
-      {/* Product inventory section. */}
-      <Text style={tw`w-full text-center text-black text-2xl`}>
-        {getTitleOfInventoryOperation(currentOperation)}
-      </Text>
 
+      {/* Product inventory section. */}
+      <View style={tw`w-full flex flex-row items-center justify-center`}>
+        <Text style={tw`text-center text-black text-2xl`}>
+          {getTitleOfInventoryOperation(currentOperation)}
+        </Text>
+        { (isInventoryOperationModifiable && !isOperation) &&
+          <Pressable
+            style={tw`bg-blue-500 py-6 px-6 rounded-full ml-3`}
+            onPress={setInterfaceToModifyCurrentInventory}>
+            <Icon
+              name={'edit'}
+              style={tw`absolute inset-0 top-3 text-base text-center`} color="#fff" />
+          </Pressable>
+        }
+      </View>
       {/* Inventory product section */}
-      {/* Depending on the action is that one menu or another one will be displayed. */}
+      {/* Depending on the action, it will be decided the menu to be displayed. */}
       { isOperation ?
         <View style={tw`flex basis-auto w-full mt-3`}>
           <TableInventoryOperations
@@ -1785,17 +1893,19 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         :
         <View style={tw`flex basis-auto w-full mt-3`}>
           <TableInventoryVisualization
-            inventory             = {productsInventory}
-            suggestedInventory    = {suggestedProduct}
-            initialInventory      = {initialShiftInventory}
-            restockInventories    = {restockInventories}
-            soldOperations        = {productSoldTransactions}
-            repositionsOperations = {productRepositionTransactions}
-            returnedInventory     = {finalShiftInventory}
-            inventoryWithdrawal   = {inventoryWithdrawal}
-            inventoryOutflow      = {inventoryOutflow}
-            finalOperation        = {finalOperation}
-            issueInventory        = {issueInventory}/>
+            inventory                       = {productsInventory}
+            suggestedInventory              = {suggestedProduct}
+            initialInventory                = {initialShiftInventory}
+            restockInventories              = {restockInventories}
+            soldOperations                  = {productSoldTransactions}
+            repositionsOperations           = {productRepositionTransactions}
+            returnedInventory               = {finalShiftInventory}
+            inventoryWithdrawal             = {inventoryWithdrawal}
+            inventoryOutflow                = {inventoryOutflow}
+            finalOperation                  = {finalOperation}
+            issueInventory                  = {issueInventory}
+            isInventoryOperationModifiable  = {isInventoryOperationModifiable}
+            />
           { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
             <View style={tw`flex basis-auto w-full mt-3`}>
               <Text style={tw`w-full text-center text-black text-2xl`}>

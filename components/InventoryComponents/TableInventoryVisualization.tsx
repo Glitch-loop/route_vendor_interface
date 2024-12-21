@@ -75,6 +75,7 @@ const TableInventoryVisualization = (
     inventoryOutflow:boolean,
     finalOperation:boolean,
     issueInventory:boolean,
+    isInventoryOperationModifiable:boolean
   }) => {
 
     const headerTableStyle:string = 'w-28 flex flex-row justify-center';
