@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // Necessary for uuid
 import {v4 as uuidv4 } from 'uuid';
 
 // Queries
@@ -53,6 +54,7 @@ import {
   deleteRecordForSyncingWithCentralDatabase,
   deleteRecordsForSyncingWithCentralDatabase,
 } from '../services/syncService';
+import { generateUUIDv4 } from '../utils/generalFunctions';
 
 // Initializing database connection
 let repository = RepositoryFactory.createRepository('supabase');
@@ -139,7 +141,7 @@ function creatingInventoryOperationDescription(inventory:IProductInventory[], in
       } = product;
 
       if (amount > 0) {
-        console.log(uuidv4())
+
         inventoryOperationDescription.push({
           id_product_operation_description: uuidv4(),
           price_at_moment: price,
@@ -176,11 +178,11 @@ export async function createInventoryOperation(
   const resultInventoryOperationDescription:IResponse<IInventoryOperationDescription[]>
     = await insertInventoryOperationDescription(inventoryOperationDescription);
 
-
+  console.log("inventory operation to sync", inventoryOperation.id_inventory_operation)
   const resultCreateRecordForSyncingOperation:IResponse<ISyncRecord>
     = await createRecordForSyncingWithCentralDatabse(inventoryOperation, 'PENDING', 'INSERT');
 
-  console.log("Inventory descriptions syncing: ", inventoryOperationDescription)
+  console.log("Inventory descriptions syncing: ", inventoryOperationDescription.length)
   const resultCreateRecordForSyncingOperationDescription:IResponse<ISyncRecord> =
   await createRecordsForSyncingWithCentralDatabse(
     inventoryOperationDescription,

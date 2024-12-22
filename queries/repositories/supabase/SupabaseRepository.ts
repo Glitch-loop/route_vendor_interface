@@ -159,7 +159,7 @@ export class SupabaseRepository implements IRepository {
         /*Fields relate to IRouteDay*/
         // id_route_day,
       } = workday;
-
+      
       const { data, error } = await supabase.from(TABLES.WORK_DAYS).insert({
         id_work_day: id_work_day,
         start_date: start_date,
@@ -169,6 +169,8 @@ export class SupabaseRepository implements IRepository {
         start_petty_cash: start_petty_cash,
         final_petty_cash: final_petty_cash,
       });
+
+      console.log("ID of work day: ", id_work_day)
 
       console.log("Insert work day: ", data)
       if (error) {
@@ -253,6 +255,7 @@ export class SupabaseRepository implements IRepository {
         state,
       } = inventoryOperation;
 
+      console.log("SUPABASE: ", id_inventory_operation)
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS)
       .insert({
         id_inventory_operation: id_inventory_operation,

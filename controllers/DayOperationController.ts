@@ -1,6 +1,5 @@
 // Libraries
 import store from '../redux/store';
-import {v4 as uuidv4 } from 'uuid';
 
 // Embedded database
 import {
@@ -25,6 +24,7 @@ import {
   getDataFromApiResponse,
 } from '../utils/apiResponse';
 import { isTypeIInventoryOperation } from '../utils/guards';
+import { generateUUIDv4 } from '../utils/generalFunctions';
 
 export function createDayOperationConcept(
   idItem:string,
@@ -41,8 +41,8 @@ export function createDayOperationConcept(
   };
   try {
     // Creating a day operation (day operation resulted from the ivnentory operation).
-    dayOperation.id_day_operation = uuidv4();
-    dayOperation.id_item = idItem === '' ? uuidv4() : idItem;
+    dayOperation.id_day_operation = generateUUIDv4();
+    dayOperation.id_item = idItem === '' ? generateUUIDv4() : idItem;
     dayOperation.id_type_operation = idTypeOperation;
     dayOperation.operation_order = operationOrder;
     dayOperation.current_operation = currentOperation;
@@ -66,11 +66,9 @@ export async function appendDayOperation(operation:any):Promise<IResponse<IDayOp
     idItem = operation.id_inventory_operation_type;
   }
 
-  console.log("creating day operation concept")
   const newDayOperation:IDayOperation = createDayOperationConcept(idTypeOperation, idItem, 0, 0);
 
   // Creating a copy of the list of the day operations.
-  console.log("creating copy of day operations")
   dayOperations.forEach(dayOperation => { newListDayOperations.push(dayOperation); });
 
   // Since it is the end shift operation, it is exected that it is going to be the last operation.
@@ -78,17 +76,12 @@ export async function appendDayOperation(operation:any):Promise<IResponse<IDayOp
 
   // Replacing the entire list of day operations in embedded datbase.
   // Delete all the information from the database.
-  console.log("Deleting everything")
   const resultDeletionAllDayOperations:IResponse<null> = await deleteAllDayOperations();
 
   // Store information in embedded database.
-  console.log("Inserting the new list")
   const resultInsertionDayOperations:IResponse<any>
     = await insertDayOperations(newListDayOperations);
 
-  console.log("Appending day: ")
-  console.log(apiResponseStatus(resultInsertionDayOperations, 201))
-  console.log(apiResponseStatus(resultDeletionAllDayOperations, 200))
   if(apiResponseStatus(resultInsertionDayOperations, 201)
   && apiResponseStatus(resultDeletionAllDayOperations, 200)) {
     /* There is no instructions */

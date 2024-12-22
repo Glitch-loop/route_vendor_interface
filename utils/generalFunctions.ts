@@ -1,3 +1,5 @@
+import 'react-native-get-random-values'; // Necessary for uuid
+import {v4 as uuidv4 } from 'uuid';
 
 export function capitalizeFirstLetter(input: string|undefined|null): string {
   if (!input || input === undefined || input === null) {
@@ -56,4 +58,8 @@ export function addingInformationParticularFieldOfObject(
   }
 
   return updatedDictionary;
+}
+
+export function generateUUIDv4() {
+  return uuidv4();
 }

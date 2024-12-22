@@ -1,5 +1,3 @@
-import {v4 as uuidv4 } from 'uuid';
-
 // Embedded database
 import {
   insertWorkDay,
@@ -28,6 +26,7 @@ import {
 import Toast from 'react-native-toast-message';
 
 import { createRecordForSyncingWithCentralDatabse, deleteRecordForSyncingWithCentralDatabase } from '../services/syncService';
+import { generateUUIDv4 } from '../utils/generalFunctions';
 
 
 export function createWorkDayConcept(cashInventory:ICurrency[],
@@ -60,7 +59,7 @@ export function createWorkDayConcept(cashInventory:ICurrency[],
       { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
 
     // General information about the route.
-    updatedRouteDay.id_work_day = uuidv4();
+    updatedRouteDay.id_work_day = generateUUIDv4();
     updatedRouteDay.start_date = timestamp_format();
     updatedRouteDay.finish_date = timestamp_format();
     updatedRouteDay.start_petty_cash = startPettyCash;

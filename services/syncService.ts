@@ -296,9 +296,8 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
         } else {
           const currentRecord:any = currentRecordToSync.payload;
           const currentAction:any = currentRecordToSync.action;
-
           if (isTypeIInventoryOperation(currentRecord)) {
-            console.log("Type of record: inventory operation")
+            console.log("Type of record: inventory operation - ", currentRecord.id_inventory_operation)
             if (currentAction === 'INSERT') {
               response = await repository.insertInventoryOperation(currentRecord);
             } else if (currentAction === 'UPDATE') {
@@ -494,8 +493,7 @@ export async function createRecordForSyncingWithCentralDatabse(
 
   const recordToSync:ISyncRecord = createSyncItem(data, status, action);
 
-  const resultInsertSyncRecord:IResponse<any>
-  = await insertSyncQueueRecord(recordToSync);
+  const resultInsertSyncRecord:IResponse<any> = await insertSyncQueueRecord(recordToSync);
 
   if(apiResponseStatus(resultInsertSyncRecord, 201)) {
     /* This is not instructions */

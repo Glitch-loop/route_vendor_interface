@@ -10,12 +10,14 @@ import {
 import { time_posix_format } from './momentFormat';
 import TABLES from './tables';
 
-function determiningInterfaceToCreateSynItem(syncItem:ISyncRecord, data:any)
+function determiningInterfaceToCreateSyncItem(syncItem:ISyncRecord, data:any)
 :ISyncRecord {
   if (isTypeIInventoryOperation(data)) {
+    console.log("id_inventory_operation: ", data.id_inventory_operation)
     syncItem.id_record = data.id_inventory_operation;
     syncItem.table_name = TABLES.INVENTORY_OPERATIONS;
   } else if (isTypeIInventoryOperationDescription(data)) {
+    console.log("id_inventory_operation_description: ", data.id_product_operation_description)
     syncItem.id_record = data.id_product_operation_description;
     syncItem.table_name = TABLES.INVENTORY_OPERATION_TYPES;
   } else if (isTypeIRouteTransaction(data)) {
@@ -28,6 +30,7 @@ function determiningInterfaceToCreateSynItem(syncItem:ISyncRecord, data:any)
     syncItem.id_record = data.id_route_transaction_operation_description;
     syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
   } else if(isTypeWorkDayInstersection(data)){
+    console.log("id_work_day: ", data.id_work_day)
     syncItem.id_record = data.id_work_day;
     syncItem.table_name = TABLES.WORK_DAYS;
   } else {
@@ -70,7 +73,7 @@ export function createSyncItem(
     timestamp:  JSON.stringify(time_posix_format()),
   };
 
-  syncItem = determiningInterfaceToCreateSynItem(syncItem, data);
+  syncItem = determiningInterfaceToCreateSyncItem(syncItem, data);
 
   if (syncItem.id_record !== '') {
     /* It means the type of record was identified. */
@@ -102,14 +105,14 @@ export function createSyncItems(arrData:any[],
 
     let data = arrData[i];
 
-    syncItem = determiningInterfaceToCreateSynItem(syncItem, data);
+    syncItem = determiningInterfaceToCreateSyncItem(syncItem, data);
 
     if (syncItem.id_record !== '') {
       /* It means the type of record was identified. */
       syncItem.status = status;
       syncItem.payload = JSON.stringify(data);
       syncItem.action = action;
-      
+
       recordsToSync.push(syncItem);
     } else {
       /* The records wasn't identified. */

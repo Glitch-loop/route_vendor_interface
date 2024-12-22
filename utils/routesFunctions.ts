@@ -1,6 +1,5 @@
 // Libraries
 import 'react-native-get-random-values'; // Necessary for uuid
-import {v4 as uuidv4 } from 'uuid';
 
 // Interfaces
 import { enumStoreStates } from '../interfaces/enumStoreStates';
@@ -13,6 +12,7 @@ import {
 
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
+import { generateUUIDv4 } from './generalFunctions';
 
 // Related to route plannification
 export function planningRouteDayOperations(arrRouteDayStores: IRouteDayStores[]):IDayOperation[] {
@@ -20,7 +20,7 @@ export function planningRouteDayOperations(arrRouteDayStores: IRouteDayStores[])
 
   arrRouteDayStores.forEach(routeDayStore => {
     arrDayOperations.push({
-      id_day_operation: uuidv4(),
+      id_day_operation: generateUUIDv4(),
       id_item: routeDayStore.id_store,
       id_type_operation: DAYS_OPERATIONS.sales,
       operation_order: routeDayStore.position_in_route,

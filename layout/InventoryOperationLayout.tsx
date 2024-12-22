@@ -673,9 +673,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         // Stores operations
         const resultCreateListStoreOfRouteDay = await createListOfStoresOfTheRouteDay(
-          routeDay
+          dayGeneralInformation
         );
-        const resulGetStoresOfRouteOfRouteDay = await getStoresOfRouteDay(routeDay);
+        const resulGetStoresOfRouteOfRouteDay = await getStoresOfRouteDay(dayGeneralInformation);
 
         const arrListStoreOfRouteDay:(IStore&IStoreStatusDay)[]
           = getDataFromApiResponse(resultCreateListStoreOfRouteDay);
@@ -684,8 +684,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           = getDataFromApiResponse(resulGetStoresOfRouteOfRouteDay);
 
         // Inventory operations.
+        console.log("START OPERATIONS")
         const resultCreateInventoryOperation = await createInventoryOperation(
-          routeDay,
+          dayGeneralInformation,
           inventory,
           currentOperation.id_type_operation
         );
@@ -785,7 +786,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           navigation.navigate('selectionRouteOperation');
       }
       } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
-             || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+      || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
         /*
           Analyzing the workflow of the operations both re-stock operation and product devolution
           share great part of the process, they only differ at the end of the process;
