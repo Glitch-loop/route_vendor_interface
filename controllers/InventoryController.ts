@@ -1,5 +1,3 @@
-import 'react-native-get-random-values'; // Necessary for uuid
-import {v4 as uuidv4 } from 'uuid';
 
 // Queries
 // Main database
@@ -108,7 +106,7 @@ function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation
       of the type operation*/
     } else {
       // Creating the inventory operation (this inventory operation is tied to the "work day").
-      inventoryOperation.id_inventory_operation = uuidv4();
+      inventoryOperation.id_inventory_operation = generateUUIDv4();
       inventoryOperation.sign_confirmation = '1';
       inventoryOperation.date = timestamp_format();
       inventoryOperation.audit = 0;
@@ -143,7 +141,7 @@ function creatingInventoryOperationDescription(inventory:IProductInventory[], in
       if (amount > 0) {
 
         inventoryOperationDescription.push({
-          id_product_operation_description: uuidv4(),
+          id_product_operation_description: generateUUIDv4(),
           price_at_moment: price,
           amount: amount,
           id_inventory_operation: id_inventory_operation,
@@ -178,11 +176,9 @@ export async function createInventoryOperation(
   const resultInventoryOperationDescription:IResponse<IInventoryOperationDescription[]>
     = await insertInventoryOperationDescription(inventoryOperationDescription);
 
-  console.log("inventory operation to sync", inventoryOperation.id_inventory_operation)
   const resultCreateRecordForSyncingOperation:IResponse<ISyncRecord>
     = await createRecordForSyncingWithCentralDatabse(inventoryOperation, 'PENDING', 'INSERT');
 
-  console.log("Inventory descriptions syncing: ", inventoryOperationDescription.length)
   const resultCreateRecordForSyncingOperationDescription:IResponse<ISyncRecord> =
   await createRecordsForSyncingWithCentralDatabse(
     inventoryOperationDescription,

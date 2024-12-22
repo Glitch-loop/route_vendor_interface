@@ -13,11 +13,9 @@ import TABLES from './tables';
 function determiningInterfaceToCreateSyncItem(syncItem:ISyncRecord, data:any)
 :ISyncRecord {
   if (isTypeIInventoryOperation(data)) {
-    console.log("id_inventory_operation: ", data.id_inventory_operation)
     syncItem.id_record = data.id_inventory_operation;
     syncItem.table_name = TABLES.INVENTORY_OPERATIONS;
   } else if (isTypeIInventoryOperationDescription(data)) {
-    console.log("id_inventory_operation_description: ", data.id_product_operation_description)
     syncItem.id_record = data.id_product_operation_description;
     syncItem.table_name = TABLES.INVENTORY_OPERATION_TYPES;
   } else if (isTypeIRouteTransaction(data)) {
@@ -30,7 +28,6 @@ function determiningInterfaceToCreateSyncItem(syncItem:ISyncRecord, data:any)
     syncItem.id_record = data.id_route_transaction_operation_description;
     syncItem.table_name = TABLES.ROUTE_TRANSACTION_OPERATIONS_DESCRIPTONS;
   } else if(isTypeWorkDayInstersection(data)){
-    console.log("id_work_day: ", data.id_work_day)
     syncItem.id_record = data.id_work_day;
     syncItem.table_name = TABLES.WORK_DAYS;
   } else {

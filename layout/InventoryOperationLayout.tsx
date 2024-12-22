@@ -684,7 +684,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           = getDataFromApiResponse(resulGetStoresOfRouteOfRouteDay);
 
         // Inventory operations.
-        console.log("START OPERATIONS")
         const resultCreateInventoryOperation = await createInventoryOperation(
           dayGeneralInformation,
           inventory,
@@ -921,8 +920,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           );
         const inventoryOperation:IInventoryOperation = getDataFromApiResponse(resultCreateInventory);
 
-
-        console.log("Updating information")
         const resultUpdateVendorInventory:IResponse<IProductInventory[]>
           = await updateVendorInventory(currentInventory, inventory, false);
 
@@ -933,24 +930,17 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           text2: 'Registrando información necesaria para cerrar el inventario final y terminar el dia correctamente.',
         });
 
-        console.log("Finishing work day")
         const resultFinishWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
           = await finishWorkDay(cashInventory, routeDay);
         const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
           = getDataFromApiResponse(resultFinishWorkDay);
 
-        console.log("Append day")
         const resultAppendDayOperation:IResponse<IDayOperation>
          = await appendDayOperation(inventoryOperation);
         const newDayOperation:IDayOperation
           = getDataFromApiResponse(resultAppendDayOperation);
 
         /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
-        console.log("Result day")
-        console.log(apiResponseStatus(resultCreateInventory, 201))
-        console.log(apiResponseStatus(resultUpdateVendorInventory, 200))
-        console.log(apiResponseStatus(resultFinishWorkDay, 200))
-        console.log(apiResponseStatus(resultAppendDayOperation, 201))
         if (apiResponseStatus(resultCreateInventory, 201)
           &&  apiResponseStatus(resultUpdateVendorInventory, 200)
           &&  apiResponseStatus(resultFinishWorkDay, 200)
