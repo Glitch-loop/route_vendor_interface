@@ -20,6 +20,7 @@ import {
   IDay,
   IRouteDay,
   IRoute,
+  IRouteDayStores,
  } from '../interfaces/interfaces';
 
 
@@ -45,6 +46,10 @@ export function isTypeIStore(obj: any): obj is IStore {
 
 export function isTypeIRouteStore(obj: any): obj is IStore&IStoreStatusDay {
   return 'id_store' in obj && 'route_day_state' in obj;
+}
+
+export function isTypeRouteDayStore(obj: any): obj is IRouteDayStores {
+  return 'id_route_day_store' in obj && 'position_in_route' in obj;
 }
 
 // Related to inventory operation

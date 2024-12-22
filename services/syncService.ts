@@ -22,6 +22,7 @@ import {
   deleteSyncHistoricRecordById,
   getAllSyncHistoricRecords,
   updateSyncQueueRecords,
+  deleteSyncQueueRecord,
 
  } from '../queries/SQLite/sqlLiteQueries';
 
@@ -41,7 +42,11 @@ import {
   isTypeIRouteTransactionOperationDescription,
   isTypeWorkDayInstersection,
 } from '../utils/guards';
-import { calculateSyncPriority } from '../utils/syncFunctions';
+import {
+  calculateSyncPriority,
+  createSyncItem,
+  createSyncItems,
+} from '../utils/syncFunctions';
 
 
 const repository:IRepository = RepositoryFactory.createRepository('supabase');
@@ -228,7 +233,6 @@ async function determingRecordsToBeSyncronized() {
     /* Something was wrong during execution. */
   }
 }
-
 
 /* Function to sync records with the main database. */
 async function syncingRecordsWithCentralDatabase():Promise<boolean> {
@@ -463,7 +467,6 @@ async function syncingRecordsWithCentralDatabase():Promise<boolean> {
   }
 }
 
-
 async function createBackgroundSyncProcess() {
   BackgroundFetch.configure({
     minimumFetchInterval: 15, // Execute every 15 minutes (minimum for iOS)
@@ -481,6 +484,76 @@ async function createBackgroundSyncProcess() {
   });
 
   BackgroundFetch.start();
+}
+
+export async function createRecordForSyncingWithCentralDatabse(
+  data:any,
+  status:'PENDING'|'SUCCESS'|'FAILED',
+  action:'INSERT'|'UPDATE'|'DELETE'
+):Promise<IResponse<any>> {
+
+  const recordToSync:ISyncRecord = createSyncItem(data, status, action);
+
+  const resultInsertSyncRecord:IResponse<any>
+  = await insertSyncQueueRecord(recordToSync);
+
+  if(apiResponseStatus(resultInsertSyncRecord, 201)) {
+    /* This is not instructions */
+  } else {
+    resultInsertSyncRecord.responseCode = 400;
+      await deleteSyncQueueRecord(recordToSync);
+  }
+
+  resultInsertSyncRecord.data = recordToSync;
+
+  return resultInsertSyncRecord;
+}
+
+export async function deleteRecordForSyncingWithCentralDatabase(
+  data:any,
+  status:'PENDING'|'SUCCESS'|'FAILED',
+  action:'INSERT'|'UPDATE'|'DELETE'
+) {
+  const resultDeleteSyncRecord:IResponse<null> =
+    await deleteSyncQueueRecord(createSyncItem(data, status, action));
+
+  return resultDeleteSyncRecord;
+}
+
+export async function createRecordsForSyncingWithCentralDatabse(
+  data:any[],
+  status:'PENDING'|'SUCCESS'|'FAILED',
+  action:'INSERT'|'UPDATE'|'DELETE'
+):Promise<IResponse<any>> {
+
+  const resultInsertSyncRecord:IResponse<ISyncRecord[]> =
+    await insertSyncQueueRecords(createSyncItems(data, status, action));
+
+  if(apiResponseStatus(resultInsertSyncRecord, 201)) {
+    /* This is not instructions */
+  } else {
+    resultInsertSyncRecord.responseCode = 400;
+    await deleteSyncQueueRecords(createSyncItems(data, status, action));
+  }
+
+  return resultInsertSyncRecord;
+}
+
+export async function deleteRecordsForSyncingWithCentralDatabase(
+  data:any,
+  status:'PENDING'|'SUCCESS'|'FAILED',
+  action:'INSERT'|'UPDATE'|'DELETE'
+) {
+  const resultDeleteSyncRecord:IResponse<ISyncRecord[]>
+    = await deleteSyncQueueRecords(createSyncItems(data, status, action));
+
+  return resultDeleteSyncRecord;
+}
+
+export async function cleanAllRecordsToSyncFromDatabase() {
+  const resultDeleteAllSyncRecords:IResponse<null> = await deleteAllSyncQueueRecords();
+
+  return resultDeleteAllSyncRecords;
 }
 
 export {

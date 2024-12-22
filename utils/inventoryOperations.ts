@@ -42,4 +42,31 @@ export function initialMXNCurrencyState():ICurrency[] {
 }
 
 // Related to product inventory
+export function calculateNewInventoryAfterAnInventoryOperation(
+  currentInventory: IProductInventory[],
+  inventoryMovements: IProductInventory[],
+  isInventoryMovementCancelation: boolean,
+) {
+  const newInventory:IProductInventory[] = [];
 
+  currentInventory.forEach((currentInventoryUpdate) => {
+    const productFound:undefined|IProductInventory = inventoryMovements
+      .find(productInventory => productInventory.id_product === currentInventoryUpdate.id_product);
+      if (productFound !== undefined) {
+        let newAmount = currentInventoryUpdate.amount;
+
+        if(isInventoryMovementCancelation) {
+          newAmount -= productFound.amount;
+        } else {
+          newAmount += productFound.amount;
+        }
+
+        newInventory.push({
+          ...productFound,
+          amount: newAmount,
+        });
+      }
+  });
+
+  return newInventory;
+}

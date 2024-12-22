@@ -56,9 +56,11 @@ function determiningWeightDependingOnRecordType(recordType:any):number {
   return weight;
 }
 
-export function createSyncItem(data:any,
+export function createSyncItem(
+  data:any,
   status:'PENDING'|'SUCCESS'|'FAILED',
-  action:'INSERT'|'UPDATE'|'DELETE'):ISyncRecord {
+  action:'INSERT'|'UPDATE'|'DELETE'
+):ISyncRecord {
   let syncItem:ISyncRecord = {
     id_record:  '',
     status:     'FAILED',
@@ -107,7 +109,7 @@ export function createSyncItems(arrData:any[],
       syncItem.status = status;
       syncItem.payload = JSON.stringify(data);
       syncItem.action = action;
-
+      
       recordsToSync.push(syncItem);
     } else {
       /* The records wasn't identified. */
