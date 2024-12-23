@@ -1244,7 +1244,7 @@ export async function getAllRouteTransactionsOperationDescriptions():Promise<IRe
 
     const sqlite = await createSQLiteConnection();
     const result = await sqlite
-      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTIONS}`);
+      .executeSql(`SELECT * FROM ${EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS}`);
 
     result.forEach((record:any) => {
       for (let index = 0; index < record.rows.length; index++) {

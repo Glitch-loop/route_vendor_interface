@@ -18,7 +18,7 @@ import {
 
 // Redux context
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
+import store, { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
@@ -84,6 +84,7 @@ import {
   getCurrentVendorInventory,
   getInventoryOperationForInventoryVisualization,
   getAllInventoryOperationsForInventoryVisualization,
+  getTotalInventoriesOfAllStoresByIdOperationType,
 
 } from '../controllers/InventoryController';
 
@@ -181,8 +182,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   /* States for route transaction operations */
   const [productSoldByStore, setProductSoldByStore] = useState<IProductInventory[][]>([]);
-  const [productRepositionByStore, setProductRepositionByStore]
-    = useState<IProductInventory[][]>([]);
+  const [productRepositionByStore, setProductRepositionByStore] = useState<IProductInventory[][]>([]);
   const [nameOfStores, setNameOfStores] = useState<string[]>([]);
 
 
@@ -208,19 +208,19 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       let currentProductInventory:IProductInventory[] = [];
 
       // Variables used for final shift inventory
-      let allInventoryOperations:IInventoryOperation[] = [];
+      // let allInventoryOperations:IInventoryOperation[] = [];
       const startShiftInventoryProduct:IProductInventory[][] = [];
       const restockInventoryProduct:IProductInventory[][] = [];
 
       // Variables for showing the produdct by store (each one for it's respective concept).
-      const productRepositionInventoryProductByStore:IProductInventory[][] = [];
-      const productSoldInventoryProductByStore:IProductInventory[][] = [];
-      const titleOfStores:string[] = [];
+      // const productRepositionInventoryProductByStore:IProductInventory[][] = [];
+      // const productSoldInventoryProductByStore:IProductInventory[][] = [];
+      // const titleOfStores:string[] = [];
 
       // These objects store the "total amount" of product for each concept
       // Information comes from "route transactions"
-      let productRepositionInventoryProduct:any = {};
-      let productSoldInventoryProduct:any = {};
+      // let productRepositionInventoryProduct:any = {};
+      // let productSoldInventoryProduct:any = {};
 
       /*
         Since it is an visualization, it is need to 'reset' the states related to
@@ -322,133 +322,46 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setFinalShiftInventory(currentProductInventory);
           });
 
+
           // Get the "inventory" of the "route transactions".
           /*
             Route transactions and invnetory transactions have their own format, but
-            route transactions can be "formated" as if they were an "inventory operation"
+            route transactions can be "formatted" to "inventory operation"
           */
           /*
             The information of this section is used for two purposes:
             - Summarize of all the day.
             - Summarize by store of the day.
           */
-          // for(let i = 0; i < stores.length; i++) {
-          //   const {id_store, store_name} = stores[i];
+          setNameOfStores(stores.map((currentStore) => {return currentStore.store_name;}));
 
-          //   // Variables used by the responses
-          //   let routeTransactionsOperationsByStore:IRouteTransactionOperation[] = [];
+          getTotalInventoriesOfAllStoresByIdOperationType(DAYS_OPERATIONS.product_reposition, stores)
+          .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
+            const totalProductRepositionOfStores:IProductInventory[][] = [];
 
-          //   // Variables to store the information about the "route transactions" of the stores.
-          //   const transactionOfTheStore:IRouteTransaction[] = [];
-          //   const transactionOperationsOfTheStore:IRouteTransactionOperation[] = [];
+            for(let record of response) {
+              const { productInventory } = record;
+              totalProductRepositionOfStores.push(productInventory);
+            }
+            setProductRepositionByStore(totalProductRepositionOfStores);
+          })
+          .catch(() => {
+            setProductRepositionByStore([]);
+          });
 
-          //   // Variables to store the route transactions (total of amount of product) by stores.
-          //   let productsInventoryOfRepositionOfStore:any = {};
-          //   let productsInventoryOfSaleOfStore:any = {};
+          getTotalInventoriesOfAllStoresByIdOperationType(DAYS_OPERATIONS.sales, stores)
+          .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
+            const totalProductSaleOfStores:IProductInventory[][] = [];
 
-          //   // Storing the name of the corner store
-          //   titleOfStores.push(store_name);
-
-          //   // Getting transactions of the current store
-          //   apiResponseProcess(await getRouteTransactionByStore(id_store),
-          //     settingFinalInventoryByStores)
-          //     .forEach((transaction:IRouteTransaction) => {
-          //       const { state } = transaction;
-          //       // It is only going to be stored active transactions
-          //       if (state === 1) {
-          //         transactionOfTheStore.push(transaction);
-          //       } else {
-          //         /* There is no instructions */
-          //       }
-          //     });
-
-
-          //   // Getting the transaction operations of the current store
-          //   for(let j = 0; j < transactionOfTheStore.length; j++) {
-          //     const { id_route_transaction } = transactionOfTheStore[j];
-
-          //     routeTransactionsOperationsByStore =
-          //       apiResponseProcess(await getRouteTransactionOperations(id_route_transaction),
-          //         settingFinalInventoryByStores);
-
-          //     routeTransactionsOperationsByStore
-          //       .forEach((transactionOperations:IRouteTransactionOperation) =>
-          //         { transactionOperationsOfTheStore.push(transactionOperations); });
-          //   }
-
-          //   // Getting the description of each transaction operation of the current store
-          //   for(let j = 0; j < transactionOperationsOfTheStore.length; j++) {
-          //     const {
-          //       id_route_transaction_operation,
-          //       id_route_transaction_operation_type,
-          //     } = transactionOperationsOfTheStore[j];
-
-          //     // Accordig with the type of operations are the instructions to make
-          //     apiResponseProcess(
-          //       await getRouteTransactionOperationDescriptions(id_route_transaction_operation),
-          //       settingFinalInventoryByStores)
-          //       .forEach((operationDescription) => {
-          //         const {
-          //           amount,
-          //           id_product,
-          //           price_at_moment,
-          //         } = operationDescription;
-
-          //         // Accordig with the type of operations are the instructions to make
-          //         if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
-          //           // Getting information of the current store
-          //           productsInventoryOfRepositionOfStore =
-          //           addingInformationParticularFieldOfObject(productsInventoryOfRepositionOfStore, id_product, 'amount', amount,
-          //             {
-          //               ...initialProduct,
-          //               amount: amount,
-          //               id_product: id_product,
-          //               price: price_at_moment,
-          //             }
-          //           );
-
-          //           // Adding the information of this transaction to the total information of the day
-          //           productRepositionInventoryProduct =
-          //             addingInformationParticularFieldOfObject(productRepositionInventoryProduct,
-          //               id_product, 'amount', amount,
-          //               {
-          //                 ...initialProduct,
-          //                 amount: amount,
-          //                 id_product: id_product,
-          //                 price: price_at_moment,
-          //               }
-          //             );
-
-          //         } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
-
-          //           // Getting information by store
-          //           productsInventoryOfSaleOfStore =
-          //             addingInformationParticularFieldOfObject(productsInventoryOfSaleOfStore,
-          //               id_product, 'amount', amount,
-          //               {
-          //                 ...initialProduct,
-          //                 amount: amount,
-          //                 id_product: id_product,
-          //                 price: price_at_moment,
-          //               }
-          //             );
-
-          //           // Getting information of the current store
-          //           productSoldInventoryProduct =
-          //             addingInformationParticularFieldOfObject(productSoldInventoryProduct,
-          //               id_product, 'amount', amount,
-          //               {
-          //                 ...initialProduct,
-          //                 amount: amount,
-          //                 id_product: id_product,
-          //                 price: price_at_moment,
-          //               }
-          //             );
-          //         } else {
-          //           /* All the other operations don't matter */
-          //         }
-          //       });
-          //   }
+            for(let record of response) {
+              const { productInventory } = record;
+              totalProductSaleOfStores.push(productInventory);
+            }
+            setProductSoldByStore(totalProductSaleOfStores);
+          })
+          .catch(() => {
+            setProductSoldByStore([]);
+          });
 
           //   // Storing the information of the current store within the rest of the stores.
           //   productRepositionInventoryProductByStore.push(
@@ -941,6 +854,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           = getDataFromApiResponse(resultAppendDayOperation);
 
         /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
+
         if (apiResponseStatus(resultCreateInventory, 201)
           &&  apiResponseStatus(resultUpdateVendorInventory, 200)
           &&  apiResponseStatus(resultFinishWorkDay, 200)
