@@ -372,7 +372,6 @@ export async function getTotalInventoriesOfAllStoresByIdOperationType(
 
   // Find to which store belongs a 'route transaction operation description'.
     // Taking account the type of operation.
-  console.log("Obtainig data")
   for(let transactionDescription of arrRouteTransactionOperationDescriptions) {
     const {
       id_route_transaction_operation,
@@ -381,24 +380,18 @@ export async function getTotalInventoriesOfAllStoresByIdOperationType(
       id_product,
     } = transactionDescription;
 
-    console.log("transaction description")
     if(id_route_transaction_operation !== undefined) {
-      console.log("route operation")
       if(dictRouteTransactionOperations[id_route_transaction_operation] !== undefined) {
         const {
           id_route_transaction_operation_type,
           id_route_transaction,
         } = dictRouteTransactionOperations[id_route_transaction_operation];
-        console.log("route transaction")
         if (id_route_transaction_operation_type !== undefined) {
-          console.log("determining operatin day")
           if (id_route_transaction_operation_type === id_day_operation) {
             if (dictRouteTransactions[id_route_transaction] !== undefined) {
-              console.log("store")
               const { id_store, state } = dictRouteTransactions[id_route_transaction];
               // Verifyng the store exists and the transaction is acive
               if (dictStores[id_store] !== undefined && state === 1) {
-                console.log("Adding product: ", amount)
                 const { dictProductInventory } = dictStores[id_store];
                 dictStores[id_store].dictProductInventory = addingInformationParticularFieldOfObject(
                   dictProductInventory,
@@ -438,126 +431,100 @@ export async function getTotalInventoriesOfAllStoresByIdOperationType(
   }
 
   return totalOfProductRelatedToOperationTypeByStore;
-
-  // for(let i = 0; i < stores.length; i++) {
-  //   const {id_store, store_name} = stores[i];
-
-  //   // Variables used by the responses
-  //   let routeTransactionsOperationsByStore:IRouteTransactionOperation[] = [];
-
-  //   // Variables to store the information about the "route transactions" of the stores.
-  //   const transactionOfTheStore:IRouteTransaction[] = [];
-  //   const transactionOperationsOfTheStore:IRouteTransactionOperation[] = [];
-
-  //   // Variables to store the route transactions (total of amount of product) by stores.
-  //   let productsInventoryOfRepositionOfStore:any = {};
-  //   let productsInventoryOfSaleOfStore:any = {};
-
-  //   // Storing the name of the corner store
-  //   titleOfStores.push(store_name);
-
-  //   // Getting transactions of the current store
-  //   apiResponseProcess(await getRouteTransactionByStore(id_store),
-  //     settingFinalInventoryByStores)
-  //     .forEach((transaction:IRouteTransaction) => {
-  //       const { state } = transaction;
-  //       // It is only going to be stored active transactions
-  //       if (state === 1) {
-  //         transactionOfTheStore.push(transaction);
-  //       } else {
-  //         /* There is no instructions */
-  //       }
-  //     });
-
-
-  //   // Getting the transaction operations of the current store
-  //   for(let j = 0; j < transactionOfTheStore.length; j++) {
-  //     const { id_route_transaction } = transactionOfTheStore[j];
-
-  //     routeTransactionsOperationsByStore =
-  //       apiResponseProcess(await getRouteTransactionOperations(id_route_transaction),
-  //         settingFinalInventoryByStores);
-
-  //     routeTransactionsOperationsByStore
-  //       .forEach((transactionOperations:IRouteTransactionOperation) =>
-  //         { transactionOperationsOfTheStore.push(transactionOperations); });
-  //   }
-
-  //   // Getting the description of each transaction operation of the current store
-  //   for(let j = 0; j < transactionOperationsOfTheStore.length; j++) {
-  //     const {
-  //       id_route_transaction_operation,
-  //       id_route_transaction_operation_type,
-  //     } = transactionOperationsOfTheStore[j];
-
-  //     // Accordig with the type of operations are the instructions to make
-  //     apiResponseProcess(
-  //       await getRouteTransactionOperationDescriptions(id_route_transaction_operation),
-  //       settingFinalInventoryByStores)
-  //       .forEach((operationDescription) => {
-  //         const {
-  //           amount,
-  //           id_product,
-  //           price_at_moment,
-  //         } = operationDescription;
-
-  //         // Accordig with the type of operations are the instructions to make
-  //         if (id_route_transaction_operation_type === DAYS_OPERATIONS.product_reposition) {
-  //           // Getting information of the current store
-  //           productsInventoryOfRepositionOfStore =
-  //           addingInformationParticularFieldOfObject(productsInventoryOfRepositionOfStore, id_product, 'amount', amount,
-  //             {
-  //               ...initialProduct,
-  //               amount: amount,
-  //               id_product: id_product,
-  //               price: price_at_moment,
-  //             }
-  //           );
-
-  //           // Adding the information of this transaction to the total information of the day
-  //           productRepositionInventoryProduct =
-  //             addingInformationParticularFieldOfObject(productRepositionInventoryProduct,
-  //               id_product, 'amount', amount,
-  //               {
-  //                 ...initialProduct,
-  //                 amount: amount,
-  //                 id_product: id_product,
-  //                 price: price_at_moment,
-  //               }
-  //             );
-
-  //         } else if(id_route_transaction_operation_type === DAYS_OPERATIONS.sales) {
-
-  //           // Getting information by store
-  //           productsInventoryOfSaleOfStore =
-  //             addingInformationParticularFieldOfObject(productsInventoryOfSaleOfStore,
-  //               id_product, 'amount', amount,
-  //               {
-  //                 ...initialProduct,
-  //                 amount: amount,
-  //                 id_product: id_product,
-  //                 price: price_at_moment,
-  //               }
-  //             );
-
-  //           // Getting information of the current store
-  //           productSoldInventoryProduct =
-  //             addingInformationParticularFieldOfObject(productSoldInventoryProduct,
-  //               id_product, 'amount', amount,
-  //               {
-  //                 ...initialProduct,
-  //                 amount: amount,
-  //                 id_product: id_product,
-  //                 price: price_at_moment,
-  //               }
-  //             );
-  //         } else {
-  //           /* All the other operations don't matter */
-  //         }
-  //       });
-  //   }
-  // }
 }
+
+export async function getTotalInventoryOfAllTransactionByIdOperationType(
+  id_day_operation:string,
+):Promise<IProductInventory[]> {
+  //Declare variables of function
+  const totalOfProductRelatedToOperationType:IProductInventory[] = [];
+  let dictProducts:Record<string, IProductInventory> = {};
+
+  // Get infomration from database.
+  const arrRouteTransactions:IRouteTransaction[] = getDataFromApiResponse(
+    await getAllRouteTransactions());
+
+  const arrRouteTransactionOperations:IRouteTransactionOperation[] = getDataFromApiResponse(
+    await getAllRouteTransactionsOperations());
+
+  const arrRouteTransactionOperationDescriptions:IRouteTransactionOperationDescription[]
+  = getDataFromApiResponse(await getAllRouteTransactionsOperationDescriptions());
+
+  // Convert information into json.
+  const dictRouteTransactions = arrRouteTransactions
+  .reduce<Record<string,IRouteTransaction>>((dict,routeTransaction) => {
+    const {id_route_transaction} = routeTransaction;
+    dict[id_route_transaction] = routeTransaction;
+    return dict;
+  },{});
+
+  const dictRouteTransactionOperations = arrRouteTransactionOperations
+  .reduce<Record<string, IRouteTransactionOperation>>((dict, routeTransactionOperation) => {
+    const { id_route_transaction_operation } = routeTransactionOperation;
+    dict[id_route_transaction_operation] = routeTransactionOperation;
+    return dict;
+  }, {});
+
+  // Find to which store belongs a 'route transaction operation description'.
+    // Taking account the type of operation.
+  console.log("Obtainig data")
+  for(let transactionDescription of arrRouteTransactionOperationDescriptions) {
+    const {
+      id_route_transaction_operation,
+      amount,
+      price_at_moment,
+      id_product,
+    } = transactionDescription;
+
+    console.log("transaction description")
+    if(id_route_transaction_operation !== undefined) {
+      console.log("route operation")
+      if(dictRouteTransactionOperations[id_route_transaction_operation] !== undefined) {
+        const {
+          id_route_transaction_operation_type,
+          id_route_transaction,
+        } = dictRouteTransactionOperations[id_route_transaction_operation];
+        console.log("route transaction")
+        if (id_route_transaction_operation_type !== undefined) {
+          console.log("determining operatin day")
+          if (id_route_transaction_operation_type === id_day_operation) {
+            if (dictRouteTransactions[id_route_transaction] !== undefined) {
+              console.log("store")
+              const { state } = dictRouteTransactions[id_route_transaction];
+              // Verifyng transaction is acive
+              if (state === 1) {
+                console.log("Adding product: ", amount)
+                dictProducts = addingInformationParticularFieldOfObject(
+                  dictProducts,
+                  id_product,
+                  'amount',
+                  amount,
+                  {
+                    ...initialProduct,
+                    amount: amount,
+                    id_product: id_product,
+                    price: price_at_moment,
+                  }
+                );
+              }
+            }
+          } else {
+            /* Other type of operations don't matter. */
+          }
+        }
+      }
+    }
+  }
+
+  // Convert the json into the interface to retrieve.
+  for (let productKey in dictProducts) {
+    totalOfProductRelatedToOperationType.push(dictProducts[productKey]);
+  }
+
+
+  return totalOfProductRelatedToOperationType;
+}
+
 /*
   Function that retrieves the product from an inventory operation and converts it into
   an array of IProductInventory interface.

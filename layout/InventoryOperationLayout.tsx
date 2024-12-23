@@ -85,6 +85,7 @@ import {
   getInventoryOperationForInventoryVisualization,
   getAllInventoryOperationsForInventoryVisualization,
   getTotalInventoriesOfAllStoresByIdOperationType,
+  getTotalInventoryOfAllTransactionByIdOperationType,
 
 } from '../controllers/InventoryController';
 
@@ -333,9 +334,22 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             - Summarize of all the day.
             - Summarize by store of the day.
           */
-          setNameOfStores(stores.map((currentStore) => {return currentStore.store_name;}));
 
-          getTotalInventoriesOfAllStoresByIdOperationType(DAYS_OPERATIONS.product_reposition, stores)
+          // Information of the day
+          getTotalInventoryOfAllTransactionByIdOperationType(
+            DAYS_OPERATIONS.product_reposition)
+            .then((response:IProductInventory[]) => {
+              setProductRepositionTransactions(response); });
+
+          getTotalInventoryOfAllTransactionByIdOperationType(
+            DAYS_OPERATIONS.product_reposition)
+            .then((response:IProductInventory[]) => {
+              setProductSoldTransactions(response); });
+
+          // Information by store
+          setNameOfStores(stores.map((currentStore) => {return currentStore.store_name;}));
+          getTotalInventoriesOfAllStoresByIdOperationType(
+            DAYS_OPERATIONS.product_reposition, stores)
           .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
             const totalProductRepositionOfStores:IProductInventory[][] = [];
 
