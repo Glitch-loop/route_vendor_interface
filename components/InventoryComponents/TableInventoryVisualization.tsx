@@ -77,7 +77,6 @@ const TableInventoryVisualization = (
     issueInventory:boolean,
     isInventoryOperationModifiable:boolean
   }) => {
-    console.log("total restocks: ", restockInventories.length)
     const headerTableStyle:string = 'w-28 flex flex-row justify-center';
     const viewTagHeaderTableStyle:string = 'w-full flex flex-row items-center justify-center';
     const textHeaderTableStyle:string = 'text-black text-center max-w-28 flex flex-row justify-center';

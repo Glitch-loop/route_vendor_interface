@@ -20,7 +20,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import store, { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
-import { addProductsInventory, setProductInventory } from '../redux/slices/productsInventorySlice';
+import { addProductsInventory, setProductInventory, updateProductsInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
 import {
   setArrayDayOperations,
@@ -60,7 +60,7 @@ import {
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
 import TableCashReception from '../components/InventoryComponents/TableCashReception';
-import { initialMXNCurrencyState } from '../utils/inventoryOperations';
+import { calculateNewInventoryAfterAnInventoryOperation, initialMXNCurrencyState } from '../utils/inventoryOperations';
 import { addingInformationParticularFieldOfObject, convertingDictionaryInArray } from '../utils/generalFunctions';
 import {
   apiResponseProcess,
@@ -204,7 +204,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     .then((response:IResponse<IProductInventory[]>) => {
       setInventory(getDataFromApiResponse(response));
     })
-    .catch(() => setInventory([]));
+    .catch(() => { setInventory([]); });
 
     // Dertermining if the current process is an inventory visualization or and inventory operation
     if (currentOperation.id_item) { // It is an inventory operation visualization.
@@ -230,6 +230,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           responseInventoryOperationProducts,
           settingOperationDescriptions
         );
+
         /*
           Depending on the type of inventory operation selected by the vendor, the necessary
           actions must be taken to display the information correctly.
@@ -428,7 +429,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         } else {
           setIsInventoryOperationModifiable(false);
         }
-
       })
       .catch(() => {
         Toast.show({
@@ -550,10 +550,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         let inventoryOfInventoryOperationToModify:IProductInventory[] = [];
         let resultDayOperation:IResponse<IDayOperation>;
         let newDayOperation:IDayOperation;
+        let currentInventoryToModify:IProductInventory[] = currentInventory;
 
         // Retriving the movements of the inventory operation to modify.
         if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
           inventoryOfInventoryOperationToModify = initialShiftInventory;
+          currentInventoryToModify = productsInventory;
         } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
         || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
           inventoryOfInventoryOperationToModify = restockInventories[0];
@@ -562,7 +564,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         }
 
         // Inventory operations.
-        console.log("Creating inventory operation")
+        console.log("Creating inventory operation: ", routeDay)
         const resultCreateInventoryOperation:IResponse<IInventoryOperation>
         = await createInventoryOperation(
           routeDay,
@@ -579,7 +581,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         console.log("Update vendor's inventory operation")
         const resultSubstractVendorPastInventoryOperation:IResponse<IProductInventory[]>
         = await updateVendorInventory(
-          currentInventory,
+          currentInventoryToModify,
           inventoryOfInventoryOperationToModify,
           true
         );
@@ -599,31 +601,31 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           resultAddVendorInventoryOperation
         );
 
-        console.log("current inventory++++++++++++++++++++++++++++++")
-        currentInventory.forEach((item) => {
-          console.log("product: ", item.id_product, " - amount: ", item.amount)
+        console.log("Current inventory++++++++++++++++++++++++++++++")
+        currentInventoryToModify.forEach((item) => {
+          console.log("product: ", item.id_product, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
-        console.log("inventory of the operation to modify+++++++++++++++++++++")
+        console.log("Inventory of the operation to modify+++++++++++++++++++++")
         inventoryOfInventoryOperationToModify.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount)
+          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
-        console.log("substracted inventory+++++++++++++++++++++")
+
+        console.log("SUBSTRACTED INVENTORY+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*")
         substractedInventory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount)
+          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
 
-
-
-        console.log("current inventory operation+++++++++++++++++++++++++")
+        console.log("Inventory of the operation+++++++++++++++++++++++++")
         inventory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount)
-        })
-        console.log("final inventory operation++++++++++++++++++++++")
-        newVendorInvnetory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount)
+          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
 
-        console.log(newVendorInvnetory)
+        console.log("Final inventory+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*")
+        newVendorInvnetory.forEach((item) => {
+          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
+        })
+
+        // newVendorInventory
 
         /*Adding day operation */
         /*
@@ -641,6 +643,12 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           newDayOperation = getDataFromApiResponse(resultDayOperation);
         }
 
+        console.log(apiResponseStatus(resultCreateInventoryOperation, 201))
+        console.log(apiResponseStatus(resultDesactivateInventoryOperation, 200))
+        console.log(apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200))
+        console.log(apiResponseStatus(resultAddVendorInventoryOperation, 200))
+        console.log(apiResponseStatus(resultDayOperation, 201))
+
         if (apiResponseStatus(resultCreateInventoryOperation, 201)
           && apiResponseStatus(resultDesactivateInventoryOperation, 200)
           && apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200)
@@ -648,7 +656,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           && apiResponseStatus(resultDayOperation, 201)) {
           /* The process has been finished successfully */
           /* Updating redux states */
-          dispatch(setProductInventory(newVendorInvnetory));
+          dispatch(updateProductsInventory(newVendorInvnetory));
 
           // Store the information (new operation) in redux context.
           dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
@@ -675,8 +683,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
           Toast.show({
             type: 'error',
-            text1: 'Ha habido un error durante el registro del inventario inicial.',
-            text2: 'Ha sucedido un error durante el registro del inventario inicial, por favor intente nuevamente.',
+            text1: 'Ha habido un error durante el registro del inventario.',
+            text2: 'Ha sucedido un error durante el registro del inventario, por favor intente nuevamente.',
           });
 
             // Keeping the vendor's inventory to the previous state (before the current inventory operation).
@@ -1132,8 +1140,20 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       };
     });
 
+    if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+      setCurrentInventory([]);
+    } else {
+      setCurrentInventory(
+        calculateNewInventoryAfterAnInventoryOperation(
+          productsInventory,
+          newInventoryOperation,
+          true
+        )
+
+      ); // Set vendor's inventory information
+    }
+
     setInventory(newInventoryOperation); // Set information that has the inventory operation
-    setCurrentInventory(currentInventory); // Set vendor's inventory information
     setIsOperation(true);
     setIsOperationToUpdate(true);
     setIsInventoryAccepted(false); // State to avoid double-click

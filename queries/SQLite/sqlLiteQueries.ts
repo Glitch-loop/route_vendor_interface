@@ -386,8 +386,8 @@ export async function updateProducts(products: IProductInventory[])
     const sqlite = await createSQLiteConnection();
 
     await sqlite.transaction(async (tx) => {
-      for(let i = 0; i < products.length; i++) {
-        const product:IProductInventory = products[i];
+      const promises = products.map((current_product:IProductInventory) => {
+        const product:IProductInventory = current_product;
         const {
           id_product,
           product_name,
@@ -424,14 +424,17 @@ export async function updateProducts(products: IProductInventory[])
           amount,
         ]).then(() => {
           updatedProducts.push(product);
-        });
-      }
+        })
+      });
+      await Promise.all(promises);
+      // for(let i = 0; i < products.length; i++) {
+      // }
     });
 
-    return createApiResponse<IProductInventory[]>(200, updatedProducts, null, 'Products updated successfully.');
+    return createApiResponse<IProductInventory[]>(200, products, null, 'Products updated successfully.');
   } catch(error) {
-
-    return createApiResponse<IProductInventory[]>(500, updatedProducts, null, 'Failed update products (transaction creation level).');
+    console.error(error)
+    return createApiResponse<IProductInventory[]>(500, products, null, 'Failed update products (transaction creation level).');
   }
 }
 

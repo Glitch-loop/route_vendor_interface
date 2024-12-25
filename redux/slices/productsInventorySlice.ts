@@ -15,8 +15,8 @@ const productsInventorySlice = createSlice({
   initialState,
   reducers: {
     setProductInventory: (state, action: PayloadAction<IProductInventory[]>) => {
-      action.payload.map(productInventory => {
-        state.push({
+      console.log("hello world setr")
+      return action.payload.map(productInventory => ({
           id_product: productInventory.id_product,
           product_name: productInventory.product_name,
           barcode: productInventory.barcode,
@@ -27,8 +27,7 @@ const productsInventorySlice = createSlice({
           product_status: productInventory.product_status,
           amount: productInventory.amount,
           order_to_show: productInventory.order_to_show,
-        });
-      });
+        }));
     },
     addProductsInventory: (state, action: PayloadAction<IProductInventory[]>) => {
       for (let i = 0; i < state.length; i++) {

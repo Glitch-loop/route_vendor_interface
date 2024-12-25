@@ -78,9 +78,7 @@ const TableInventoryOperations = (
     setInventoryOperation:any,
     currentOperation:IDayOperation,
   }) => {
-
     let outflowProductFromFactory:boolean = determineFlowOfProduct(currentOperation);
-
   return (
     <DataTable style={tw`w-full`}>
       {/* Header section */}

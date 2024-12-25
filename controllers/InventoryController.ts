@@ -627,22 +627,40 @@ export async function getInventoryOperationForInventoryVisualization(id_inventor
   // );
 
   // let resultGetinventoryOperation = getDataFromApiResponse(resultGetInventoryOperation);
+  const responseGetAllProductFromEmbeddedDatabase:IResponse<IProductInventory[]>
+  =  await getProducts();
 
   const resultGetInventoryOperationDescription:IResponse<IInventoryOperationDescription[]>
     = await getInventoryOperationDescription(id_inventory_operation);
 
-  if(apiResponseStatus(resultGetInventoryOperationDescription, 200)) {
+  if(
+    apiResponseStatus(resultGetInventoryOperationDescription, 200)
+    && apiResponseStatus(responseGetAllProductFromEmbeddedDatabase, 200)
+  ) {
     let inventoryOperationDescriptions:IInventoryOperationDescription[] = getDataFromApiResponse(
       resultGetInventoryOperationDescription
     );
-
+    let allProducts:IProduct[] = getDataFromApiResponse(responseGetAllProductFromEmbeddedDatabase);
     inventoryOperationDescriptions.forEach((inventoryOperationDescription) => {
-      inventoryOperationProducts.push({
-        ...initialProduct,
-        amount: inventoryOperationDescription.amount,
-        id_product: inventoryOperationDescription.id_product,
-        price: inventoryOperationDescription.price_at_moment,
+      const foundProduct:IProduct|undefined = allProducts.find((currentProduct) => {
+        return inventoryOperationDescription.id_product === currentProduct.id_product;
       });
+
+      if (foundProduct) {
+        inventoryOperationProducts.push({
+          ...foundProduct,
+          amount: inventoryOperationDescription.amount,
+          id_product: inventoryOperationDescription.id_product,
+          price: inventoryOperationDescription.price_at_moment,
+        });
+      } else {
+        inventoryOperationProducts.push({
+          ...initialProduct,
+          amount: inventoryOperationDescription.amount,
+          id_product: inventoryOperationDescription.id_product,
+          price: inventoryOperationDescription.price_at_moment,
+        });
+      }
     });
   } else {
     /* There is not extra instructions */
@@ -679,9 +697,15 @@ export async function updateVendorInventory(
     inventoryMovements,
     isInventoryMovementCancelation);
 
+    console.log("Inventory after calculation************************************************")
+    newInventory.forEach((item) => {
+      console.log("product: ", item.id_product, " - amount: ", item.amount, " - order: ", item.order_to_show)
+    })
+
   // Updating the inventory in embedded database with the last changes.
   const resultUpdatingInventory:IResponse<IProductInventory[]>
     = await updateProducts(newInventory);
+
 
   if (apiResponseStatus(resultUpdatingInventory, 200)) {
     /* There is no extra steps */
