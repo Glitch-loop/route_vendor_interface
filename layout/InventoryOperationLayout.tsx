@@ -288,27 +288,36 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             const {
               id_inventory_operation,
               id_inventory_operation_type,
+              state,
             } = inventoryOperation;
 
-            const resultGetInventoryOperation:IResponse<IProductInventory[]> = await getInventoryOperationForInventoryVisualization(id_inventory_operation);
-            const inventoryOperationInformation:IProductInventory[] = getDataFromApiResponse(
-              resultGetInventoryOperation
-            );
-
-            // Determining where to store the information of the current inventory operation.
-            if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
-              startShiftInventoryProduct.push(inventoryOperationInformation);
-            } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
-              restockInventoryProduct.push(inventoryOperationInformation);
+            if (state === 1) {
+              const resultGetInventoryOperation:IResponse<IProductInventory[]> = await getInventoryOperationForInventoryVisualization(id_inventory_operation);
+              const inventoryOperationInformation:IProductInventory[] = getDataFromApiResponse(
+                resultGetInventoryOperation
+              );
+  
+              // Determining where to store the information of the current inventory operation.
+              if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
+                startShiftInventoryProduct.push(inventoryOperationInformation);
+              } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
+                restockInventoryProduct.push(inventoryOperationInformation);
+              } else {
+                /* Other case of operations are ignored */
+              }
             } else {
-              /* Other case of operations are ignored */
+              /* "Inactive" inventory operations will not be processed. */
             }
           });
 
           await Promise.all(mapInventoryOperationRequests)
           .then(() => {
             // Storing information related to the inventory operations
-            setInitialShiftInventory(startShiftInventoryProduct[0]);
+            if (startShiftInventoryProduct.length > 0) {
+              setInitialShiftInventory(startShiftInventoryProduct[0]);
+            } else {
+              setInitialShiftInventory([]);
+            }
             setRestockInventories(restockInventoryProduct);
 
             // This information is retrieved with the "currentOperation" state.
