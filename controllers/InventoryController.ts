@@ -697,11 +697,6 @@ export async function updateVendorInventory(
     inventoryMovements,
     isInventoryMovementCancelation);
 
-    console.log("Inventory after calculation************************************************")
-    newInventory.forEach((item) => {
-      console.log("product: ", item.id_product, " - amount: ", item.amount, " - order: ", item.order_to_show)
-    })
-
   // Updating the inventory in embedded database with the last changes.
   const resultUpdatingInventory:IResponse<IProductInventory[]>
     = await updateProducts(newInventory);

@@ -547,20 +547,20 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             "petty cash".
         */
        console.log("Operation to update")
-        let inventoryOfInventoryOperationToModify:IProductInventory[] = [];
+        let movementOfInventoryOperationToModify:IProductInventory[] = [];
         let resultDayOperation:IResponse<IDayOperation>;
         let newDayOperation:IDayOperation;
-        let currentInventoryToModify:IProductInventory[] = currentInventory;
+        let currentInventoryToModify:IProductInventory[] = productsInventory;
 
         // Retriving the movements of the inventory operation to modify.
         if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-          inventoryOfInventoryOperationToModify = initialShiftInventory;
-          currentInventoryToModify = productsInventory;
+          movementOfInventoryOperationToModify = initialShiftInventory;
+          //currentInventoryToModify = productsInventory;
         } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
         || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-          inventoryOfInventoryOperationToModify = restockInventories[0];
+          movementOfInventoryOperationToModify = restockInventories[0];
         } else if(currentOperation.id_day_operation === DAYS_OPERATIONS.end_shift_inventory) {
-          inventoryOfInventoryOperationToModify = finalShiftInventory;
+          movementOfInventoryOperationToModify = finalShiftInventory;
         }
 
         // Inventory operations.
@@ -582,7 +582,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         const resultSubstractVendorPastInventoryOperation:IResponse<IProductInventory[]>
         = await updateVendorInventory(
           currentInventoryToModify,
-          inventoryOfInventoryOperationToModify,
+          movementOfInventoryOperationToModify,
           true
         );
 
@@ -606,7 +606,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           console.log("product: ", item.id_product, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
         console.log("Inventory of the operation to modify+++++++++++++++++++++")
-        inventoryOfInventoryOperationToModify.forEach((item) => {
+        movementOfInventoryOperationToModify.forEach((item) => {
           console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
         })
 
