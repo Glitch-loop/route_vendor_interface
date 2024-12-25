@@ -615,6 +615,10 @@ export async function getTotalInventoryOfAllTransactionByIdOperationType(
   return totalOfProductRelatedToOperationType;
 }
 
+export async function getStatusOfInventoryOperation(id_inventory_operation:string):Promise<IResponse<IInventoryOperation[]>> {
+  return await getInventoryOperation(id_inventory_operation);
+}
+
 /*
   Function that retrieves the product from an inventory operation and converts it into
   an array of IProductInventory interface.

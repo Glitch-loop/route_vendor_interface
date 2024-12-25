@@ -88,6 +88,7 @@ import {
   getTotalInventoryOfAllTransactionByIdOperationType,
   desactivateInventoryOperation,
   cancelDesactivateInventoryOperation,
+  getStatusOfInventoryOperation,
 
 } from '../controllers/InventoryController';
 
@@ -182,6 +183,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   /* States related to the layout logic */
   const [isOperation, setIsOperation] = useState<boolean>(true);
+  const [isActiveOperation, setIsActiveOperation] = useState<boolean>(true);
 
   /* States for route transaction operations */
   const [productSoldByStore, setProductSoldByStore] = useState<IProductInventory[][]>([]);
@@ -222,6 +224,20 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       setInventory([]);
       setIsOperation(false);
 
+      // Determining if the inventory operation is active
+      getStatusOfInventoryOperation(currentOperation.id_item)
+      .then((response:IResponse<IInventoryOperation[]>) => {
+        const inventoryOperation:IInventoryOperation = getDataFromApiResponse(
+          response
+        )[0];
+
+        const { state } = inventoryOperation;
+        if(state === 1) {
+          setIsActiveOperation(true);
+        } else {
+          setIsActiveOperation(false);
+        }
+      });
 
       // Retrieving the inventory operation.
       getInventoryOperationForInventoryVisualization(currentOperation.id_item)
@@ -296,7 +312,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               const inventoryOperationInformation:IProductInventory[] = getDataFromApiResponse(
                 resultGetInventoryOperation
               );
-  
+
               // Determining where to store the information of the current inventory operation.
               if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
                 startShiftInventoryProduct.push(inventoryOperationInformation);
@@ -1149,17 +1165,25 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       };
     });
 
-    if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-      setCurrentInventory([]);
-    } else {
+    if (id_type_operation === DAYS_OPERATIONS.restock_inventory) {
       setCurrentInventory(
         calculateNewInventoryAfterAnInventoryOperation(
           productsInventory,
           newInventoryOperation,
           true
         )
-
       ); // Set vendor's inventory information
+    } else {
+      /* The others inventories operations are "absoulte".
+        Inventory operations:
+          - Product devolution inventory
+          - Start shift inventory
+          - End shift inventory
+
+        The information provided to this inventory operations are absolutes (so they don't have influence in the vendor's inventory). The only excpetion is the "start shift inventory",
+        that is the inventory which starts the inventory of the day.
+      */
+      setCurrentInventory([]);
     }
 
     setInventory(newInventoryOperation); // Set information that has the inventory operation
@@ -1176,9 +1200,16 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
       {/* Product inventory section. */}
       <View style={tw`w-full flex flex-row items-center justify-center`}>
-        <Text style={tw`text-center text-black text-2xl`}>
-          {getTitleOfInventoryOperation(currentOperation)}
-        </Text>
+        <View style={tw`w-full flex flex-col items-center justify-center`}>
+          <Text style={tw`text-center text-black text-2xl`}>
+            {getTitleOfInventoryOperation(currentOperation)}
+          </Text>
+          { !isActiveOperation &&
+          <Text style={tw`text-center text-black text-base`}>
+            Operación cancelada
+          </Text>
+          }
+        </View>
         { (isInventoryOperationModifiable && !isOperation) &&
           <Pressable
             style={tw`bg-blue-500 py-6 px-6 rounded-full ml-3`}
