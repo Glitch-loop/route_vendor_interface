@@ -12,8 +12,9 @@ import {
   disconnectPrinter,
 } from '../../services/printerService';
 import ActionDialog from '../ActionDialog';
+import Toast from 'react-native-toast-message';
 
-const BluetoothButton = ({}:{}) => {
+const BluetoothButton = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isBeingConnected, setIsBeingConnected] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<boolean>(false);
@@ -21,10 +22,25 @@ const BluetoothButton = ({}:{}) => {
   const [renderingComponent, setRenderingComponent] = useState<boolean>(true);
 
   useEffect(() => {
+    // Determine the status for the first time
+    getPrinterConnectionStatus()
+    .then((response:boolean) => {
+      setIsConnected(response);
+      setRenderingComponent(false);
+    });
+
     const intervalAction = setInterval(async () => {
+      const printerStatus:boolean = await getPrinterConnectionStatus();
+
+      if(isConnected && !printerStatus) {
+        Toast.show({type: 'error',
+          text1:'Se ha desconectado la impresora',
+          text2: 'Se ha desconectado al impresora.'});
+      }
+
       setRenderingComponent(false);
       setIsConnected(await getPrinterConnectionStatus());
-    }, 10000);
+    }, 30000);
 
     /* Clear action when unmount */
     return () => clearInterval(intervalAction);

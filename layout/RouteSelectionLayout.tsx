@@ -73,6 +73,7 @@ const {
 
 async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
   try {
+    console.log("Formatting")
     let completeRoutes:ICompleteRoute[] = [];
     let currentRoute: ICompleteRoute;
     let routes:IRoute[] = [];
@@ -92,10 +93,13 @@ async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]>
     };
 
     // Getting all vendor's routes
+    console.log("consulting all route")
     routes = apiResponseProcess(await getAllRoutesByVendor(vendor.id_vendor),
-      settingResponseRoutesByVendor);
-
+    settingResponseRoutesByVendor);
+    console.log("routes: ", routes)
+    
     // Getting all the days in a route
+    console.log("Consulting all days of the route")
     for (let i = 0; i < routes.length; i++) {
       daysOfRoute = apiResponseProcess(await getAllDaysByRoute(routes[i].id_route),
         settingResponseDaysOfRoutesByVendor);
@@ -131,6 +135,8 @@ async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]>
 
     return completeRoutes;
   } catch (error) {
+    console.log("This is the error: ", error)
+
     Toast.show({type: 'error',
       text1:'Error durante la consulta de las rutas',
       text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente',
@@ -255,7 +261,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
           text2: 'Consultando rutas disponibles para el vendedor'});
 
         formattingDaysOfTheVendor(testingUser)
-          .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); });
+          .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); })
+          .catch((error) => {console.log(error)});
       }
     });
   },[]);

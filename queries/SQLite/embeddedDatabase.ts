@@ -122,6 +122,7 @@ export const inventoryOperationsEmbeddedTable = `
     id_inventory_operation      TEXT NOT NULL UNIQUE, 
     sign_confirmation           TEXT NOT NULL,
     date                        DATETIME NOT NULL,
+    state                       INT NOT NULL,
     audit                       INT NOT NULL,
     id_inventory_operation_type TEXT NOT NULL,
     id_work_day                 TEXT NOT NULL

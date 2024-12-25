@@ -824,6 +824,7 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
       id_inventory_operation,
       sign_confirmation,
       date,
+      state,
       audit,
       id_inventory_operation_type,
       id_work_day,
@@ -833,11 +834,12 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
 
     await sqlite.transaction(async (tx) => {
       await tx.executeSql(`
-        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, audit, id_inventory_operation_type, id_work_day) VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO ${EMBEDDED_TABLES.INVENTORY_OPERATIONS} (id_inventory_operation, sign_confirmation, date, state, audit, id_inventory_operation_type, id_work_day) VALUES (?, ?, ?, ?, ?, ?, ?);
       `, [
           id_inventory_operation,
           sign_confirmation,
           date,
+          state,
           audit,
           id_inventory_operation_type,
           id_work_day,
@@ -856,6 +858,59 @@ export async function insertInventoryOperation(inventoryOperation: IInventoryOpe
       inventoryOperation,
       null,
       'Failed inserting inventory operation.'
+    );
+  }
+}
+
+export async function updateInventoryOperation(inventoryOperation: IInventoryOperation)
+:Promise<IResponse<IInventoryOperation>> {
+  try {
+    const {
+      id_inventory_operation,
+      sign_confirmation,
+      date,
+      audit,
+      state,
+      id_inventory_operation_type,
+      id_work_day,
+    } = inventoryOperation;
+
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      await tx.executeSql(`
+        UPDATE ${EMBEDDED_TABLES.INVENTORY_OPERATIONS}  SET 
+        sign_confirmation = ?, 
+        date = ?, 
+        audit = ?,
+        state = ?, 
+        id_inventory_operation_type = ?, 
+        id_work_day = ?
+        WHERE id_inventory_operation = ?;
+      `, [
+          sign_confirmation,
+          date,
+          audit,
+          state,
+          id_inventory_operation_type,
+          id_work_day,
+          id_inventory_operation,
+        ]);
+    });
+
+    return createApiResponse<IInventoryOperation>(
+      200,
+      inventoryOperation,
+      null,
+      'Inventory operation updated successfully.'
+    );
+  } catch(error) {
+    console.log(error)
+    return createApiResponse<IInventoryOperation>(
+      500,
+      inventoryOperation,
+      null,
+      'Failed updating inventory operation.'
     );
   }
 }

@@ -71,6 +71,7 @@ export class SupabaseRepository implements IRepository {
         return createApiResponse<IRouteDay[]>(200, data, null);
       }
     } catch(error) {
+      console.log(error)
       return createApiResponse<IRouteDay[]>(500, [], null, 'Failed getting all the days by route.');
     }
   }
@@ -78,6 +79,7 @@ export class SupabaseRepository implements IRepository {
   async getAllRoutesByVendor(id_vendor:string):Promise<IResponse<IRoute[]>> {
     try {
       const { data, error } = await supabase.from(TABLES.ROUTES).select().eq('id_vendor', id_vendor);
+      console.log(error)
       if (error) {
         return createApiResponse<IRoute[]>(500, [], null,
           'Failed getting all routes by vendor.');
@@ -85,6 +87,7 @@ export class SupabaseRepository implements IRepository {
         return createApiResponse<IRoute[]>(200, data, null);
       }
     } catch(error) {
+      console.log(error)
       return createApiResponse<IRoute[]>(500, [], null, 'Failed getting all routes by vendor.');
     }
   }

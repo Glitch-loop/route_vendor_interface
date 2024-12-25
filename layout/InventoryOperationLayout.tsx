@@ -86,6 +86,8 @@ import {
   getAllInventoryOperationsForInventoryVisualization,
   getTotalInventoriesOfAllStoresByIdOperationType,
   getTotalInventoryOfAllTransactionByIdOperationType,
+  desactivateInventoryOperation,
+  cancelDesactivateInventoryOperation,
 
 } from '../controllers/InventoryController';
 
@@ -159,8 +161,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [suggestedProduct, setSuggestedProduct] = useState<IProductInventory[]>([]);
 
   /*
-    current product state is used to store the current inventory (current inventory at the moment of
-    making the inventory operation).
+    Current inventory state stores the vendor's inventory (the inventory that currently has the
+    vendor).
   */
   const [currentInventory, setCurrentInventory] = useState<IProductInventory[]>([]);
 
@@ -186,9 +188,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   const [productRepositionByStore, setProductRepositionByStore] = useState<IProductInventory[][]>([]);
   const [nameOfStores, setNameOfStores] = useState<string[]>([]);
 
-
   // State used for the logic of the component
   const [isInventoryAccepted, setIsInventoryAccepted] = useState<boolean>(false);
+  const [isOperationToUpdate, setIsOperationToUpdate] = useState<boolean>(false);
 
   // Use effect operations
   useEffect(() => {
@@ -209,19 +211,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       let currentProductInventory:IProductInventory[] = [];
 
       // Variables used for final shift inventory
-      // let allInventoryOperations:IInventoryOperation[] = [];
       const startShiftInventoryProduct:IProductInventory[][] = [];
       const restockInventoryProduct:IProductInventory[][] = [];
-
-      // Variables for showing the produdct by store (each one for it's respective concept).
-      // const productRepositionInventoryProductByStore:IProductInventory[][] = [];
-      // const productSoldInventoryProductByStore:IProductInventory[][] = [];
-      // const titleOfStores:string[] = [];
-
-      // These objects store the "total amount" of product for each concept
-      // Information comes from "route transactions"
-      // let productRepositionInventoryProduct:any = {};
-      // let productSoldInventoryProduct:any = {};
 
       /*
         Since it is an visualization, it is need to 'reset' the states related to
@@ -377,32 +368,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setProductSoldByStore([]);
           });
 
-          //   // Storing the information of the current store within the rest of the stores.
-          //   productRepositionInventoryProductByStore.push(
-          //     convertingDictionaryInArray(productsInventoryOfRepositionOfStore));
-
-          //   productSoldInventoryProductByStore.push(
-          //     convertingDictionaryInArray(productsInventoryOfSaleOfStore));
-          // }
-
-
-          // // Storing route transactions information in states.
-          // setNameOfStores(titleOfStores);
-          // setProductRepositionByStore(productRepositionInventoryProductByStore);
-          // setProductSoldByStore(productSoldInventoryProductByStore);
-
-
-          /*
-            These variables have the total amount of product for each concept, but they are stored by corner store:
-            - productRepositionInventoryProduct
-            - soldProductInventoryProduct
-
-            Now, it is needed to "reduce" them into a single array for display them in the "inventory visualizator component".
-          */
-          // Storing information relate to route transactions
-          // setProductRepositionTransactions(
-          //   convertingDictionaryInArray(productRepositionInventoryProduct));
-          // setProductSoldTransactions(convertingDictionaryInArray(productSoldInventoryProduct));
         } else {
           /* Other inventory operation */
         }
@@ -415,10 +380,15 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         });
 
         if (index !== -1) {
-          if (index === dayOperations.length - 1) {
-            /* Last operation of day operations, that means that it is modificable. */
+          if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+            /* End shit inventory is modificable */
             isCurrentInventoryOperationModifiable = true;
-          } else {
+          } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+            /* Per day, there is only one product devolution inventory, so
+            it is modificable */
+            isCurrentInventoryOperationModifiable = true;
+          }
+          else {
             // Verifying it is the last inventory operation (excluding product devolution inventory)
             let isNextOperationCurrentOne:boolean = false;
             let isAnotherInventoryOperationAbove:boolean = false;
@@ -565,340 +535,149 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             - Remainded products
       */
 
-      // Determining the type of inventory operation.
-      if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+      if (isOperationToUpdate) {
         /*
-          According with the flow, when vendor accepts the 'initial inventory' he is
-          acception to make the current 'work day'*.
-
-          It is needed to retrieve and process the following information to create the 
-          work day:
-            - route: Information related to the route identification.
-            - day: The information of the day.
-            - routeDay: Information that relates the day to perform and the route.
-
-          Work day: This concept refers to all the "general  information" needed to 
-          identify the "current day" as working one.
+          When an inventory is "updated", the original inventory is kept stored and a new one is created.
         */
 
-        // Related to work day operations
-        Toast.show({
-          type: 'info',
-          text1: 'Creando dia de trabajo.',
-          text2: 'Registrando el dia.',
-        });
+          // Determining the type of inventory operation.
+        /*
+          Notes:
+            For "start shift inventory operation" it is only allowed to modify the product not the
+            "petty cash".
+        */
+       console.log("Operation to update")
+        let inventoryOfInventoryOperationToModify:IProductInventory[] = [];
+        let resultDayOperation:IResponse<IDayOperation>;
+        let newDayOperation:IDayOperation;
 
-        const resultCreateWorkDay = await createWorkDay(cashInventory, routeDay);
-        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
-          = getDataFromApiResponse(resultCreateWorkDay);
-
-        Toast.show({
-          type: 'info',
-          text1: 'Comenzando registro de inventario inicial.',
-          text2: 'Registrando inventario inicial y consultando información para la ruta.',
-        });
-
-        // Stores operations
-        const resultCreateListStoreOfRouteDay = await createListOfStoresOfTheRouteDay(
-          dayGeneralInformation
-        );
-        const resulGetStoresOfRouteOfRouteDay = await getStoresOfRouteDay(dayGeneralInformation);
-
-        const arrListStoreOfRouteDay:(IStore&IStoreStatusDay)[]
-          = getDataFromApiResponse(resultCreateListStoreOfRouteDay);
-
-        const arrStoresOfRouteDay:IRouteDayStores[]
-          = getDataFromApiResponse(resulGetStoresOfRouteOfRouteDay);
+        // Retriving the movements of the inventory operation to modify.
+        if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+          inventoryOfInventoryOperationToModify = initialShiftInventory;
+        } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
+        || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+          inventoryOfInventoryOperationToModify = restockInventories[0];
+        } else if(currentOperation.id_day_operation === DAYS_OPERATIONS.end_shift_inventory) {
+          inventoryOfInventoryOperationToModify = finalShiftInventory;
+        }
 
         // Inventory operations.
-        const resultCreateInventoryOperation = await createInventoryOperation(
-          dayGeneralInformation,
+        console.log("Creating inventory operation")
+        const resultCreateInventoryOperation:IResponse<IInventoryOperation>
+        = await createInventoryOperation(
+          routeDay,
           inventory,
           currentOperation.id_type_operation
         );
-
         const inventoryOperation = getDataFromApiResponse(resultCreateInventoryOperation);
 
-        /* This inventory is what will be used to perform calculation */
-        const resultCreateVendorInventoryOperation = await createVendorInventory(inventory);
+        console.log("Desactivatin inventory operation")
+        const resultDesactivateInventoryOperation:IResponse<IInventoryOperation> 
+        = await desactivateInventoryOperation(currentOperation.id_item);
 
-        // Related to day operations
-        /*
-          For this operation it is needed to create:
-            - A day operation for the start shift inventory operation.
-            - A day for each store in the route day.
-        */
-        const resultCreateListOfDayOperations = await createListOfDayOperations(
-          inventoryOperation, arrStoresOfRouteDay
+        /* Updating vendor inventory */
+        console.log("Update vendor's inventory operation")
+        const resultSubstractVendorPastInventoryOperation:IResponse<IProductInventory[]>
+        = await updateVendorInventory(
+          currentInventory,
+          inventoryOfInventoryOperationToModify,
+          true
         );
 
-        const arrDayOperations:IDayOperation[] = getDataFromApiResponse(
-          resultCreateListOfDayOperations
+        const substractedInventory:IProductInventory[] =  getDataFromApiResponse(
+          resultSubstractVendorPastInventoryOperation
         );
-                /*
-      At this point the records needed to start a database have been created.
-      In the workflow of the application, the first operation has been completed (starting
-      shift inventory), so it is needed to advance to the next operation (first store of
-      the route).
-    */
 
-    if (apiResponseStatus(resultCreateWorkDay, 201)
-     && apiResponseStatus(resultCreateListStoreOfRouteDay, 201)
-     && apiResponseStatus(resultCreateInventoryOperation, 201)
-     && apiResponseStatus(resultCreateVendorInventoryOperation, 201)
-     && apiResponseStatus(resultCreateListOfDayOperations, 201)) {
-        /* The process has been finished successfully */
-        /* Updating redux states */
-
-        dispatch(setDayGeneralInformation(dayGeneralInformation));
-        dispatch(setStores(arrListStoreOfRouteDay));
-        dispatch(setProductInventory(inventory));
-        dispatch(setArrayDayOperations(arrDayOperations));
-
-        // Executing a synchronization process to register the start shift inventory
-        // Note: In case of failure, the background process will eventually synchronize the records.
-        syncingRecordsWithCentralDatabase();
-
-        Toast.show({
-          type: 'success',
-          text1: 'Se ha registrado el inventario inicial con exito.',
-          text2: 'El proceso para registrar el inventario inicial ha sido completado exitosamente.',
-        });
-
-        processResult = true;
-      } else {
-        /*
-          Something was wrong during the creation of the 'route day' or
-          during the registration of the inventory operation.
-
-          According with the workflow, it is not possible to start a new work day if it is missing
-          information, therefore it is needed to delete (or clean) the database and start again.
-        */
-
-        Toast.show({
-          type: 'error',
-          text1: 'Ha habido un error durante el registro del inventario inicial.',
-          text2: 'Ha sucedido un error durante el registro del inventario inicial, por favor intente nuevamente.',
-        });
-
-        await cleanAllDayOperationsFromDatabase();
-        await cleanAllRouteTransactionsFromDatabase();
-        await cleanAllInventoryOperationsFromDatabase();
-        await cleanAllStoresFromDatabase();
-        await cleanAllRecordsToSyncFromDatabase();
-        await cleanWorkdayFromDatabase();
-
-        processResult = false;
-      }
-
-      if (processResult) {
-        navigation.reset({
-          index: 0, // Set the index of the new state (0 means first screen)
-          routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
-        });
-
-        navigation.navigate('routeOperationMenu');
-      } else {
-        /*
-          Since this is the operations of the day, it is important to ensure the integrity of
-          the workflow, thus, to achieve this, it is needed to redirect the user to the main manu
-          to force complete all the process again.
-        */
-          navigation.reset({
-            index: 0, // Set the index of the new state (0 means first screen)
-            routes: [{ name: 'selectionRouteOperation' }], // Array of route objects, with the route to navigate to
-          });
-
-          navigation.navigate('selectionRouteOperation');
-      }
-      } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
-      || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-        /*
-          Analyzing the workflow of the operations both re-stock operation and product devolution
-          share great part of the process, they only differ at the end of the process;
-          re-stock operation goes back to the route operation menu and product devolution
-          prepare a new inventory for doing the final inventory.
-        */
-        Toast.show({
-          type: 'info',
-          text1: 'Comenzando registro de operación de inventario.',
-          text2: 'Comenzado el registro de la operación de inventario.',
-        });
-
-        // Inventory operations
-        const resultCreateInventoryOperation = await createInventoryOperation(
-          routeDay,
+        const resultAddVendorInventoryOperation:IResponse<IProductInventory[]>
+        = await updateVendorInventory(
+          substractedInventory,
           inventory,
-          currentOperation.id_type_operation);
+          false
+        );
 
-        const inventoryOperation = getDataFromApiResponse(resultCreateInventoryOperation);
+        const newVendorInvnetory:IProductInventory[] = getDataFromApiResponse(
+          resultAddVendorInventoryOperation
+        );
 
-        const resultUpdateVendorInventory = await updateVendorInventory(currentInventory, inventory, false);
+        console.log("current inventory++++++++++++++++++++++++++++++")
+        currentInventory.forEach((item) => {
+          console.log("product: ", item.id_product, " - amount: ", item.amount)
+        })
+        console.log("inventory of the operation to modify+++++++++++++++++++++")
+        inventoryOfInventoryOperationToModify.forEach((item) => {
+          console.log("product: ", item.product_name, " - amount: ", item.amount)
+        })
+        console.log("substracted inventory+++++++++++++++++++++")
+        substractedInventory.forEach((item) => {
+          console.log("product: ", item.product_name, " - amount: ", item.amount)
+        })
 
-        const resultDayOperation:IResponse<IDayOperation> =
-        await createDayOperationBeforeTheCurrentOperation(inventoryOperation);
-        const newDayOperation:IDayOperation = getDataFromApiResponse(resultDayOperation);
 
-        if(apiResponseStatus(resultCreateInventoryOperation, 201)
-        && apiResponseStatus(resultUpdateVendorInventory, 200)
-        && apiResponseStatus(resultDayOperation, 201)) {
-          /* There was not an error during the process. */
-          /* At this point, the inventory operation has been finished and registered. */
 
-          // Updating redux states.
-          // Updating the the inventory with the last changes.
-          dispatch(addProductsInventory(inventory));
+        console.log("current inventory operation+++++++++++++++++++++++++")
+        inventory.forEach((item) => {
+          console.log("product: ", item.product_name, " - amount: ", item.amount)
+        })
+        console.log("final inventory operation++++++++++++++++++++++")
+        newVendorInvnetory.forEach((item) => {
+          console.log("product: ", item.product_name, " - amount: ", item.amount)
+        })
+
+        console.log(newVendorInvnetory)
+
+        /*Adding day operation */
+        /*
+          Depending on the type of operation is how the new day operation will be included in the
+          day operation list.
+        */
+        console.log("Adding inventory operation day")
+        if(currentOperation.id_day_operation === DAYS_OPERATIONS.end_shift_inventory) {
+          resultDayOperation = await appendDayOperation(inventoryOperation);
+          newDayOperation = getDataFromApiResponse(resultDayOperation);
+        } else {
+          resultDayOperation = await createDayOperationBeforeTheCurrentOperation(
+            inventoryOperation
+          );
+          newDayOperation = getDataFromApiResponse(resultDayOperation);
+        }
+
+        if (apiResponseStatus(resultCreateInventoryOperation, 201)
+          && apiResponseStatus(resultDesactivateInventoryOperation, 200)
+          && apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200)
+          && apiResponseStatus(resultAddVendorInventoryOperation, 200)
+          && apiResponseStatus(resultDayOperation, 201)) {
+          /* The process has been finished successfully */
+          /* Updating redux states */
+          dispatch(setProductInventory(newVendorInvnetory));
 
           // Store the information (new operation) in redux context.
           dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
 
-          if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
-            /* There is not extra instructions. */
-            Toast.show({
-              type: 'success',
-              text1: 'Se ha registrado el re-stock de producto exitosamente.',
-              text2: 'Se ha agregado los productos del re-stock de producto al inventario.',
-            });
+          // Executing a synchronization process to register the start shift inventory
+          // Note: In case of failure, the background process will eventually synchronize the records.
+          syncingRecordsWithCentralDatabase();
 
-            // Executing a synchronization process to register the start shift inventory
-            // Note: In case of failure, the background process will eventually synchronize the records.
-            syncingRecordsWithCentralDatabase();
-          } else {
-            Toast.show({
-              type: 'success',
-              text1: 'Se ha registrado la devolución de producto exitosamente.',
-              text2: 'Se ha registrado el inventario de devolución de producto exitosamente.',
-            });
+          Toast.show({
+            type: 'success',
+            text1: 'Se ha actualizado el inventario correctamente.',
+            text2: 'El proceso para actualizar el inventario ha sido completado exitosamente.',
+          });
 
-            /* The inventory operation was an "product devolution inventoy" */
-            // Creating a new work day operation for "end shift inventory".
-            let nextDayOperation:IDayOperation
-              = createDayOperationConcept(
-                inventoryOperation.id_inventory_operation,
-                DAYS_OPERATIONS.end_shift_inventory,
-                0,
-                0);
-
-            // Set the new day operation as the current one.
-            dispatch(setCurrentOperation(nextDayOperation));
-          }
           processResult = true;
         } else {
-          // Keeping the vendor's inventory to the previous state (before the current inventory operation).
-          await setVendorInventory(currentInventory);
-
-          // Canceling the current inventory operation
-          await cancelCreationOfInventoryOperation(inventoryOperation);
-
-          // Ensuring that the new day operation don't appear in the list of actions.
-          await setDayOperations(dayOperations);
-
-          /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
-
-          processResult = false;
-        }
-
-        if(processResult) {
-          if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
-            /* The inventory operation was a "restock inventory" */
-            navigation.reset({
-              index: 0, // Set the index of the new state (0 means first screen)
-              routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
-            });
-            navigation.navigate('routeOperationMenu');
-          } else {
-            Toast.show({
-              type: 'info',
-              text1: 'Preparando el inventario final.',
-              text2: 'Preparando información para registrar el inventario final.',
-            });
-            // Reseting states for making the end shift inventory.
-            const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
-              return {
-                ...proudct,
-                amount: 0,
-              };
-            });
-
-            setInventory(newInventoryForFinalOperation);
-            setIsOperation(true);
-            setIsInventoryAccepted(false); // State to avoid double-click
-          }
-        } else {
           /*
-            In case of error, the user can make another petition to process the inventory.
-            The information that is currently stored in memory can be used to try again,
-            that is the reason of why it is not being redirected to the route operation menu.
+            Something was wrong during the creation of the 'route day' or
+            during the registration of the inventory operation.
+
+            According with the workflow, it is not possible to start a new work day if it is missing
+            information, therefore it is needed to delete (or clean) the database and start again.
           */
-          setIsInventoryAccepted(false);
-        }
-      } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-        Toast.show({
-          type: 'info',
-          text1: 'Comenzando registro de inventario final.',
-          text2: 'Registrando inventario final.',
-        });
 
-        const resultCreateInventory:IResponse<IInventoryOperation>
-          = await createInventoryOperation(
-            routeDay,
-            inventory,
-            currentOperation.id_type_operation
-          );
-        const inventoryOperation:IInventoryOperation = getDataFromApiResponse(resultCreateInventory);
-
-        const resultUpdateVendorInventory:IResponse<IProductInventory[]>
-          = await updateVendorInventory(currentInventory, inventory, false);
-
-        /* Closing work day operation */
-        Toast.show({
-          type: 'info',
-          text1: 'Registrando inventario final.',
-          text2: 'Registrando información necesaria para cerrar el inventario final y terminar el dia correctamente.',
-        });
-
-        const resultFinishWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
-          = await finishWorkDay(cashInventory, routeDay);
-        const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
-          = getDataFromApiResponse(resultFinishWorkDay);
-
-        const resultAppendDayOperation:IResponse<IDayOperation>
-         = await appendDayOperation(inventoryOperation);
-        const newDayOperation:IDayOperation
-          = getDataFromApiResponse(resultAppendDayOperation);
-
-        /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
-
-        if (apiResponseStatus(resultCreateInventory, 201)
-          &&  apiResponseStatus(resultUpdateVendorInventory, 200)
-          &&  apiResponseStatus(resultFinishWorkDay, 200)
-          &&  apiResponseStatus(resultAppendDayOperation, 201)) {
-
-            // Updating redux context
-            dispatch(addProductsInventory(inventory));
-
-            // Storing information in redux context.
-            dispatch(setDayGeneralInformation(dayGeneralInformation));
-
-            // Store the information (new operation) in redux context.
-            dispatch(setDayOperation(newDayOperation));
-
-            Toast.show({type: 'success',
-              text1:'Se ha registrado el inventario final exitosamente.',
-              text2: 'Se ha registrado el inventario final exitosamente.'});
-
-            // Executing a synchronization process to register the start shift inventory
-            // Note: In case of failure, the background process will eventually synchronize the records.
-            syncingRecordsWithCentralDatabase();
-
-            processResult = true;
-          } else {
-            /* Something was wrong during the final shift inventory */
-            Toast.show({
-              type: 'error',
-              text1: 'Ha habido un error durnate el inventario final.',
-              text2: 'Ha habido un error durante el registro de la operación del inventario final, porfavor intente nuevamente.',
-            });
+          Toast.show({
+            type: 'error',
+            text1: 'Ha habido un error durante el registro del inventario inicial.',
+            text2: 'Ha sucedido un error durante el registro del inventario inicial, por favor intente nuevamente.',
+          });
 
             // Keeping the vendor's inventory to the previous state (before the current inventory operation).
             setVendorInventory(currentInventory);
@@ -909,28 +688,390 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             // Ensuring that the new day operation don't appear in the list of actions.
             setDayOperations(dayOperations);
 
-            // Keeping the workday status to the previous state  (before the current inventory operation).
-            cancelWorkDayUpdate(routeDay);
+            // Cancel the desacivation of inventory operation.
+            cancelDesactivateInventoryOperation(currentOperation.id_item);
 
-            processResult = false;
-          }
+          processResult = false;
+        }
 
-        if(processResult) {
+        if (processResult) {
           navigation.reset({
             index: 0, // Set the index of the new state (0 means first screen)
             routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
           });
+
           navigation.navigate('routeOperationMenu');
-        } else {
-          /*
-            In case of error, the user can make another petition to process the inventory.
-            The information that is currently stored in memory can be used to try again,
-            that is the reason of why it is not being redirected to the route operation menu.
-          */
-            setIsInventoryAccepted(false);
         }
       } else {
-        /* At the moment, there is not a default case */
+        // Determining the type of inventory operation.
+        if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+          /*
+            According with the flow, when vendor accepts the 'initial inventory' he is
+            acception to make the current 'work day'*.
+  
+            It is needed to retrieve and process the following information to create the
+            work day:
+              - route: Information related to the route identification.
+              - day: The information of the day.
+              - routeDay: Information that relates the day to perform and the route.
+
+            Work day: This concept refers to all the "general  information" needed to
+            identify the "current day" as working one.
+          */
+          // Related to work day operations
+          Toast.show({
+            type: 'info',
+            text1: 'Creando dia de trabajo.',
+            text2: 'Registrando el dia.',
+          });
+          console.log("Creating work day")
+          const resultCreateWorkDay = await createWorkDay(cashInventory, routeDay);
+          const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+            = getDataFromApiResponse(resultCreateWorkDay);
+
+          Toast.show({
+            type: 'info',
+            text1: 'Comenzando registro de inventario inicial.',
+            text2: 'Registrando inventario inicial y consultando información para la ruta.',
+          });
+
+          console.log("Creating stores list")
+          // Stores operations
+          const resultCreateListStoreOfRouteDay = await createListOfStoresOfTheRouteDay(
+            dayGeneralInformation
+          );
+          const resulGetStoresOfRouteOfRouteDay = await getStoresOfRouteDay(dayGeneralInformation);
+
+          const arrListStoreOfRouteDay:(IStore&IStoreStatusDay)[]
+            = getDataFromApiResponse(resultCreateListStoreOfRouteDay);
+
+          const arrStoresOfRouteDay:IRouteDayStores[]
+            = getDataFromApiResponse(resulGetStoresOfRouteOfRouteDay);
+
+          console.log("Creating inventory operation")
+          // Inventory operations.
+          const resultCreateInventoryOperation = await createInventoryOperation(
+            dayGeneralInformation,
+            inventory,
+            currentOperation.id_type_operation
+          );
+
+          const inventoryOperation = getDataFromApiResponse(resultCreateInventoryOperation);
+
+          console.log("Creating vendor inventory")
+          /* This inventory is what will be used to perform calculation */
+          const resultCreateVendorInventoryOperation = await createVendorInventory(inventory);
+
+          console.log("Creating list")
+          // Related to day operations
+          /*
+            For this operation it is needed to create:
+              - A day operation for the start shift inventory operation.
+              - A day for each store in the route day.
+          */
+          const resultCreateListOfDayOperations = await createListOfDayOperations(
+            inventoryOperation, arrStoresOfRouteDay
+          );
+
+          const arrDayOperations:IDayOperation[] = getDataFromApiResponse(
+            resultCreateListOfDayOperations
+          );
+        /*
+          At this point the records needed to start a database have been created.
+          In the workflow of the application, the first operation has been completed (starting
+          shift inventory), so it is needed to advance to the next operation (first store of
+          the route).
+        */
+          console.log("Verifying all is ok")
+        if (apiResponseStatus(resultCreateWorkDay, 201)
+        && apiResponseStatus(resultCreateListStoreOfRouteDay, 201)
+        && apiResponseStatus(resultCreateInventoryOperation, 201)
+        && apiResponseStatus(resultCreateVendorInventoryOperation, 201)
+        && apiResponseStatus(resultCreateListOfDayOperations, 201)) {
+            /* The process has been finished successfully */
+            /* Updating redux states */
+    
+            dispatch(setDayGeneralInformation(dayGeneralInformation));
+            dispatch(setStores(arrListStoreOfRouteDay));
+            dispatch(setProductInventory(inventory));
+            dispatch(setArrayDayOperations(arrDayOperations));
+    
+            // Executing a synchronization process to register the start shift inventory
+            // Note: In case of failure, the background process will eventually synchronize the records.
+            syncingRecordsWithCentralDatabase();
+    
+            Toast.show({
+              type: 'success',
+              text1: 'Se ha registrado el inventario inicial con exito.',
+              text2: 'El proceso para registrar el inventario inicial ha sido completado exitosamente.',
+            });
+    
+            processResult = true;
+          } else {
+            /*
+              Something was wrong during the creation of the 'route day' or
+              during the registration of the inventory operation.
+    
+              According with the workflow, it is not possible to start a new work day if it is missing
+              information, therefore it is needed to delete (or clean) the database and start again.
+            */
+    
+            Toast.show({
+              type: 'error',
+              text1: 'Ha habido un error durante el registro del inventario inicial.',
+              text2: 'Ha sucedido un error durante el registro del inventario inicial, por favor intente nuevamente.',
+            });
+    
+            await cleanAllDayOperationsFromDatabase();
+            await cleanAllRouteTransactionsFromDatabase();
+            await cleanAllInventoryOperationsFromDatabase();
+            await cleanAllStoresFromDatabase();
+            await cleanAllRecordsToSyncFromDatabase();
+            await cleanWorkdayFromDatabase();
+    
+            processResult = false;
+          }
+          if (processResult) {
+            navigation.reset({
+              index: 0, // Set the index of the new state (0 means first screen)
+              routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+            });
+    
+            navigation.navigate('routeOperationMenu');
+          } else {
+            /*
+              Since this is the operations of the day, it is important to ensure the integrity of
+              the workflow, thus, to achieve this, it is needed to redirect the user to the main manu
+              to force complete all the process again.
+            */
+              navigation.reset({
+                index: 0, // Set the index of the new state (0 means first screen)
+                routes: [{ name: 'selectionRouteOperation' }], // Array of route objects, with the route to navigate to
+              });
+    
+              navigation.navigate('selectionRouteOperation');
+          }
+        } else if(currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory
+        || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+          /*
+            Analyzing the workflow of the operations both re-stock operation and product devolution
+            share great part of the process, they only differ at the end of the process;
+            re-stock operation goes back to the route operation menu and product devolution
+            prepare a new inventory for doing the final inventory.
+          */
+          Toast.show({
+            type: 'info',
+            text1: 'Comenzando registro de operación de inventario.',
+            text2: 'Comenzado el registro de la operación de inventario.',
+          });
+  
+          // Inventory operations
+          const resultCreateInventoryOperation = await createInventoryOperation(
+            routeDay,
+            inventory,
+            currentOperation.id_type_operation);
+  
+          const inventoryOperation = getDataFromApiResponse(resultCreateInventoryOperation);
+  
+          const resultUpdateVendorInventory = await updateVendorInventory(currentInventory, inventory, false);
+  
+          const resultDayOperation:IResponse<IDayOperation> =
+          await createDayOperationBeforeTheCurrentOperation(inventoryOperation);
+          const newDayOperation:IDayOperation = getDataFromApiResponse(resultDayOperation);
+  
+          if(apiResponseStatus(resultCreateInventoryOperation, 201)
+          && apiResponseStatus(resultUpdateVendorInventory, 200)
+          && apiResponseStatus(resultDayOperation, 201)) {
+            /* There was not an error during the process. */
+            /* At this point, the inventory operation has been finished and registered. */
+  
+            // Updating redux states.
+            // Updating the the inventory with the last changes.
+            dispatch(addProductsInventory(inventory));
+  
+            // Store the information (new operation) in redux context.
+            dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
+  
+            if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+              /* There is not extra instructions. */
+              Toast.show({
+                type: 'success',
+                text1: 'Se ha registrado el re-stock de producto exitosamente.',
+                text2: 'Se ha agregado los productos del re-stock de producto al inventario.',
+              });
+  
+              // Executing a synchronization process to register the start shift inventory
+              // Note: In case of failure, the background process will eventually synchronize the records.
+              syncingRecordsWithCentralDatabase();
+            } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) { // It is an product devolution
+              Toast.show({
+                type: 'success',
+                text1: 'Se ha registrado la devolución de producto exitosamente.',
+                text2: 'Se ha registrado el inventario de devolución de producto exitosamente.',
+              });
+  
+              /* The inventory operation was an "product devolution inventoy" */
+              // Creating a new work day operation for "end shift inventory".
+              let nextDayOperation:IDayOperation
+                = createDayOperationConcept(
+                  '', // It isn't still determined the UUID of the end shift inventory
+                  DAYS_OPERATIONS.end_shift_inventory,
+                  0,
+                  0);
+  
+              // Set the new day operation as the current one.
+              dispatch(setCurrentOperation(nextDayOperation));
+            }
+            processResult = true;
+          } else {
+            // Keeping the vendor's inventory to the previous state (before the current inventory operation).
+            await setVendorInventory(currentInventory);
+  
+            // Canceling the current inventory operation
+            await cancelCreationOfInventoryOperation(inventoryOperation);
+  
+            // Ensuring that the new day operation don't appear in the list of actions.
+            await setDayOperations(dayOperations);
+  
+            /* The user is not being redirected to the 'RouteOperationLayout' to avoid to re-make all the operation again. */
+  
+            processResult = false;
+          }
+  
+          if(processResult) {
+            if (currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+              /* The inventory operation was a "restock inventory" */
+              navigation.reset({
+                index: 0, // Set the index of the new state (0 means first screen)
+                routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+              });
+              navigation.navigate('routeOperationMenu');
+            } else {
+              Toast.show({
+                type: 'info',
+                text1: 'Preparando el inventario final.',
+                text2: 'Preparando información para registrar el inventario final.',
+              });
+              // Reseting states for making the end shift inventory.
+              const newInventoryForFinalOperation = inventory.map((proudct:IProductInventory) => {
+                return {
+                  ...proudct,
+                  amount: 0,
+                };
+              });
+  
+              setInventory(newInventoryForFinalOperation);
+              setIsOperation(true);
+              setIsInventoryAccepted(false); // State to avoid double-click
+            }
+          } else {
+            /*
+              In case of error, the user can make another petition to process the inventory.
+              The information that is currently stored in memory can be used to try again,
+              that is the reason of why it is not being redirected to the route operation menu.
+            */
+            setIsInventoryAccepted(false);
+          }
+        } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+          Toast.show({
+            type: 'info',
+            text1: 'Comenzando registro de inventario final.',
+            text2: 'Registrando inventario final.',
+          });
+  
+          const resultCreateInventory:IResponse<IInventoryOperation>
+            = await createInventoryOperation(
+              routeDay,
+              inventory,
+              currentOperation.id_type_operation
+            );
+          const inventoryOperation:IInventoryOperation = getDataFromApiResponse(resultCreateInventory);
+  
+          const resultUpdateVendorInventory:IResponse<IProductInventory[]>
+            = await updateVendorInventory(currentInventory, inventory, false);
+  
+          /* Closing work day operation */
+          Toast.show({
+            type: 'info',
+            text1: 'Registrando inventario final.',
+            text2: 'Registrando información necesaria para cerrar el inventario final y terminar el dia correctamente.',
+          });
+  
+          const resultFinishWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
+            = await finishWorkDay(cashInventory, routeDay);
+          const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+            = getDataFromApiResponse(resultFinishWorkDay);
+  
+          const resultAppendDayOperation:IResponse<IDayOperation>
+           = await appendDayOperation(inventoryOperation);
+          const newDayOperation:IDayOperation
+            = getDataFromApiResponse(resultAppendDayOperation);
+  
+          /* At this moment the final operations has been done, now it is needed to display the summarazie of all the day */
+  
+          if (apiResponseStatus(resultCreateInventory, 201)
+            &&  apiResponseStatus(resultUpdateVendorInventory, 200)
+            &&  apiResponseStatus(resultFinishWorkDay, 200)
+            &&  apiResponseStatus(resultAppendDayOperation, 201)) {
+  
+              // Updating redux context
+              dispatch(addProductsInventory(inventory));
+  
+              // Storing information in redux context.
+              dispatch(setDayGeneralInformation(dayGeneralInformation));
+  
+              // Store the information (new operation) in redux context.
+              dispatch(setDayOperation(newDayOperation));
+  
+              Toast.show({type: 'success',
+                text1:'Se ha registrado el inventario final exitosamente.',
+                text2: 'Se ha registrado el inventario final exitosamente.'});
+  
+              // Executing a synchronization process to register the start shift inventory
+              // Note: In case of failure, the background process will eventually synchronize the records.
+              syncingRecordsWithCentralDatabase();
+  
+              processResult = true;
+            } else {
+              /* Something was wrong during the final shift inventory */
+              Toast.show({
+                type: 'error',
+                text1: 'Ha habido un error durnate el inventario final.',
+                text2: 'Ha habido un error durante el registro de la operación del inventario final, porfavor intente nuevamente.',
+              });
+  
+              // Keeping the vendor's inventory to the previous state (before the current inventory operation).
+              setVendorInventory(currentInventory);
+  
+              // Canceling inventory operation
+              cancelCreationOfInventoryOperation(inventoryOperation);
+  
+              // Ensuring that the new day operation don't appear in the list of actions.
+              setDayOperations(dayOperations);
+  
+              // Keeping the workday status to the previous state  (before the current inventory operation).
+              cancelWorkDayUpdate(routeDay);
+  
+              processResult = false;
+            }
+  
+          if(processResult) {
+            navigation.reset({
+              index: 0, // Set the index of the new state (0 means first screen)
+              routes: [{ name: 'routeOperationMenu' }], // Array of route objects, with the route to navigate to
+            });
+            navigation.navigate('routeOperationMenu');
+          } else {
+            /*
+              In case of error, the user can make another petition to process the inventory.
+              The information that is currently stored in memory can be used to try again,
+              that is the reason of why it is not being redirected to the route operation menu.
+            */
+              setIsInventoryAccepted(false);
+          }
+        } else {
+          /* At the moment, there is not a default case */
+        }
       }
     } catch (error) {
       setIsInventoryAccepted(false);
@@ -955,7 +1096,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     }
   };
 
-  const setInterfaceToModifyCurrentInventory = () => {
+  const handlerOnModifyInventory = () => {
     const {id_type_operation} = currentOperation;
     let currentInventoryOperation:IProductInventory[] = [];
 
@@ -974,7 +1115,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     const newInventoryOperation = inventory.map((proudct:IProductInventory) => {
       let amountForInventory:number = 0;
 
-      const productOfOperation:IProductInventory|undefined = currentInventoryOperation.find((productOperation:IProductInventory) => {
+      const productOfOperation:IProductInventory|undefined = currentInventoryOperation
+      .find((productOperation:IProductInventory) => {
         return productOperation.id_product === proudct.id_product;
       });
 
@@ -989,8 +1131,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         amount: amountForInventory,
       };
     });
-    setInventory(newInventoryOperation);
+
+    setInventory(newInventoryOperation); // Set information that has the inventory operation
+    setCurrentInventory(currentInventory); // Set vendor's inventory information
     setIsOperation(true);
+    setIsOperationToUpdate(true);
     setIsInventoryAccepted(false); // State to avoid double-click
   };
 
@@ -1008,7 +1153,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         { (isInventoryOperationModifiable && !isOperation) &&
           <Pressable
             style={tw`bg-blue-500 py-6 px-6 rounded-full ml-3`}
-            onPress={setInterfaceToModifyCurrentInventory}>
+            onPress={handlerOnModifyInventory}>
             <Icon
               name={'edit'}
               style={tw`absolute inset-0 top-3 text-base text-center`} color="#fff" />
@@ -1068,7 +1213,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       {/* Cash reception section. */}
       {((currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
       || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory)
-      && isOperation) &&
+      && isOperation && !isOperationToUpdate) &&
         /*
           The reception of money can only be possible in tow scenarios:
             1. Start shift inventory operation.

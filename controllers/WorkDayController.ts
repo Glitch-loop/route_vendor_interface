@@ -162,6 +162,38 @@ export async function finishWorkDay(
 
 }
 
+export async function setWorkDay(
+  cashInventory:ICurrency[],
+  generalInformationOfRouteDay:IRoute&IDayGeneralInformation&IDay&IRouteDay,
+) {
+  const dayGeneralInformation:IRoute&IDayGeneralInformation&IDay&IRouteDay
+    = finishWorkDayConcept(cashInventory, generalInformationOfRouteDay);
+
+  const resultFinishingWorkDay:IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>
+    = await updateWorkDay(dayGeneralInformation);
+
+  const resultCreateRecordToSync:IResponse<any> = await createRecordForSyncingWithCentralDatabse(
+    dayGeneralInformation,
+    'PENDING',
+    'UPDATE'
+  );
+
+  if (apiResponseStatus(resultFinishingWorkDay, 200)
+    && apiResponseStatus(resultCreateRecordToSync, 201)) {
+      /* There is not instruction */
+    } else {
+      const recordToSync:ISyncRecord = getDataFromApiResponse(resultCreateRecordToSync);
+
+      await deleteAllWorkDayInformation();
+      await deleteSyncQueueRecord(recordToSync);
+
+      resultFinishingWorkDay.responseCode = 400;
+    }
+
+    return resultFinishingWorkDay;
+
+}
+
 export async function cleanWorkdayFromDatabase() {
   return await deleteAllWorkDayInformation();
 }

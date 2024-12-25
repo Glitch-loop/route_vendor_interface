@@ -21,6 +21,8 @@ import {
   getAllRouteTransactions,
   getAllRouteTransactionsOperations,
   getAllRouteTransactionsOperationDescriptions,
+  updateInventoryOperation,
+  deleteSyncHistoricRecordById,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Interfaces
@@ -249,6 +251,9 @@ export async function createVendorInventory(inventory:IProductInventory[]) {
   return resultInsertProducts;
 }
 
+/*
+  Function to delete the inventory operation in case of process failure.
+*/
 export async function cancelCreationOfInventoryOperation(inventoryOperation:IInventoryOperation) {
     const {id_inventory_operation} = inventoryOperation;
 
@@ -274,6 +279,91 @@ export async function cancelCreationOfInventoryOperation(inventoryOperation:IInv
       'PENDING',
       'INSERT');
 }
+
+/*
+  Function for desactivate an inventory operation
+*/
+export async function desactivateInventoryOperation(id_inventory_operation:string) {
+  const resultGetInventoryOperation:IResponse<IInventoryOperation[]> =  await getInventoryOperation(
+    id_inventory_operation
+  );
+  const inventoryOperation:IInventoryOperation[] = getDataFromApiResponse(
+    resultGetInventoryOperation
+  );
+
+  const resultUpdteInventoryOperaion:IResponse<IInventoryOperation> = await updateInventoryOperation(
+    {
+      ...inventoryOperation[0],
+      state: 0,
+    }
+  );
+
+  const updtedInventoryOperaion = getDataFromApiResponse(resultUpdteInventoryOperaion);
+
+  const resultSyncRecordCreation:IResponse<ISyncRecord> =
+    await createRecordForSyncingWithCentralDatabse(updtedInventoryOperaion, 'PENDING', 'UPDATE');
+
+  if (apiResponseStatus(resultGetInventoryOperation, 200)
+   && apiResponseStatus(resultUpdteInventoryOperaion, 200)
+   && apiResponseStatus(resultSyncRecordCreation, 201)
+  ) {
+    return createApiResponse(resultUpdteInventoryOperaion.responseCode,
+      resultUpdteInventoryOperaion.data,
+      resultUpdteInventoryOperaion.error,
+      resultUpdteInventoryOperaion.message
+    );
+  } else {
+
+    await updateInventoryOperation({ ...inventoryOperation[0], state: 1 });
+    await deleteRecordForSyncingWithCentralDatabase(updtedInventoryOperaion, 'PENDING', 'UPDATE');
+
+    return createApiResponse(400,
+      resultUpdteInventoryOperaion.data,
+      resultUpdteInventoryOperaion.error,
+      resultUpdteInventoryOperaion.message
+    );
+  }
+}
+
+/*
+  Function for cancel the 'desactivation' of an inventory operation
+*/
+export async function cancelDesactivateInventoryOperation(id_inventory_operation:string) {
+  const resultGetInventoryOperation:IResponse<IInventoryOperation[]> =  await getInventoryOperation(
+    id_inventory_operation
+  );
+  const inventoryOperation:IInventoryOperation[] = getDataFromApiResponse(
+    resultGetInventoryOperation
+  );
+
+  const resultUpdteInventoryOperaion:IResponse<IInventoryOperation> = await updateInventoryOperation({
+    ...inventoryOperation[0],
+    state: 1,
+  });
+
+  const updtedInventoryOperaion = getDataFromApiResponse(resultUpdteInventoryOperaion);
+
+  const resultSyncRecordDeletion:IResponse<null> =
+    await deleteRecordForSyncingWithCentralDatabase(updtedInventoryOperaion, 'PENDING', 'UPDATE');
+
+  if (apiResponseStatus(resultGetInventoryOperation, 200)
+   && apiResponseStatus(resultUpdteInventoryOperaion, 200)
+   && apiResponseStatus(resultSyncRecordDeletion, 200)
+  ) {
+    return createApiResponse(resultUpdteInventoryOperaion.responseCode,
+      resultUpdteInventoryOperaion.data,
+      resultUpdteInventoryOperaion.error,
+      resultUpdteInventoryOperaion.message
+    );
+  } else {
+    return createApiResponse(400,
+      resultUpdteInventoryOperaion.data,
+      resultUpdteInventoryOperaion.error,
+      resultUpdteInventoryOperaion.message
+    );
+  }
+}
+
 
 // Getters
 export async function getProductForInventoryOperation():Promise<IResponse<IProductInventory[]>> {
