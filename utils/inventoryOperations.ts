@@ -70,3 +70,27 @@ export function calculateNewInventoryAfterAnInventoryOperation(
 
   return newInventory;
 }
+
+export function mergeInventories(baseInventory:IProductInventory[], targetInventory:IProductInventory[]):IProductInventory[] {
+  const newInventoryOperation = baseInventory.map((proudct:IProductInventory) => {
+    let amountForInventory:number = 0;
+
+    const productOfOperation:IProductInventory|undefined = targetInventory
+    .find((productOperation:IProductInventory) => {
+      return productOperation.id_product === proudct.id_product;
+    });
+
+    if(productOfOperation === undefined) {
+      amountForInventory = 0;
+    } else {
+      amountForInventory = productOfOperation.amount;
+    }
+
+    return {
+      ...proudct,
+      amount: amountForInventory,
+    };
+  });
+
+  return newInventoryOperation;
+}

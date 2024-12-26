@@ -48,7 +48,7 @@ import {
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
 import TableCashReception from '../components/InventoryComponents/TableCashReception';
-import { calculateNewInventoryAfterAnInventoryOperation, initialMXNCurrencyState } from '../utils/inventoryOperations';
+import { calculateNewInventoryAfterAnInventoryOperation, initialMXNCurrencyState, mergeInventories } from '../utils/inventoryOperations';
 import { addingInformationParticularFieldOfObject, convertingDictionaryInArray } from '../utils/generalFunctions';
 import {
   apiResponseProcess,
@@ -598,7 +598,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     if(askToUserInventoryIsFine) {
       setShowDialog(true);
     } else {
-      handleVendorConfirmation();
+      handlerVendorConfirmation();
     }
   };
 
@@ -606,7 +606,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     setShowDialog(false);
   };
 
-  const handleVendorConfirmation = async ():Promise<void> => {
+  const handlerVendorConfirmation = async ():Promise<void> => {
     // By default it is considered that the process is going to fail.
     let processResult:boolean = false;
     try {
@@ -1192,41 +1192,20 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     }
   };
 
-  const handlerOnModifyInventory = () => {
+  const handlerModifyInventory = () => {
     const {id_type_operation} = currentOperation;
-    let currentInventoryOperation:IProductInventory[] = [];
+    let newInventoryOperation:IProductInventory[] = [];
 
     if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-      currentInventoryOperation = initialShiftInventory;
+      newInventoryOperation = mergeInventories(inventory, initialShiftInventory);
     } else if (id_type_operation === DAYS_OPERATIONS.restock_inventory
             || id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-      currentInventoryOperation = restockInventories[0];
-    } else if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-      currentInventoryOperation = finalShiftInventory;
+      newInventoryOperation = mergeInventories(inventory, restockInventories[0]);
+    } else if (id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+      newInventoryOperation = mergeInventories(inventory, finalShiftInventory);
     } else {
       /* Other invalid day operation */
     }
-
-    // Reseting states for making the end shift inventory.
-    const newInventoryOperation = inventory.map((proudct:IProductInventory) => {
-      let amountForInventory:number = 0;
-
-      const productOfOperation:IProductInventory|undefined = currentInventoryOperation
-      .find((productOperation:IProductInventory) => {
-        return productOperation.id_product === proudct.id_product;
-      });
-
-      if(productOfOperation === undefined) {
-        amountForInventory = 0;
-      } else {
-        amountForInventory = productOfOperation.amount;
-      }
-
-      return {
-        ...proudct,
-        amount: amountForInventory,
-      };
-    });
 
     if (id_type_operation === DAYS_OPERATIONS.restock_inventory) {
       setCurrentInventory(
@@ -1259,7 +1238,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     <ScrollView style={tw`w-full flex flex-col`}>
       <ActionDialog
         visible={showDialog}
-        onAcceptDialog={handleVendorConfirmation}
+        onAcceptDialog={handlerVendorConfirmation}
         onDeclinedialog={handlerOnCancelInventoryOperationProcess}>
           <View style={tw`w-11/12 flex flex-col`}>
             <Text style={tw`text-center text-black text-xl`}>
@@ -1295,7 +1274,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         { (isInventoryOperationModifiable && !isOperation) &&
           <Pressable
             style={tw`bg-blue-500 py-6 px-6 rounded-full ml-3`}
-            onPress={handlerOnModifyInventory}>
+            onPress={handlerModifyInventory}>
             <Icon
               name={'edit'}
               style={tw`absolute inset-0 top-3 text-base text-center`} color="#fff" />
