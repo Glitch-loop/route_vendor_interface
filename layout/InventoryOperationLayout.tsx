@@ -209,6 +209,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       // Variables used for final shift inventory
       const startShiftInventoryProduct:IProductInventory[][] = [];
       const restockInventoryProduct:IProductInventory[][] = [];
+      let isOpertionActive:number = 1;
 
       /*
         Since it is an visualization, it is need to 'reset' the states related to
@@ -227,6 +228,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         if (inventoryOperation.length > 0) {
           const { state } = inventoryOperation[0];
+          isOpertionActive = state;
+
           if(state === 1) {
             setIsActiveOperation(true);
           } else {
@@ -254,8 +257,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
         if (index !== -1) {
           if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory
-          ||  currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
-          ) {
+           || currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
             /* Per day, there is only 1 product devolution and 1 final inventory.
               However, it might be another records of these types working as historic records.
 
@@ -278,7 +280,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             } else {
               isCurrentInventoryOperationModifiable = true;
             }
-            console.log("isOtherOperationOfTheSameTypeAbove: ", isOtherOperationOfTheSameTypeAbove)
           } else {
             // Verifying the inventory is the last operation (excluding product devolution inventory)
             let isNextOperationCurrentOne:boolean = false;
@@ -314,6 +315,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           isCurrentInventoryOperationModifiable = false;
         }
 
+        // Determining if the inventory is modifiable
         if(isCurrentInventoryOperationModifiable === true) {
           setIsInventoryOperationModifiable(true);
         } else {
@@ -341,131 +343,143 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           setRestockInventories([inventoryOperationProducts]);
           setFinalShiftInventory([]);
         } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-          // Variables used by the process.
-          let inventoryOperations:IInventoryOperation[] = [];
-          // let productInventoryOfInventoryOperation:IProductInventory[] = [];
 
-          setInventoryWithdrawal(true);
-          setInventoryOutflow(true);
-          setFinalOperation(true);
-          setIssueInventory(true);
-          /*
-            End shift inventory is an special case. This inventory visualization intends to show
-            the summarize of all the inventory operations that were made during the route.
+          if (isOpertionActive === 1) {
+            // Variables used by the process.
+            let inventoryOperations:IInventoryOperation[] = [];
+            // let productInventoryOfInventoryOperation:IProductInventory[] = [];
 
-            In this way, it is needed to get all the inventory operations of the day (inflow and remaining of product):
-            - Initial inventory
-            - Re-stock inventory
-            - Final invnetory
+            setInventoryWithdrawal(true);
+            setInventoryOutflow(true);
+            setFinalOperation(true);
+            setIssueInventory(true);
+            /*
+              End shift inventory is an special case. This inventory visualization intends to show
+              the summarize of all the inventory operations that were made during the route.
 
-            And also, it is needed to retrieve the outflow of product:
-              - product reposition transactions
-              - selling transactions
+              In this way, it is needed to get all the inventory operations of the day (inflow and remaining of product):
+              - Initial inventory
+              - Re-stock inventory
+              - Final invnetory
 
-            Product devolution is not included becuase it is considered as another inventory out
-            of the product inventory of the day.
-          */
+              And also, it is needed to retrieve the outflow of product:
+                - product reposition transactions
+                - selling transactions
 
-          // Get all the inventory operations
-          inventoryOperations = apiResponseProcess(
-            await getAllInventoryOperationsForInventoryVisualization(),
-            settingAllInventoryOperations
-          );
+              Product devolution is not included becuase it is considered as another inventory out
+              of the product inventory of the day.
+            */
 
-          const mapInventoryOperationRequests = inventoryOperations
-          .map(async (inventoryOperation) => {
-            const {
-              id_inventory_operation,
-              id_inventory_operation_type,
-              state,
-            } = inventoryOperation;
+            // Get all the inventory operations
+            inventoryOperations = apiResponseProcess(
+              await getAllInventoryOperationsForInventoryVisualization(),
+              settingAllInventoryOperations
+            );
 
-            if (state === 1) {
-              const resultGetInventoryOperation:IResponse<IProductInventory[]> = await getInventoryOperationForInventoryVisualization(id_inventory_operation);
-              const inventoryOperationInformation:IProductInventory[] = getDataFromApiResponse(
-                resultGetInventoryOperation
-              );
+            const mapInventoryOperationRequests = inventoryOperations
+            .map(async (inventoryOperation) => {
+              const {
+                id_inventory_operation,
+                id_inventory_operation_type,
+                state,
+              } = inventoryOperation;
 
-              // Determining where to store the information of the current inventory operation.
-              if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
-                startShiftInventoryProduct.push(inventoryOperationInformation);
-              } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
-                restockInventoryProduct.push(inventoryOperationInformation);
+              if (state === 1) {
+                const resultGetInventoryOperation:IResponse<IProductInventory[]> = await getInventoryOperationForInventoryVisualization(id_inventory_operation);
+                const inventoryOperationInformation:IProductInventory[] = getDataFromApiResponse(
+                  resultGetInventoryOperation
+                );
+
+                // Determining where to store the information of the current inventory operation.
+                if (id_inventory_operation_type === DAYS_OPERATIONS.start_shift_inventory) {
+                  startShiftInventoryProduct.push(inventoryOperationInformation);
+                } else if (id_inventory_operation_type === DAYS_OPERATIONS.restock_inventory) {
+                  restockInventoryProduct.push(inventoryOperationInformation);
+                } else {
+                  /* Other case of operations are ignored */
+                }
               } else {
-                /* Other case of operations are ignored */
+                /* "Inactive" inventory operations will not be processed. */
               }
-            } else {
-              /* "Inactive" inventory operations will not be processed. */
-            }
-          });
+            });
 
-          await Promise.all(mapInventoryOperationRequests)
-          .then(() => {
-            // Storing information related to the inventory operations
-            if (startShiftInventoryProduct.length > 0) {
-              setInitialShiftInventory(startShiftInventoryProduct[0]);
-            } else {
-              setInitialShiftInventory([]);
-            }
-            setRestockInventories(restockInventoryProduct);
+            await Promise.all(mapInventoryOperationRequests)
+            .then(() => {
+              // Storing information related to the inventory operations
+              if (startShiftInventoryProduct.length > 0) {
+                setInitialShiftInventory(startShiftInventoryProduct[0]);
+              } else {
+                setInitialShiftInventory([]);
+              }
+              setRestockInventories(restockInventoryProduct);
+
+              // This information is retrieved with the "currentOperation" state.
+              setFinalShiftInventory(inventoryOperationProducts);
+            });
+
+
+            // Get the "inventory" of the "route transactions".
+            /*
+              Route transactions and invnetory transactions have their own format, but
+              route transactions can be "formatted" to "inventory operation"
+            */
+            /*
+              The information of this section is used for two purposes:
+              - Summarize of all the day.
+              - Summarize by store of the day.
+            */
+
+            // Information of the day
+            getTotalInventoryOfAllTransactionByIdOperationType(
+              DAYS_OPERATIONS.product_reposition)
+              .then((response:IProductInventory[]) => {
+                setProductRepositionTransactions(response); });
+
+            getTotalInventoryOfAllTransactionByIdOperationType(
+              DAYS_OPERATIONS.product_reposition)
+              .then((response:IProductInventory[]) => {
+                setProductSoldTransactions(response); });
+
+            // Information by store
+            setNameOfStores(stores.map((currentStore) => {return currentStore.store_name;}));
+            getTotalInventoriesOfAllStoresByIdOperationType(
+              DAYS_OPERATIONS.product_reposition, stores)
+            .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
+              const totalProductRepositionOfStores:IProductInventory[][] = [];
+
+              for(let record of response) {
+                const { productInventory } = record;
+                totalProductRepositionOfStores.push(productInventory);
+              }
+              setProductRepositionByStore(totalProductRepositionOfStores);
+            })
+            .catch(() => {
+              setProductRepositionByStore([]);
+            });
+
+            getTotalInventoriesOfAllStoresByIdOperationType(DAYS_OPERATIONS.sales, stores)
+            .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
+              const totalProductSaleOfStores:IProductInventory[][] = [];
+
+              for(let record of response) {
+                const { productInventory } = record;
+                totalProductSaleOfStores.push(productInventory);
+              }
+              setProductSoldByStore(totalProductSaleOfStores);
+            })
+            .catch(() => {
+              setProductSoldByStore([]);
+            });
+          } else {
+            // Setting interface of the inventory visualization
+            setInventoryWithdrawal(false);
+            setInventoryOutflow(false);
+            setFinalOperation(false);
+            setIssueInventory(false);
 
             // This information is retrieved with the "currentOperation" state.
             setFinalShiftInventory(inventoryOperationProducts);
-          });
-
-
-          // Get the "inventory" of the "route transactions".
-          /*
-            Route transactions and invnetory transactions have their own format, but
-            route transactions can be "formatted" to "inventory operation"
-          */
-          /*
-            The information of this section is used for two purposes:
-            - Summarize of all the day.
-            - Summarize by store of the day.
-          */
-
-          // Information of the day
-          getTotalInventoryOfAllTransactionByIdOperationType(
-            DAYS_OPERATIONS.product_reposition)
-            .then((response:IProductInventory[]) => {
-              setProductRepositionTransactions(response); });
-
-          getTotalInventoryOfAllTransactionByIdOperationType(
-            DAYS_OPERATIONS.product_reposition)
-            .then((response:IProductInventory[]) => {
-              setProductSoldTransactions(response); });
-
-          // Information by store
-          setNameOfStores(stores.map((currentStore) => {return currentStore.store_name;}));
-          getTotalInventoriesOfAllStoresByIdOperationType(
-            DAYS_OPERATIONS.product_reposition, stores)
-          .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
-            const totalProductRepositionOfStores:IProductInventory[][] = [];
-
-            for(let record of response) {
-              const { productInventory } = record;
-              totalProductRepositionOfStores.push(productInventory);
-            }
-            setProductRepositionByStore(totalProductRepositionOfStores);
-          })
-          .catch(() => {
-            setProductRepositionByStore([]);
-          });
-
-          getTotalInventoriesOfAllStoresByIdOperationType(DAYS_OPERATIONS.sales, stores)
-          .then((response: (IStore & IStoreStatusDay & { productInventory: IProductInventory[] })[]) => {
-            const totalProductSaleOfStores:IProductInventory[][] = [];
-
-            for(let record of response) {
-              const { productInventory } = record;
-              totalProductSaleOfStores.push(productInventory);
-            }
-            setProductSoldByStore(totalProductSaleOfStores);
-          })
-          .catch(() => {
-            setProductSoldByStore([]);
-          });
+          }
 
         } else {
           /* Other inventory operation */
@@ -1315,7 +1329,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             issueInventory                  = {issueInventory}
             isInventoryOperationModifiable  = {isInventoryOperationModifiable}
             />
-          { currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory &&
+          { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory
+            && isActiveOperation === true) &&
             <View style={tw`flex basis-auto w-full mt-3`}>
               <Text style={tw`w-full text-center text-black text-2xl`}>
                 Producto vendido por tienda
