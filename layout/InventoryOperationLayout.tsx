@@ -205,7 +205,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     // Dertermining if the current process is an inventory visualization or and inventory operation
     if (currentOperation.id_item !== '') { // It is a visualization of inventory operation.
       console.log("visualization")
-      let currentProductInventory:IProductInventory[] = [];
 
       // Variables used for final shift inventory
       const startShiftInventoryProduct:IProductInventory[][] = [];
@@ -280,8 +279,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               isCurrentInventoryOperationModifiable = true;
             }
             console.log("isOtherOperationOfTheSameTypeAbove: ", isOtherOperationOfTheSameTypeAbove)
-          }
-          else {
+          } else {
             // Verifying the inventory is the last operation (excluding product devolution inventory)
             let isNextOperationCurrentOne:boolean = false;
             let isAnotherInventoryOperationAbove:boolean = false;
@@ -412,7 +410,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
             setRestockInventories(restockInventoryProduct);
 
             // This information is retrieved with the "currentOperation" state.
-            setFinalShiftInventory(currentProductInventory);
+            setFinalShiftInventory(inventoryOperationProducts);
           });
 
 
