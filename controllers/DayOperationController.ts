@@ -42,7 +42,7 @@ export function createDayOperationConcept(
   try {
     // Creating a day operation (day operation resulted from the ivnentory operation).
     dayOperation.id_day_operation = generateUUIDv4();
-    dayOperation.id_item = idItem === '' ? generateUUIDv4() : idItem;
+    dayOperation.id_item = idItem;
     dayOperation.id_type_operation = idTypeOperation;
     dayOperation.operation_order = operationOrder;
     dayOperation.current_operation = currentOperation;

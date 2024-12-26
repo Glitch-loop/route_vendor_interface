@@ -4,21 +4,9 @@ import { View, ScrollView, Text, BackHandler, Pressable } from 'react-native';
 import 'react-native-get-random-values'; // Necessary for uuid
 import tw from 'twrnc';
 
-// Queries
-// Embedded database
-import {
-  getInventoryOperation,
-  getInventoryOperationDescription,
-  getProducts,
-  getAllInventoryOperations,
-  getRouteTransactionByStore,
-  getRouteTransactionOperations,
-  getRouteTransactionOperationDescriptions,
-} from '../queries/SQLite/sqlLiteQueries';
-
 // Redux context
 import { useSelector, useDispatch } from 'react-redux';
-import store, { RootState, AppDispatch } from '../redux/store';
+import { RootState, AppDispatch } from '../redux/store';
 import { setDayGeneralInformation } from '../redux/slices/routeDaySlice';
 import { addProductsInventory, setProductInventory, updateProductsInventory } from '../redux/slices/productsInventorySlice';
 import { setStores } from '../redux/slices/storesSlice';
@@ -212,8 +200,11 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     })
     .catch(() => { setInventory([]); });
 
+
+    console.log("currentOperation: ", currentOperation)
     // Dertermining if the current process is an inventory visualization or and inventory operation
-    if (currentOperation.id_item) { // It is an inventory operation visualization.
+    if (currentOperation.id_item !== '') { // It is a visualization of inventory operation.
+      console.log("visualization")
       let currentProductInventory:IProductInventory[] = [];
 
       // Variables used for final shift inventory
@@ -491,6 +482,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       });
 
     } else { // It is a new inventory operation
+      console.log("operation")
       /*
         It is a product inventory operation.
 
@@ -989,7 +981,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               // Executing a synchronization process to register the start shift inventory
               // Note: In case of failure, the background process will eventually synchronize the records.
               syncingRecordsWithCentralDatabase();
-            } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) { // It is an product devolution
+            } else if (
+              currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
+            ) { // It is an product devolution
               Toast.show({
                 type: 'success',
                 text1: 'Se ha registrado la devolución de producto exitosamente.',
@@ -1071,7 +1065,10 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
               inventory,
               currentOperation.id_type_operation
             );
-          const inventoryOperation:IInventoryOperation = getDataFromApiResponse(resultCreateInventory);
+
+          const inventoryOperation:IInventoryOperation = getDataFromApiResponse(
+            resultCreateInventory
+          );
   
           const resultUpdateVendorInventory:IResponse<IProductInventory[]>
             = await updateVendorInventory(currentInventory, inventory, false);
