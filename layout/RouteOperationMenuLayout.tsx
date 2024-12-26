@@ -101,17 +101,39 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const onFinishInventory = ():void => {
     /*
       There are two operations to make at the end of the day:
-      1 - product devolution inventory
-      2 - final inventory (remaining product)
-    */
+      1 - product devolution inventory.
+      2 - final inventory (remaining product).
 
-    dispatch(setCurrentOperation({
-      id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
-      id_item: '', // It is still not an operation.
-      id_type_operation: DAYS_OPERATIONS.product_devolution_inventory,
-      operation_order: 0,
-      current_operation: 0,
-    }));
+      The complete process for finishing work day is first making the product devolution and then
+      making the final inventory.
+    */
+    let mustBeCompleteProcess:boolean = true;
+    // Determining if there is already an product devolution, if it is, then skip it
+    dayOperations.forEach((dayOperation) => {
+      if(dayOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
+        mustBeCompleteProcess = false;
+      }
+    });
+
+    console.log("mustBeCompleteProcess: ", mustBeCompleteProcess)
+
+    if (mustBeCompleteProcess) {
+      dispatch(setCurrentOperation({
+        id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
+        id_item: '', // It is still not an operation.
+        id_type_operation: DAYS_OPERATIONS.product_devolution_inventory,
+        operation_order: 0,
+        current_operation: 0,
+      }));
+    } else {
+      dispatch(setCurrentOperation({
+        id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
+        id_item: '', // It is still not an operation.
+        id_type_operation: DAYS_OPERATIONS.end_shift_inventory,
+        operation_order: 0,
+        current_operation: 0,
+      }));
+    }
     navigation.navigate('inventoryOperation');
   };
 
