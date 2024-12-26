@@ -89,6 +89,7 @@ import {
   desactivateInventoryOperation,
   cancelDesactivateInventoryOperation,
   getStatusOfInventoryOperation,
+  deterimenIfExistsMovement,
 
 } from '../controllers/InventoryController';
 
@@ -97,6 +98,7 @@ import {
   cleanWorkdayFromDatabase,
   createWorkDay,
   finishWorkDay,
+  getTotalAmountFromCashInventory,
 } from '../controllers/WorkDayController';
 
 import {
@@ -115,6 +117,7 @@ import {
 } from '../controllers/DayOperationController';
 
 import { cleanAllRouteTransactionsFromDatabase } from '../controllers/SaleController';
+import ActionDialog from '../components/ActionDialog';
 
 // Definitions
 const settingOperationDescriptions:any = {
@@ -184,6 +187,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   /* States related to the layout logic */
   const [isOperation, setIsOperation] = useState<boolean>(true);
   const [isActiveOperation, setIsActiveOperation] = useState<boolean>(true);
+  const [showDialog, setShowDialog] = useState<boolean>(false);
 
   /* States for route transaction operations */
   const [productSoldByStore, setProductSoldByStore] = useState<IProductInventory[][]>([]);
@@ -542,7 +546,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   }, [currentOperation, stores, navigation]);
 
   // Handlers
-  const handlerGoBack = () => {
+  const handlerGoBack = ():void => {
     /*
       According with the workflow of the system, the system identify if the user is making the first "inventory
       operation" of the day (referring to "Start shift inventory operation") when the current operation is undefined.
@@ -563,6 +567,40 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     navigation.navigate('routeOperationMenu');
   };
 
+  const handlerOnContinueInventoryOperationProcess = ():void => {
+    const { id_type_operation } = currentOperation;
+    let askToUserInventoryIsFine:boolean = false;
+
+
+
+    if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+    || id_type_operation === DAYS_OPERATIONS.end_shift_inventory
+    ) {
+      if (getTotalAmountFromCashInventory(cashInventory) === 0
+      || !deterimenIfExistsMovement(inventory)) {
+        askToUserInventoryIsFine = true;
+      } else {
+        askToUserInventoryIsFine = false;
+      }
+    } else {
+      if (!deterimenIfExistsMovement(inventory)) {
+        askToUserInventoryIsFine = true;
+      } else {
+        askToUserInventoryIsFine = false;
+      }
+    }
+
+    if(askToUserInventoryIsFine) {
+      setShowDialog(true);
+    } else {
+      handleVendorConfirmation();
+    }
+  };
+
+  const handlerOnCancelInventoryOperationProcess = ():void => {
+    setShowDialog(false);
+  };
+
   const handleVendorConfirmation = async ():Promise<void> => {
     // By default it is considered that the process is going to fail.
     let processResult:boolean = false;
@@ -573,6 +611,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }
 
       setIsInventoryAccepted(true);
+
+      setShowDialog(false);
       /*
         There are 3 types of inventory operations:
         - Start shift inventory: Unique in the day.
@@ -1207,6 +1247,25 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
   return (
     <ScrollView style={tw`w-full flex flex-col`}>
+      <ActionDialog
+        visible={showDialog}
+        onAcceptDialog={handleVendorConfirmation}
+        onDeclinedialog={handlerOnCancelInventoryOperationProcess}>
+          <View style={tw`w-11/12 flex flex-col`}>
+            <Text style={tw`text-center text-black text-xl`}>
+              ¿Estas seguró de continuar?
+            </Text>
+            <Text style={tw`my-2 text-center text-black text-xl font-bold`}>
+              {
+              currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+              || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory ?
+              'Puede ser que estes olvidando registrar algún producto o cantidad de dinero.' :
+              'Puede ser que estes olvidando registrar algún producto'
+              }
+            </Text>
+          </View>
+      </ActionDialog>
+
       <View style={tw`mt-3 w-full flex basis-1/6`}>
         <RouteHeader onGoBack={handlerGoBack}/>
       </View>
@@ -1322,7 +1381,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       }
       <View style={tw`flex basis-1/6 mt-3`}>
         <VendorConfirmation
-          onConfirm={isOperation ? handleVendorConfirmation : handlerReturnToRouteMenu}
+          onConfirm={isOperation ?
+            handlerOnContinueInventoryOperationProcess : handlerReturnToRouteMenu}
           onCancel={isOperation ? handlerOnVendorCancelation : handlerReturnToRouteMenu}
           message={'Escribiendo mi numero de telefono y marcando el cuadro de texto acepto tomar estos productos.'}
           confirmMessageButton={isOperation ? 'Aceptar' : 'Volver al menú'}

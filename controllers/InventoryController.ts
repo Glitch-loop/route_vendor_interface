@@ -99,6 +99,21 @@ export function getTitleOfInventoryOperation(dayOperation: IDayOperation):string
   return title;
 }
 
+export function deterimenIfExistsMovement(
+  movementsInventoryOperation:IProductInventory[]
+) {
+  let isAtLeastOneMovement:boolean = false;
+
+  movementsInventoryOperation.forEach((inventory:IProductInventory) => {
+    const { amount } = inventory;
+    if(amount > 0) {
+      isAtLeastOneMovement = true;
+    }
+  });
+
+  return isAtLeastOneMovement;
+}
+
 // Related to inventory operation
 function creatingInventoryOperation(dayGeneralInformation:IDayGeneralInformation, idTypeOperation:string):IInventoryOperation {
   const inventoryOperation:IInventoryOperation = {

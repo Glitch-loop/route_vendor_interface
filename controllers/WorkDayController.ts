@@ -28,6 +28,10 @@ import Toast from 'react-native-toast-message';
 import { createRecordForSyncingWithCentralDatabse, deleteRecordForSyncingWithCentralDatabase } from '../services/syncService';
 import { generateUUIDv4 } from '../utils/generalFunctions';
 
+export function getTotalAmountFromCashInventory(cashInventory:ICurrency[]):number {
+  return cashInventory.reduce((acc, currentCurrency) =>
+    { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
+}
 
 export function createWorkDayConcept(cashInventory:ICurrency[],
   routeDay:IRoute&IDayGeneralInformation&IDay&IRouteDay):IRoute&IDayGeneralInformation&IDay&IRouteDay {
@@ -55,8 +59,8 @@ export function createWorkDayConcept(cashInventory:ICurrency[],
   try {
     const updatedRouteDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = { ...routeDay };
 
-    let startPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
-      { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
+    let startPettyCash:number = getTotalAmountFromCashInventory(cashInventory);
+
 
     // General information about the route.
     updatedRouteDay.id_work_day = generateUUIDv4();
@@ -82,8 +86,7 @@ export function finishWorkDayConcept(cashInventory:ICurrency[],
   try {
     const updatedRouteDay:IRoute&IDayGeneralInformation&IDay&IRouteDay = { ...routeDay };
 
-    let endPettyCash:number = cashInventory.reduce((acc, currentCurrency) =>
-      { if (currentCurrency.amount === undefined) {return acc;} else {return acc + currentCurrency.amount * currentCurrency.value;}}, 0);
+    let endPettyCash:number = getTotalAmountFromCashInventory(cashInventory);
 
     // General information about the route.
     /* Since it is the end shift of the route, there are information that we already have from other operations */
