@@ -227,13 +227,17 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
       // Determining if the inventory operation is active
       getStatusOfInventoryOperation(currentOperation.id_item)
       .then((response:IResponse<IInventoryOperation[]>) => {
-        const inventoryOperation:IInventoryOperation = getDataFromApiResponse(
+        const inventoryOperation:IInventoryOperation[] = getDataFromApiResponse(
           response
-        )[0];
+        );
 
-        const { state } = inventoryOperation;
-        if(state === 1) {
-          setIsActiveOperation(true);
+        if (inventoryOperation.length > 0) {
+          const { state } = inventoryOperation[0];
+          if(state === 1) {
+            setIsActiveOperation(true);
+          } else {
+            setIsActiveOperation(false);
+          }
         } else {
           setIsActiveOperation(false);
         }
@@ -246,6 +250,82 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           responseInventoryOperationProducts,
           settingOperationDescriptions
         );
+
+        // Determining if there is possible to make modifications to the inventory operation.
+        let isCurrentInventoryOperationModifiable:boolean = false;
+
+        const index = dayOperations.findIndex((dayOperation) => {
+          return dayOperation.id_day_operation === currentOperation.id_day_operation;
+        });
+
+        if (index !== -1) {
+          if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory
+          ||  currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory
+          ) {
+            /* Per day, there is only 1 product devolution and 1 final inventory.
+              However, it might be another records of these types working as historic records.
+
+              These two type of records are always modifiables.
+            */
+            let isOtherOperationOfTheSameTypeAbove:boolean = false;
+            const { id_type_operation } = currentOperation;
+
+            for(let i = index + 1; i < dayOperations.length; i++) {
+              const dayOperation:IDayOperation = dayOperations[i];
+              // Verifyng there is not another product devolution operation above
+              if(dayOperation.id_type_operation === id_type_operation) {
+                isOtherOperationOfTheSameTypeAbove = true;
+                break;
+              }
+            }
+
+            if (isOtherOperationOfTheSameTypeAbove) {
+              isCurrentInventoryOperationModifiable = false;
+            } else {
+              isCurrentInventoryOperationModifiable = true;
+            }
+            console.log("isOtherOperationOfTheSameTypeAbove: ", isOtherOperationOfTheSameTypeAbove)
+          }
+          else {
+            // Verifying the inventory is the last operation (excluding product devolution inventory)
+            let isNextOperationCurrentOne:boolean = false;
+            let isAnotherInventoryOperationAbove:boolean = false;
+            if (dayOperations[index + 1].current_operation === 1) {
+              isNextOperationCurrentOne = true;
+            } else {
+              isNextOperationCurrentOne = false;
+            }
+
+            // Checking if there is another inventory operation above.
+            for(let i = index + 1; i < dayOperations.length; i++) {
+              const dayOperation:IDayOperation = dayOperations[i];
+              if (dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
+                isAnotherInventoryOperationAbove = true;
+              } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+                isAnotherInventoryOperationAbove = true;
+              } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+                isAnotherInventoryOperationAbove = true;
+              } else {
+                /* Other operations that doesn't affetc */
+              }
+            }
+
+            if(isAnotherInventoryOperationAbove === false && isNextOperationCurrentOne === true) {
+              isCurrentInventoryOperationModifiable = true;
+            } else {
+              isCurrentInventoryOperationModifiable = false;
+            }
+          }
+        } else {
+          /* It means the record was not found in the array. */
+          isCurrentInventoryOperationModifiable = false;
+        }
+
+        if(isCurrentInventoryOperationModifiable === true) {
+          setIsInventoryOperationModifiable(true);
+        } else {
+          setIsInventoryOperationModifiable(false);
+        }
 
         /*
           Depending on the type of inventory operation selected by the vendor, the necessary
@@ -397,63 +477,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         } else {
           /* Other inventory operation */
         }
-
-        // Determining if there is possible to make modifications to the inventory operation.
-        let isCurrentInventoryOperationModifiable:boolean = false;
-
-        const index = dayOperations.findIndex((dayOperation) => {
-          return dayOperation.id_day_operation === currentOperation.id_day_operation;
-        });
-
-        if (index !== -1) {
-          if (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-            /* End shit inventory is modificable */
-            isCurrentInventoryOperationModifiable = true;
-          } else if (currentOperation.id_type_operation === DAYS_OPERATIONS.product_devolution_inventory) {
-            /* Per day, there is only one product devolution inventory, so
-            it is modificable */
-            isCurrentInventoryOperationModifiable = true;
-          }
-          else {
-            // Verifying it is the last inventory operation (excluding product devolution inventory)
-            let isNextOperationCurrentOne:boolean = false;
-            let isAnotherInventoryOperationAbove:boolean = false;
-            if (dayOperations[index + 1].current_operation === 1) {
-              isNextOperationCurrentOne = true;
-            } else {
-              isNextOperationCurrentOne = false;
-            }
-
-            // Checking if there is another inventory operation above.
-            for(let i = index + 1; i < dayOperations.length; i++) {
-              const dayOperation:IDayOperation = dayOperations[i];
-              if (dayOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
-                isAnotherInventoryOperationAbove = true;
-              } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
-                isAnotherInventoryOperationAbove = true;
-              } else if(dayOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
-                isAnotherInventoryOperationAbove = true;
-              } else {
-                /* Other operations that doesn't affetc */
-              }
-            }
-
-            if(isAnotherInventoryOperationAbove === false && isNextOperationCurrentOne === true) {
-              isCurrentInventoryOperationModifiable = true;
-            } else {
-              isCurrentInventoryOperationModifiable = false;
-            }
-          }
-        } else {
-          /* It means the record was not found in the array. */
-          isCurrentInventoryOperationModifiable = false;
-        }
-
-        if(isCurrentInventoryOperationModifiable === true) {
-          setIsInventoryOperationModifiable(true);
-        } else {
-          setIsInventoryOperationModifiable(false);
-        }
       })
       .catch(() => {
         Toast.show({
@@ -576,6 +599,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         let resultDayOperation:IResponse<IDayOperation>;
         let newDayOperation:IDayOperation;
         let currentInventoryToModify:IProductInventory[] = productsInventory;
+        let resultUpdateVendorInventoryProcess:boolean = false;
+        let newVendorInvnetory:IProductInventory[] = [];
 
         // Retriving the movements of the inventory operation to modify.
         if (currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory) {
@@ -589,7 +614,6 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         }
 
         // Inventory operations.
-        console.log("Creating inventory operation: ", routeDay)
         const resultCreateInventoryOperation:IResponse<IInventoryOperation>
         = await createInventoryOperation(
           routeDay,
@@ -598,93 +622,82 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         );
         const inventoryOperation = getDataFromApiResponse(resultCreateInventoryOperation);
 
-        console.log("Desactivatin inventory operation")
         const resultDesactivateInventoryOperation:IResponse<IInventoryOperation> 
         = await desactivateInventoryOperation(currentOperation.id_item);
-
-        /* Updating vendor inventory */
-        console.log("Update vendor's inventory operation")
-        const resultSubstractVendorPastInventoryOperation:IResponse<IProductInventory[]>
-        = await updateVendorInventory(
-          currentInventoryToModify,
-          movementOfInventoryOperationToModify,
-          true
-        );
-
-        const substractedInventory:IProductInventory[] =  getDataFromApiResponse(
-          resultSubstractVendorPastInventoryOperation
-        );
-
-        const resultAddVendorInventoryOperation:IResponse<IProductInventory[]>
-        = await updateVendorInventory(
-          substractedInventory,
-          inventory,
-          false
-        );
-
-        const newVendorInvnetory:IProductInventory[] = getDataFromApiResponse(
-          resultAddVendorInventoryOperation
-        );
-
-        console.log("Current inventory++++++++++++++++++++++++++++++")
-        currentInventoryToModify.forEach((item) => {
-          console.log("product: ", item.id_product, " - amount: ", item.amount,  " - order: ", item.order_to_show)
-        })
-        console.log("Inventory of the operation to modify+++++++++++++++++++++")
-        movementOfInventoryOperationToModify.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
-        })
-
-        console.log("SUBSTRACTED INVENTORY+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*")
-        substractedInventory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
-        })
-
-        console.log("Inventory of the operation+++++++++++++++++++++++++")
-        inventory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
-        })
-
-        console.log("Final inventory+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*")
-        newVendorInvnetory.forEach((item) => {
-          console.log("product: ", item.product_name, " - amount: ", item.amount,  " - order: ", item.order_to_show)
-        })
-
-        // newVendorInventory
 
         /*Adding day operation */
         /*
           Depending on the type of operation is how the new day operation will be included in the
           day operation list.
         */
-        console.log("Adding inventory operation day")
-        if(currentOperation.id_day_operation === DAYS_OPERATIONS.end_shift_inventory) {
+        if(currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+          console.log("appending at the end");
           resultDayOperation = await appendDayOperation(inventoryOperation);
           newDayOperation = getDataFromApiResponse(resultDayOperation);
         } else {
+          console.log("annother one");
           resultDayOperation = await createDayOperationBeforeTheCurrentOperation(
             inventoryOperation
           );
           newDayOperation = getDataFromApiResponse(resultDayOperation);
         }
 
-        console.log(apiResponseStatus(resultCreateInventoryOperation, 201))
-        console.log(apiResponseStatus(resultDesactivateInventoryOperation, 200))
-        console.log(apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200))
-        console.log(apiResponseStatus(resultAddVendorInventoryOperation, 200))
-        console.log(apiResponseStatus(resultDayOperation, 201))
+        /* Updating vendor's inventory */
+        /*
+          Only when user updates a re-stock inventory is when it is necessary to update
+          the vendor's inventory.
+        */
+        if(currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+        || currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+         const resultSubstractVendorPastInventoryOperation:IResponse<IProductInventory[]>
+         = await updateVendorInventory(
+           currentInventoryToModify,
+           movementOfInventoryOperationToModify,
+           true
+         );
+
+         const substractedInventory:IProductInventory[] =  getDataFromApiResponse(
+           resultSubstractVendorPastInventoryOperation
+         );
+
+         const resultAddVendorInventoryOperation:IResponse<IProductInventory[]>
+         = await updateVendorInventory(
+           substractedInventory,
+           inventory,
+           false
+         );
+
+         newVendorInvnetory = getDataFromApiResponse(resultAddVendorInventoryOperation);
+
+         if (apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200)
+          && apiResponseStatus(resultAddVendorInventoryOperation, 200)) {
+            resultUpdateVendorInventoryProcess = true;
+          } else {
+            resultUpdateVendorInventoryProcess = false;
+          }
+        } else {
+          // It is not necessary to update vendor's inventory
+          resultUpdateVendorInventoryProcess = true;
+        }
 
         if (apiResponseStatus(resultCreateInventoryOperation, 201)
           && apiResponseStatus(resultDesactivateInventoryOperation, 200)
-          && apiResponseStatus(resultSubstractVendorPastInventoryOperation, 200)
-          && apiResponseStatus(resultAddVendorInventoryOperation, 200)
+          && resultUpdateVendorInventoryProcess
           && apiResponseStatus(resultDayOperation, 201)) {
+
           /* The process has been finished successfully */
           /* Updating redux states */
-          dispatch(updateProductsInventory(newVendorInvnetory));
+          if(currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
+          || currentOperation.id_type_operation === DAYS_OPERATIONS.restock_inventory) {
+              dispatch(updateProductsInventory(newVendorInvnetory));
+            }
 
-          // Store the information (new operation) in redux context.
-          dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
+            // Store the information (new operation) in redux context.
+            if(currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) {
+              dispatch(setDayOperation(newDayOperation));
+            } else {
+              dispatch(setDayOperationBeforeCurrentOperation(newDayOperation));
+            }
 
           // Executing a synchronization process to register the start shift inventory
           // Note: In case of failure, the background process will eventually synchronize the records.
@@ -1200,7 +1213,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
 
       {/* Product inventory section. */}
       <View style={tw`w-full flex flex-row items-center justify-center`}>
-        <View style={tw`w-full flex flex-col items-center justify-center`}>
+        <View style={tw`flex flex-col items-center justify-center`}>
           <Text style={tw`text-center text-black text-2xl`}>
             {getTitleOfInventoryOperation(currentOperation)}
           </Text>
