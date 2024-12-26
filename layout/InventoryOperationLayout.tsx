@@ -1355,14 +1355,18 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
         </View>
       }
       { ((currentOperation.id_type_operation === DAYS_OPERATIONS.start_shift_inventory
-      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) && !isOperation) &&
+      || currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory) 
+      && !isOperation
+      && isActiveOperation) &&
         <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
           <Text style={tw`text-black text-lg`}>
             Dinero llevado al inicio de la ruta: ${routeDay.start_petty_cash}
           </Text>
         </View>
       }
-      { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory && !isOperation) &&
+      { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory 
+      && !isOperation
+    && isActiveOperation) &&
         <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>
           <Text style={tw`text-black text-lg`}>
             Dinero regresado al final de la ruta: ${routeDay.final_petty_cash}
