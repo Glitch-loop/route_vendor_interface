@@ -566,8 +566,9 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     if (id_type_operation === DAYS_OPERATIONS.start_shift_inventory
     || id_type_operation === DAYS_OPERATIONS.end_shift_inventory
     ) {
-      if (getTotalAmountFromCashInventory(cashInventory) === 0
-      || !deterimenIfExistsMovement(inventory)) {
+      if ((getTotalAmountFromCashInventory(cashInventory) === 0 && !isOperationToUpdate)
+      || !deterimenIfExistsMovement(inventory)
+      ) {
         askToUserInventoryIsFine = true;
       } else {
         askToUserInventoryIsFine = false;
