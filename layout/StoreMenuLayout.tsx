@@ -21,7 +21,7 @@ import MenuHeader from '../components/generalComponents/MenuHeader';
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { clearCurrentOperation } from '../redux/slices/currentOperationSlice';
+import { cleanCurrentOperation } from '../redux/slices/currentOperationSlice';
 
 // Embedded database
 import {
@@ -103,7 +103,7 @@ const StoreMenuLayout = ({ navigation }:{ navigation:any}) => {
 
   // handlers
   const handlerGoBackToMainOperationMenu = () => {
-    dispatch(clearCurrentOperation());
+    dispatch(cleanCurrentOperation());
     navigation.navigate('routeOperationMenu');
   };
 

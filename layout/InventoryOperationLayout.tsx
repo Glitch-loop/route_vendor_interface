@@ -547,7 +547,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     );
 
     return () => backHandler.remove();
-  }, [currentOperation, stores, navigation]);
+  }, [currentOperation, dayOperations, stores, navigation]);
 
   // Handlers
   const handlerGoBack = ():void => {
@@ -1364,7 +1364,7 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
           </Text>
         </View>
       }
-      { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory 
+      { (currentOperation.id_type_operation === DAYS_OPERATIONS.end_shift_inventory
       && !isOperation
     && isActiveOperation) &&
         <View style={tw`w-11/12 ml-3 flex flex-col basis-auto mt-3`}>

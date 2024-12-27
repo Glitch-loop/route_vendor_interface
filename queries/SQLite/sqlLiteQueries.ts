@@ -103,8 +103,38 @@ export async function dropEmbeddedDatabase():Promise<IResponse<null>> {
     });
     return createApiResponse(200, null, null, 'Embedded database dropped successfully.');
   } catch(error) {
-    console.log(error)
     return createApiResponse(500, null, null, 'Failed dropping database.');
+  }
+}
+
+export async function cleanEmbeddedDatbase():Promise<IResponse<null>> {
+  try {
+    const tablesToDelete:string[] = [
+      EMBEDDED_TABLES.ROUTE_DAY,
+      EMBEDDED_TABLES.STORES,
+      EMBEDDED_TABLES.PRODUCTS,
+      EMBEDDED_TABLES.DAY_OPERATIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATIONS,
+      EMBEDDED_TABLES.ROUTE_TRANSACTION_OPERATION_DESCRIPTIONS,
+      EMBEDDED_TABLES.INVENTORY_OPERATIONS,
+      EMBEDDED_TABLES.PRODUCT_OPERATION_DESCRIPTIONS,
+      EMBEDDED_TABLES.SYNC_QUEUE,
+      EMBEDDED_TABLES.SYNC_HISTORIC,
+    ];
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      const dropTablePromises:any[] = tablesToDelete
+      .map((tableName:string) => {
+        return tx.executeSql(`DROP TABLE IF EXISTS ${tableName};`);
+      });
+
+      Promise.all(dropTablePromises);
+    });
+    return createApiResponse(200, null, null, 'Embedded database dropped successfully.');
+  } catch(error) {
+    return createApiResponse(500, null, null, 'Failed cleaning database.');
   }
 }
 

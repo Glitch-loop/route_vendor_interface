@@ -78,6 +78,28 @@ const routeDaySlice = createSlice({
     setRouteDay: (state, action: PayloadAction<ICompleteRouteDay>) => {
       state.id_route_day = action.payload.id_route_day;
     },
+    cleanAllGeneralInformation: (state, action: PayloadAction<void>) => {
+      return {
+        /*Fields related to the general information.*/
+        id_work_day: '',
+        start_date: '',
+        finish_date: '',
+        start_petty_cash: 0,
+        final_petty_cash: 0,
+        /*Fields related to IRoute interface*/
+        id_route: '',
+        route_name: '',
+        description: '',
+        route_status: '',
+        id_vendor: '',
+        /*Fields related to IDay interface*/
+        id_day: '',
+        day_name: '',
+        order_to_show: 0,
+        /*Fields relate to IRouteDay*/
+        id_route_day: '',
+      };
+    },
   },
 });
 
@@ -90,6 +112,7 @@ export const {
   setStartDay,
   setEndDay,
   setRouteDay,
+  cleanAllGeneralInformation,
  } = routeDaySlice.actions;
 
 export default routeDaySlice.reducer;

@@ -15,7 +15,6 @@ const productsInventorySlice = createSlice({
   initialState,
   reducers: {
     setProductInventory: (state, action: PayloadAction<IProductInventory[]>) => {
-      console.log("hello world setr")
       return action.payload.map(productInventory => ({
           id_product: productInventory.id_product,
           product_name: productInventory.product_name,
@@ -58,9 +57,19 @@ const productsInventorySlice = createSlice({
         }
       }
     },
+    cleanProductsInventory: (state, action: PayloadAction<void>) => {
+      return [
+
+      ];
+    },
   },
 });
 
-export const { setProductInventory, addProductsInventory, updateProductsInventory } = productsInventorySlice.actions;
+export const {
+  setProductInventory,
+  addProductsInventory,
+  updateProductsInventory,
+  cleanProductsInventory,
+} = productsInventorySlice.actions;
 
 export default productsInventorySlice.reducer;

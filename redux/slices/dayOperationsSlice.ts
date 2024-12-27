@@ -27,14 +27,15 @@ const dayOperationsSlice = createSlice({
         This functions was designed to store the 'corner shops' that will be visited
         the current day.
       */
-      action.payload.forEach(dayOperation => {
-        state.push({
+
+      return action.payload.map(dayOperation => {
+        return {
           id_day_operation: dayOperation.id_day_operation,
           id_item: dayOperation.id_item,
           id_type_operation: dayOperation.id_type_operation,
           operation_order: dayOperation.operation_order,
           current_operation: dayOperation.current_operation,
-        });
+        };
       });
     },
     setDayOperation: (state, action: PayloadAction<IDayOperation>) => {
@@ -174,6 +175,9 @@ const dayOperationsSlice = createSlice({
         console.error(error);
       }
     },
+    cleanCurrentOperationsList: (state, action: PayloadAction<void>) => {
+      return [];
+    },
   },
 });
 
@@ -183,6 +187,7 @@ export const {
   setNextOperation,
   setCurrentOperation,
   setDayOperationBeforeCurrentOperation,
+  cleanCurrentOperationsList,
 } = dayOperationsSlice.actions;
 
 export default dayOperationsSlice.reducer;

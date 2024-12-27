@@ -6,12 +6,25 @@ import tw from 'twrnc';
 
 // Databases
 // Embedded
-import { createEmbeddedDatabase, dropEmbeddedDatabase } from '../queries/SQLite/sqlLiteQueries';
+import {
+  cleanEmbeddedDatbase,
+  createEmbeddedDatabase,
+} from '../queries/SQLite/sqlLiteQueries';
 
 // Redux context
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
+import {
+  cleanCurrentOperation,
+  setCurrentOperation,
+} from '../redux/slices/currentOperationSlice';
+import { cleanCurrentOperationsList } from '../redux/slices/dayOperationsSlice';
+import { cleanProductsInventory } from '../redux/slices/productsInventorySlice';
+import { cleanAllGeneralInformation } from '../redux/slices/routeDaySlice';
+import { cleanStores } from '../redux/slices/storesSlice';
+
+// Services
+import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 
 // Components
 import RouteCard from '../components/RouteCard';
@@ -19,14 +32,14 @@ import MenuHeader from '../components/generalComponents/MenuHeader';
 import TypeOperationItem from '../components/TypeOperationItem';
 
 // Interfaces and enums
-import { IDayOperation } from '../interfaces/interfaces';
+import { IDayOperation, IResponse } from '../interfaces/interfaces';
 
 // Utils
+import { apiResponseStatus } from '../utils/apiResponse';
 import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
-import { syncingRecordsWithCentralDatabase } from '../services/syncService';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -150,6 +163,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
       /* The user only will be capable to finish the day if all the records were correctly
       synchronized with the database. */
+      console.log("resultSyncingProcess: ", resultSyncingProcess)
       if (resultSyncingProcess) {
         Toast.show({
           type: 'success',
@@ -157,20 +171,38 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
           text2: 'Se ha sincronizado toda la información correctamente con la base de datos.'});
 
         // Dropping database for freeing space.
-        await dropEmbeddedDatabase();
+        const resultCleanDatabase:IResponse<null> = await cleanEmbeddedDatbase();
 
         // Creating database with new information.
-        await createEmbeddedDatabase();
+        const resultCreateDatabase:IResponse<null> = await createEmbeddedDatabase();
 
-        // Resetting the navigation stack (avoiding user go back to the route operation).
-        navigation.reset({
-          index: 0, // Set the index of the new state (0 means first screen)
-          routes: [{ name: 'routeSelection' }], // Array of route objects, with the route to navigate to
-        });
+        if(apiResponseStatus(resultCleanDatabase, 200)
+        && apiResponseStatus(resultCreateDatabase, 201)) {
+          console.log("database reseted")
+          // Clean states
+          console.log("reseting: 1")
+          cleanCurrentOperation();
+          console.log("reseting: 2")
+          cleanCurrentOperationsList();
+          console.log("reseting: 3")
+          cleanProductsInventory();
+          console.log("reseting: 4")
+          cleanAllGeneralInformation();
+          console.log("reseting: 5")
+          cleanStores();
 
-        // Redirecting to main menu.
-        navigation.navigate('routeSelection');
+          console.log("Redirecting")
+          // Resetting the navigation stack (avoiding user go back to the route operation).
+          navigation.reset({
+            index: 0, // Set the index of the new state (0 means first screen)
+            routes: [{ name: 'routeSelection' }], // Array of route objects, with the route to navigate to
+          });
 
+          // Redirecting to main menu.
+          navigation.navigate('routeSelection');
+        } else {
+          console.log("BAD")
+        }
       } else {
         Toast.show({
           type: 'error',

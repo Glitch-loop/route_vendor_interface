@@ -9,13 +9,11 @@ const initialState: IDayOperation = {
   current_operation: 0,
 };
 
-
 const currentOperationSlice = createSlice({
   name: 'currentOperation',
   initialState,
   reducers: {
     setCurrentOperation: (state, action: PayloadAction<IDayOperation>) => {
-      console.log("Set current operation: ", action)
       return {
         id_day_operation:   action.payload.id_day_operation,
         id_item:            action.payload.id_item,
@@ -24,19 +22,19 @@ const currentOperationSlice = createSlice({
         current_operation:  action.payload.current_operation,
       };
     },
-    clearCurrentOperation: (state) => {
+    cleanCurrentOperation: (state, action: PayloadAction<void>) => {
       return {
-        id_day_operation :  '',
-        id_item          :  '',
+        id_day_operation:   '',
+        id_item:            '',
         id_type_operation:  '',
-        operation_order  :  0,
+        operation_order:    0,
         current_operation:  0,
       };
     },
   },
 });
 
-export const { setCurrentOperation, clearCurrentOperation} = currentOperationSlice.actions;
+export const { setCurrentOperation, cleanCurrentOperation} = currentOperationSlice.actions;
 
 export default currentOperationSlice.reducer;
 

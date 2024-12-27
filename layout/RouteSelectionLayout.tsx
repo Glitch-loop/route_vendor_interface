@@ -22,7 +22,7 @@ import {
 
 // Redux States and reducers
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../redux/store';
+import store, { AppDispatch, RootState } from '../redux/store';
 import { setUser } from '../redux/slices/userSlice';
 import { setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 import {
@@ -146,16 +146,47 @@ async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]>
   }
 }
 
+// Determining if there is an initialized day.
+const settingResponseDayOperations:any = {
+  showErrorMessage: true,
+  toastTitleError: 'Error durante la consulta de las operaciones',
+  toastMessageError: 'Al momento de intentar consultar las operaciones del dia de hoy ha habido un error, por favor intente nuevamente',
+};
+
+const settingResponseWorkDay:any = {
+  showErrorMessage: true,
+  toastTitleError: 'Error durante la consulta del dia de trabajo',
+  toastMessageError: 'Al momento de intentar consultar la información general del dia ha habido un error, por favor intente nuevamente',
+};
+
+const settingResponseProducts:any = {
+  showErrorMessage: true,
+  toastTitleError: 'Error durante la consulta de los productos',
+  toastMessageError: 'Al momento de intentar consultar los productos para hacer el inventario ha habido un error, por favor intente nuevamente',
+};
+
+const settingResponseStores:any = {
+  showErrorMessage: true,
+  toastTitleError: 'Error durante la consulta de las tiendas',
+  toastMessageError: 'Al momento de intentar consultar las tiendas para cargar el dia ha habido un error, por favor intente nuevamente',
+};
+
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
   const dispatch: AppDispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
-
+  // const currentOp = useSelector((state: RootState) => state.currentOperation);
+  // const dayOp = useSelector((state: RootState) => state.dayOperations);
+  // const productsInventory = useSelector((state: RootState) => state.productsInventory);
+  // const routeDay = useSelector((state: RootState) => state.routeDay);
+  // const stores = useSelector((state: RootState) => state.stores);
+  
   // Use states definition
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [pendingToAcceptRoute, setPendingToAcceptRoute] = useState<IRoute|undefined>(undefined);
-  const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay] = useState<ICompleteRouteDay|undefined>(undefined);
+  const [pendingToAcceptRouteDay, setPendingToAcceptRouteDay]
+    = useState<ICompleteRouteDay|undefined>(undefined);
 
 
   // Setting the john doe user for testing
@@ -188,48 +219,27 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
       In addition, each route will have assigend a vendor who is in charge of maintin the route.
     */
-
-
-
-    // Determining if there is an initialized day.
-    const settingResponseDayOperations:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de las operaciones',
-      toastMessageError: 'Al momento de intentar consultar las operaciones del dia de hoy ha habido un error, por favor intente nuevamente',
-    };
-
-    const settingResponseWorkDay:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta del dia de trabajo',
-      toastMessageError: 'Al momento de intentar consultar la información general del dia ha habido un error, por favor intente nuevamente',
-    };
-
-    const settingResponseProducts:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de los productos',
-      toastMessageError: 'Al momento de intentar consultar los productos para hacer el inventario ha habido un error, por favor intente nuevamente',
-    };
-
-    const settingResponseStores:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de las tiendas',
-      toastMessageError: 'Al momento de intentar consultar las tiendas para cargar el dia ha habido un error, por favor intente nuevamente',
-    };
-
     getDayOperations()
     .then(async (dayOperationsResponse:IResponse<IDayOperation[]>) => {
 
-      let dayOperations:IDayOperation[] = apiResponseProcess(dayOperationsResponse,
-        settingResponseDayOperations);
+      let dayOperations:IDayOperation[] = apiResponseProcess(
+        dayOperationsResponse,
+        settingResponseDayOperations
+      );
 
       if (dayOperations.length > 0) {
+        // console.log(currentOp)
+        // console.log(dayOp)
+        // console.log(productsInventory)
+        // console.log(routeDay)
+        // console.log(stores)
         /*
           It means it is a day operation, so it is necessary to get retrieve the information and
           set it in the context.
         */
 
         // Getting general information of the day.
-        console.log("Getting the information of the day")
+        console.log("GETTING OPERATION OF THE DAY")
 
         Toast.show({type: 'info',
           text1:'Consultando información',
@@ -238,22 +248,23 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
         dispatch(setAllGeneralInformation(
           apiResponseProcess(await getWorkDay(), settingResponseWorkDay)));
 
-        // Setting the operations of the day
+        // // Setting the operations of the day
         console.log("Getting the day operations")
         dispatch(setArrayDayOperations(dayOperations));
 
-        // Setting inventory of the day
-        console.log("Getting products")
+        // // Setting inventory of the day
+        // console.log("Getting products")
         dispatch(setProductInventory(
           apiResponseProcess(await getProducts(), settingResponseProducts)));
 
-        // Setting the information of the stores to visit
+        // // Setting the information of the stores to visit
         console.log("Getting stores")
         dispatch(setStores(apiResponseProcess(await getStores(), settingResponseStores)));
 
         console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
+        console.log("NEW DAY")
         /* It is a new 'work' day. */
         // Getting all the routes assigned to a vendor
         Toast.show({type: 'info',

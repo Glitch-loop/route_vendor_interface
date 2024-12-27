@@ -80,10 +80,15 @@ const storesSlice = createSlice({
         }
       });
     },
+    cleanStores: (state, action: PayloadAction<void>) => {
+      return [
+
+      ];
+    },
   },
 });
 
 
-export const { setStores, updateStores } = storesSlice.actions;
+export const { setStores, updateStores, cleanStores } = storesSlice.actions;
 
 export default storesSlice.reducer;
