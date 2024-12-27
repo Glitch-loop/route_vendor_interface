@@ -266,10 +266,10 @@ export class SupabaseRepository implements IRepository {
         date: date,
         audit: audit,
         id_inventory_operation_type: id_inventory_operation_type,
-        id_word_day: id_work_day,
+        id_work_day: id_work_day,
         state: state,
       });
-
+      console.log("id_work_day: ", id_work_day)
       console.log("Insert inventory operation (data): ", data)
       if (error) {
         console.log("Insert inventory operation (error): ", error)
@@ -310,6 +310,7 @@ export class SupabaseRepository implements IRepository {
         state,
       } = inventoryOperation;
 
+      console.log("id_work_day: ", id_work_day)
       const { data, error } = await supabase.from(TABLES.INVENTORY_OPERATIONS)
       .update({
         sign_confirmation: sign_confirmation,
@@ -343,7 +344,7 @@ export class SupabaseRepository implements IRepository {
       return createApiResponse<null>(
         500,
         null,
-        null,'Failed inserting the inventory operation.'
+        null,'Failed updating the inventory operation.'
       );
     }
   }
