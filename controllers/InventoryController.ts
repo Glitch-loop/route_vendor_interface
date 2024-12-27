@@ -22,7 +22,6 @@ import {
   getAllRouteTransactionsOperations,
   getAllRouteTransactionsOperationDescriptions,
   updateInventoryOperation,
-  deleteSyncHistoricRecordById,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Interfaces
@@ -43,7 +42,15 @@ import {
   IStore,
   IStoreStatusDay,
   IRouteTransactionOperationDescription,
- } from '../interfaces/interfaces';
+} from '../interfaces/interfaces';
+
+// Services
+import {
+  createRecordForSyncingWithCentralDatabse,
+  createRecordsForSyncingWithCentralDatabse,
+  deleteRecordForSyncingWithCentralDatabase,
+  deleteRecordsForSyncingWithCentralDatabase,
+} from '../services/syncService';
 
 // Utils
 import DAYS_OPERATIONS from '../lib/day_operations';
@@ -57,12 +64,9 @@ import {
 import Toast from 'react-native-toast-message';
 
 import {
-  createRecordForSyncingWithCentralDatabse,
-  createRecordsForSyncingWithCentralDatabse,
-  deleteRecordForSyncingWithCentralDatabase,
-  deleteRecordsForSyncingWithCentralDatabase,
-} from '../services/syncService';
-import { addingInformationParticularFieldOfObject, convertingArrayInDictionary, generateUUIDv4 } from '../utils/generalFunctions';
+  addingInformationParticularFieldOfObject,
+  generateUUIDv4,
+} from '../utils/generalFunctions';
 
 // Initializing database connection
 let repository = RepositoryFactory.createRepository('supabase');
@@ -571,8 +575,7 @@ export async function getTotalInventoryOfAllTransactionByIdOperationType(
   }, {});
 
   // Find to which store belongs a 'route transaction operation description'.
-    // Taking account the type of operation.
-  console.log("Obtainig data")
+  // Taking account the type of operation.
   for(let transactionDescription of arrRouteTransactionOperationDescriptions) {
     const {
       id_route_transaction_operation,

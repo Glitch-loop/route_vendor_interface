@@ -48,7 +48,7 @@ export function getColorContextOfStore(store:IStore&IStoreStatusDay, currentOper
     } else if (store.route_day_state === enumStoreStates.SERVED) {
       style = 'bg-amber-200/75'; // Client of the route that has been visited.
     } else {
-      style = 'bg-amber-300'; // Client of the current route that is pending to visit. 
+      style = 'bg-amber-300'; // Client of the current route that is pending to visit.
     }
   }
 

@@ -1,7 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IStore, IStoreStatusDay } from '../../interfaces/interfaces';
-import { enumStoreStates } from '../../interfaces/enumStoreStates';
-import { determineRouteDayState } from '../../utils/routeDayStoreStatesAutomata';
 
 /*
   The purpose of this context is to store the information of all the routes that are going to be
@@ -16,13 +14,13 @@ const storesSlice = createSlice({
   reducers: {
     setStores: (state, action: PayloadAction<(IStore&IStoreStatusDay)[]>) => {
       // This function is used for initialize a route.
-      action.payload.forEach(store => {
+      return action.payload.map(store => {
         let index = state.findIndex(storedStore =>
           storedStore.id_store === store.id_store);
 
         if(index === -1) {
           // Save store
-          state.push({
+          return {
             // Related to information of the stores
             id_store: store.id_store,
             street: store.street,
@@ -45,10 +43,10 @@ const storesSlice = createSlice({
               This configuration indicates that the store is one of the route itself.
             */
             route_day_state: store.route_day_state,
-          });
+          };
         } else {
           // The store already exists. Update the information.
-          state[index] = {
+          return {
             ...store,
             route_day_state: store.route_day_state,
           };

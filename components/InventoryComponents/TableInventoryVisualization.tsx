@@ -230,7 +230,6 @@ const TableInventoryVisualization = (
 
                   // Propierties that are always going to be present.
                   let id_product = product.id_product;
-                  let amount = product.amount;
 
                   /* Declaring variables that will store the amount of product for each type of operation*/
                   let suggestedAmount = 0;

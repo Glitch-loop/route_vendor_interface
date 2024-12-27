@@ -118,22 +118,6 @@ const settingAllInventoryOperations:any = {
   toastTitleError:'Error al mostrar inventario final',
   toastMessageError: 'Ha habido un error durante la consulta de las operaciones de inventario del dia, por favor intente nuevamente',
 };
-const settingOperationDescriptionsFinalInventory:any = {
-  showErrorMessage: true,
-  toastTitleError:'Error en mostrar el inventario final',
-  toastMessageError: 'Ha habido un error durante la consulta de las operaciones que componen el inventario final, por favor intente nuevamente',
-};
-const settingFinalInventoryByStores:any = {
-  showErrorMessage: true,
-  toastTitleError:'Error al mostrar inventario final',
-  toastMessageError: 'Ha habido un error durante la consulta de los movimientos de producto por tienda',
-};
-const settingResponseProducts:any = {
-  showErrorMessage: true,
-  toastTitleError: 'Error durante la consulta de productos',
-  toastMessageError: 'Ha habido un error durante la consulta de los productos, por favor intente nuevamente',
-};
-
 
 const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
   // Defining redux context
@@ -200,12 +184,8 @@ const InventoryOperationLayout = ({ navigation }:{ navigation:any }) => {
     })
     .catch(() => { setInventory([]); });
 
-
-    console.log("currentOperation: ", currentOperation)
     // Dertermining if the current process is an inventory visualization or and inventory operation
     if (currentOperation.id_item !== '') { // It is a visualization of inventory operation.
-      console.log("visualization")
-
       // Variables used for final shift inventory
       const startShiftInventoryProduct:IProductInventory[][] = [];
       const restockInventoryProduct:IProductInventory[][] = [];
