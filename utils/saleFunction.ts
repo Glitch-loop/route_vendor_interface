@@ -120,7 +120,7 @@ export function getAmountSpacesNextSection(titleSection:number|string, wordSecti
 export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, indent:number = 0) {
   const anchorPrint:number = 32;
   let text:string = '';
-  let line:string = '';
+  let writtenLine:string = '';
   let filteredLineToWrite:string = '';
   let indentation = 0;
 
@@ -128,13 +128,13 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
   if (indent < 0) {
     indentation = 0;
   } else if  (indent > 32) {
-    indentation = 25;
+    indentation = 25; // Maximum allowed indentantion
   } else {
     indentation = indent;
   }
 
   // Filtering tabulators and enters
-  for (let  i = 0; i < lineToWrite.length; i++) {
+  for (let i = 0; i < lineToWrite.length; i++) {
     if (lineToWrite[i] === '\n') {
       continue;
     } else if (lineToWrite[i] === '\t') {
@@ -149,22 +149,38 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
   // Filtering blank spaces or empty strings.
   const words = wordsToFilter.filter((word:string) => {return word !== '';});
   console.log("-------------------------------")
+  console.log("Words to print: ", words)
   for(let i = 0; i < words.length; i++) {
-    const remaindLenght = indentation + line.length + words[i].length;
+    console.log("Current word: ", words[i], " - word length:", words[i].length)
+    const totalLineLength = indentation + writtenLine.length + words[i].length;
     if (i === words.length - 1) { // Last iteration
-      if (remaindLenght < anchorPrint) {
+      if (totalLineLength < anchorPrint) {
         /*anchorPrint + 1: The addition represents the space between words.*/
-        text = text + ' '.repeat(indentation) + line + words[i];
+        text = text + ' '.repeat(indentation) + writtenLine + words[i];
+        console.log("After LAST word")
+        console.log(text)
+        console.log(writtenLine)
       } else {
-        text = text + '\n' + ' '.repeat(indentation) + line + '\n' + ' '.repeat(indentation) + words[i];
+        text = text + '\n' + ' '.repeat(indentation) + writtenLine + '\n' + ' '.repeat(indentation) + words[i];
+        console.log("After LAST new line creation")
+        console.log(text)
+        console.log(writtenLine)
+
       }
     } else {
-      if (remaindLenght + 1 < anchorPrint) {
-        /*anchorPrint + 1: The addition represents the space between words.*/
-        line = line + words[i] + ' ';
+      console.log("totalLineLength: ", totalLineLength)
+      if (totalLineLength + 1 < anchorPrint) {
+        /*anchorPrint + 1: It represents a 'space' between words.*/
+        console.log("There are room")
+        writtenLine = writtenLine + words[i] + ' ';
       } else {
-        text = text + '\n' + ' '.repeat(indentation) + line;
-        line = words[i] + ' ';
+        console.log("new line")
+        text = text  + ' '.repeat(indentation) + writtenLine + '\n';
+        writtenLine = words[i] + ' ';
+
+        console.log("After new line creation")
+        console.log(text)
+        console.log(writtenLine)
       }
     }
   }
@@ -174,6 +190,7 @@ export function getTicketLine(lineToWrite:string, enterAtTheEnd:boolean = true, 
   } else {
     /* Do nothing*/
   }
+
   console.log("Text to print: ", text)
   return text;
 }
