@@ -53,10 +53,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const [showDialog, setShowDialog] = useState<boolean>(false);
 
   useEffect(() => {
-    // navigation.reset({
-    //   index: 0,
-    //   routes: [{name: 'routeOperationMenu'}],
-    // });
     // Determining if the day is still open
     const endShiftInventoryOperation:IDayOperation|undefined
     = dayOperations.find(dayOperation =>

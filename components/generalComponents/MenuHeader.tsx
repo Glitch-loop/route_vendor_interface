@@ -1,5 +1,5 @@
 // Libraries
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import tw from 'twrnc';
 
@@ -16,8 +16,6 @@ import BluetoothButton from '../generalComponents/BluetoothButton';
 import { getColorContextOfStore, getStoreFromContext } from '../../utils/routesFunctions';
 
 // Auxiliar function
-
-
 function getJustifyContentConfiguration(showGoBackButton:boolean, showRouteName:boolean, showStoreName:boolean, showPrinterButton:boolean):string {
   let justifyConent = 'justify-around w-full';
   let activeFields = 0;
@@ -72,9 +70,12 @@ const MenuHeader = ({
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
 
-
   // Read-only variables
-  let store:IStore&IStoreStatusDay = getStoreFromContext(currentOperation, stores);
+  const store:IStore&IStoreStatusDay = useMemo(() => {
+    return getStoreFromContext(currentOperation, stores);
+  }, [currentOperation, stores]);
+
+  // let store:IStore&IStoreStatusDay = getStoreFromContext(currentOperation, stores);
 
   return (
     <View style={tw`flex flex-row items-center ${getJustifyContentConfiguration(showGoBackButton,
@@ -87,13 +88,17 @@ const MenuHeader = ({
         </View>
       }
       { showRouteName &&
-        <Text style={tw`text-3xl text-black text-center align-middle`}> { routeDay.route_name } </Text>
+        <Text style={tw`text-3xl text-black text-center align-middle`}>
+          { routeDay.route_name }
+        </Text>
       }
       { showRouteName && showStoreName &&
         <Text style={tw`text-2xl text-black text-center align-middle`}>|</Text>
       }
       { showStoreName &&
-        <Text style={tw`max-w-25 ml-3 text-lg text-black text-center align-middle`}> { store.store_name } </Text>
+        <Text style={tw`max-w-25 ml-3 text-lg text-black text-center align-middle`}>
+          { store.store_name }
+        </Text>
       }
       { showStoreName &&
         <View style={tw`${ getColorContextOfStore(store, currentOperation) } rounded-full flex flex-row h-6 w-6`} />
