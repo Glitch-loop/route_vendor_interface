@@ -24,8 +24,10 @@ import InventoryOperationLayout from './layout/InventoryOperationLayout';
 import RouteOperationMenuLayout from './layout/RouteOperationMenuLayout';
 import StoreMenuLayout from './layout/StoreMenuLayout';
 import SalesLayout from './layout/SalesLayout';
-import ToastMessage from './components/generalComponents/ToastMessage';
+import LoginLayout from './layout/LoginLayout';
 
+// Components
+import ToastMessage from './components/generalComponents/ToastMessage';
 
 // Embedded database
 // Queries
@@ -40,6 +42,7 @@ import { requestGeolocalizationPermissionsProcess } from './services/geolocation
 import { createBackgroundSyncProcess } from './services/syncService';
 
 export type RootStackParamList = {
+  login: undefined;
   routeSelection: undefined;
   selectionRouteOperation: undefined;
   inventoryOperation: undefined;
@@ -92,7 +95,11 @@ function App(): React.JSX.Element {
           <View style={tw`w-full h-full`}>
             <ToastMessage />
             {/* <Stack.Navigator initialRouteName="inventoryOperation"> */}
-            <Stack.Navigator initialRouteName="routeSelection">
+            <Stack.Navigator initialRouteName="login">
+              <Stack.Screen
+                name="login"
+                component={LoginLayout}
+                options={{ headerShown: false}}/>
               <Stack.Screen
                 name="routeSelection"
                 component={RouteSelectionLayout}

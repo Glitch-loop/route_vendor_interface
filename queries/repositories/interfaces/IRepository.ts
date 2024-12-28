@@ -4,7 +4,6 @@ import {
   IDayGeneralInformation,
   IDay,
   IRouteDay,
-  IDayOperation,
   IRouteTransaction,
   IRouteTransactionOperation,
   IRouteTransactionOperationDescription,
@@ -29,7 +28,8 @@ export interface IRepository {
   insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>>;
   updateWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):Promise<IResponse<null>>;
 
-  // TODO: Related to users
+  // related to users
+  getUserDataByCellphone(user:IUser):Promise<IResponse<IUser>>;
 
   // Related to products (inventory operations)
   insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>>;

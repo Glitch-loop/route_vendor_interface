@@ -152,17 +152,20 @@ function productCommitedValidation(productInventory:IProductInventory[],
           amount: amountToCommit,
         });
       } else { /* There is not product enough to fullfill both movements */
-        console.log("this movement")
         isNewAmountAllowed = false; // Not possible amount.
-        
+
         if (amountInStockOfCurrentProduct - amountShared > 0) {
           errorCaption = `No hay suficiente stock para completar la reposición y venta. Stock: ${amountInStockOfCurrentProduct}`;
           productCommited.push({
             ...productToCommitFound,
             amount: amountInStockOfCurrentProduct - amountShared,
           });
-        } else {
-          /* All the stock is already being used by shared inventory*/
+        } else { /* All the stock is already being used by shared inventory*/
+          if(isProductReposition) {
+            errorCaption = `Actualmente la totalidad del stock esta siendo usado para la venta. Stock: ${amountInStockOfCurrentProduct}`;
+          } else {
+            errorCaption = `Actualmente la totalidad del stock esta siendo usado para la reposición de producto. Stock: ${amountInStockOfCurrentProduct}`;
+          }
         }
       }
     } else if (productToCommitFound !== undefined) {

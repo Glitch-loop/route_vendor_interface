@@ -244,6 +244,52 @@ export class SupabaseRepository implements IRepository {
   }
 
   // TODO: Related to users
+  async getUserDataByCellphone(user: IUser):Promise<IResponse<IUser>> {
+    const emptyUser:IUser = {
+      id_vendor:  '',
+      cellphone:  '',
+      name:       '',
+      password:   '',
+      status:     0,
+    };
+    try {
+      const { cellphone } = user;
+
+      if(cellphone === undefined) {
+        return createApiResponse(
+          400,
+          emptyUser,
+          null,
+          'Cellphone was not provided.'
+        );
+      } else {
+        const { data, error } = await supabase.from(TABLES.VENDORS)
+        .select()
+        .eq('number', cellphone);
+
+        if (error) {
+          return createApiResponse<IUser>(
+            determinigSQLSupabaseError(error),
+            emptyUser,
+            null,
+            'Failed logging the user.'
+          );
+        } else {
+          const identifiedUser = data.pop();
+          return createApiResponse<IUser>(200, identifiedUser, null, 'Work day updated successfully.');
+        }
+      }
+
+    } catch (error) {
+      return createApiResponse(
+        500,
+        emptyUser,
+        null,
+        'It was not possible to communicate with the server'
+      );
+    }
+  }
+
 
   // Related to products (inventory operations)
   async insertInventoryOperation(inventoryOperation: IInventoryOperation):Promise<IResponse<null>> {
