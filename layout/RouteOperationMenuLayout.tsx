@@ -124,8 +124,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
       }
     });
 
-    console.log("mustBeCompleteProcess: ", mustBeCompleteProcess)
-
     if (mustBeCompleteProcess) {
       dispatch(setCurrentOperation({
         id_day_operation: routeDay.id_route_day, // Specifying that this operation belongs to this day.
@@ -159,7 +157,6 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
       /* The user only will be capable to finish the day if all the records were correctly
       synchronized with the database. */
-      console.log("resultSyncingProcess: ", resultSyncingProcess)
       if (resultSyncingProcess) {
         Toast.show({
           type: 'success',
@@ -174,20 +171,13 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
 
         if(apiResponseStatus(resultCleanDatabase, 200)
         && apiResponseStatus(resultCreateDatabase, 201)) {
-          console.log("database reseted")
           // Clean states
-          console.log("reseting: 1")
           cleanCurrentOperation();
-          console.log("reseting: 2")
           cleanCurrentOperationsList();
-          console.log("reseting: 3")
           cleanProductsInventory();
-          console.log("reseting: 4")
           cleanAllGeneralInformation();
-          console.log("reseting: 5")
           cleanStores();
 
-          console.log("Redirecting")
           // Resetting the navigation stack (avoiding user go back to the route operation).
           navigation.reset({
             index: 0, // Set the index of the new state (0 means first screen)
@@ -197,7 +187,11 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
           // Redirecting to main menu.
           navigation.navigate('routeSelection');
         } else {
-          console.log("BAD")
+          /* Something was wrong*/
+          Toast.show({
+            type: 'error',
+            text1:'Ha habido un error al momento de guardar la información, asegurate de tener conexión a internet para completar el proceso',
+            text2: 'Ha habido un error durante el sincronizado con la base de datos.'});
         }
       } else {
         Toast.show({

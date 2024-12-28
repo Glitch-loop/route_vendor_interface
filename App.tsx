@@ -59,12 +59,12 @@ async function appInitialization() {
     // Dropping database
     console.log("deleting database")
     //await dropEmbeddedDatabase();
-    
+
     // Creating database
     console.log("creating database")
     await createEmbeddedDatabase();
 
-    // await createBackgroundSyncProcess();
+    //await createBackgroundSyncProcess();
     // Verifying permissions
     // Connecting to the printer
     //await getPrinterBluetoothConnection();

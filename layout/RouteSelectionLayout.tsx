@@ -175,12 +175,7 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
   const dispatch: AppDispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
-  // const currentOp = useSelector((state: RootState) => state.currentOperation);
-  // const dayOp = useSelector((state: RootState) => state.dayOperations);
-  // const productsInventory = useSelector((state: RootState) => state.productsInventory);
-  // const routeDay = useSelector((state: RootState) => state.routeDay);
-  // const stores = useSelector((state: RootState) => state.stores);
-  
+
   // Use states definition
   const [routes, setRoutes] = useState<ICompleteRoute[]>([]);
   const [showDialog, setShowDialog] = useState<boolean>(false);
