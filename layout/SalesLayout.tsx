@@ -109,53 +109,88 @@ function productCommitedValidation(productInventory:IProductInventory[],
   productsToCommit:IProductInventory[],
   productSharingInventory:IProductInventory[],
   isProductReposition:boolean) {
+
   let isNewAmountAllowed:boolean = true;
   let errorTitle:string = 'Cantidad a vender excede el inventario.';
   let errorCaption:string = '';
+  const productCommited:IProductInventory[] = [];
 
-  // Verify the amount between salling and repositing don't be grater that the current inventory
+  // Verify the amount between selling and repositioning don't be grater than the current inventory
   productInventory.forEach((product:IProductInventory) => {
+    const amountInStockOfCurrentProduct:number = product.amount;
+    const idCurrentProduct:string = product.id_product;
+    let amountToCommit:number = 0;
+    let amountShared:number = 0;
     // Find the product in the inventory after adding product
     let productToCommitFound:IProductInventory|undefined =
     productsToCommit.find((productRepositionToCommit:IProductInventory) =>
-        { return productRepositionToCommit.id_product === product.id_product; });
+        { return productRepositionToCommit.id_product === idCurrentProduct; });
 
-    // Find product in product commited for sale.
-    let productSharingFound:IProductInventory|undefined = productSharingInventory.find((currentProductSale:IProductInventory) => {
-      return currentProductSale.id_product === product.id_product;
-    });
+    // Find the 'product' in the type of operation that shares the movement.
+    let productSharingFound:IProductInventory|undefined = productSharingInventory.find(
+      (currentProductSale:IProductInventory) => {
+        return currentProductSale.id_product === idCurrentProduct;
+      });
 
-    // Starting distribution of product between concepts
+    // Validating the distribution of the amount for the product between type of movements
     if (productSharingFound !== undefined && productToCommitFound !== undefined) {
       /*
         It means, both concepts are outflowing the same product, so it is needed to verify that
-        both amounts (product reposition and sale) combined don't be grater than what is currently
-        in stock.
+        both amounts (product reposition and sale) don't be grater than the current
+        stock.
       */
-      if(product.amount === 0) { /* There is not product in inventory */
+
+      amountToCommit = productToCommitFound.amount;
+      amountShared = productSharingFound.amount;
+
+      if(amountInStockOfCurrentProduct === 0) { /* There is not product in stock */
         isNewAmountAllowed = false;
-        productToCommitFound.amount = 0; // Beacuse it is not product to fullfill
-        errorCaption = 'Actualmente no hay suficiente inventario disponible para completar toda la solicitud correctamente';
-      } else if ((productSharingFound.amount + productToCommitFound.amount) <= product.amount) {
-        /* Product enough to supply both requests */
-        /* No instrucciones; It's a valid input */
-      } else { /* There is not product enough to fullfil both requests */
+        errorCaption = 'Actualmente no tienes el suficiente stock para el producto, stock: 0';
+      } else if ((amountShared + amountToCommit) <= amountInStockOfCurrentProduct) { /* Product enough to supply both movements */
+        productCommited.push({
+          ...productToCommitFound,
+          amount: amountToCommit,
+        });
+      } else { /* There is not product enough to fullfill both movements */
+        console.log("this movement")
         isNewAmountAllowed = false; // Not possible amount.
-        errorCaption = 'No hay suficiente inventario para completar la reposición y venta.';
-        productToCommitFound.amount = product.amount - productSharingFound.amount;
+        
+        if (amountInStockOfCurrentProduct - amountShared > 0) {
+          errorCaption = `No hay suficiente stock para completar la reposición y venta. Stock: ${amountInStockOfCurrentProduct}`;
+          productCommited.push({
+            ...productToCommitFound,
+            amount: amountInStockOfCurrentProduct - amountShared,
+          });
+        } else {
+          /* All the stock is already being used by shared inventory*/
+        }
       }
     } else if (productToCommitFound !== undefined) {
+      amountToCommit = productToCommitFound.amount;
       /* It means that only one concept (product reposition or sale) is outflowing product. */
-      if (productToCommitFound.amount <= product.amount) {
-        /* No instructions; valid input */
+      if (amountToCommit <= amountInStockOfCurrentProduct) {
+        productCommited.push({
+          ...productToCommitFound,
+          amount: amountToCommit,
+        });
       } else {
-        productToCommitFound.amount = product.amount;
-        isNewAmountAllowed = false; // There is not product enough to fullfill the requeriment.
-        if (isProductReposition) {
-          errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
+        isNewAmountAllowed = false;
+        if(amountInStockOfCurrentProduct > 0) {
+          productCommited.push({
+            ...productToCommitFound,
+            amount: amountInStockOfCurrentProduct,
+          });
+          errorCaption = `Estas excediendo el stock actual del producto, stock: ${amountInStockOfCurrentProduct}`;
         } else {
-          errorCaption = 'Estas intentando vender mas producto del que tienes en el inventario.';
+          errorCaption = 'Actualmente no tienes stock para el producto, stock: 0';
         }
+
+        // isNewAmountAllowed = false; // There is not product enough to fullfill the requeriment.
+        // if (isProductReposition) {
+        //   errorCaption = 'Estas intentando reponer mas producto del que tienes en el inventario.';
+        // } else {
+        //   errorCaption = 'Estas intentando vender mas producto del que tienes en el inventario.';
+        // }
       }
     } else {
       /* Not instructions for this if-else block in this particular function */
@@ -168,7 +203,8 @@ function productCommitedValidation(productInventory:IProductInventory[],
     Toast.show({type: 'error', text1:errorTitle, text2: errorCaption});
   }
 
-  return productsToCommit;
+  return productCommited;
+  //productsToCommit;
 }
 
 function determiningNextStatusOfStore(foundStore: IStore&IStoreStatusDay|undefined):IStore&IStoreStatusDay {
