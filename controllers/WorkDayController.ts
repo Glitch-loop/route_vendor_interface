@@ -4,6 +4,7 @@ import {
   deleteAllWorkDayInformation,
   deleteSyncQueueRecord,
   updateWorkDay,
+  getWorkDay,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Interfaces
@@ -231,3 +232,8 @@ export async function cancelWorkDayUpdate(
   }
 
 }
+
+export async function getWorkDayFromToday():Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {
+  return await getWorkDay();
+}
+

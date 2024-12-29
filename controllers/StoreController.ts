@@ -6,6 +6,7 @@ import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 import {
   insertStores,
   deleteAllStores,
+  getStores,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Interfaces
@@ -32,32 +33,6 @@ import {
 let repository = RepositoryFactory.createRepository('supabase');
 
 // Related to process the information from getters
-/*
-  Function to get the stores that belongs to the current day in the route.
-*/
-export async function getStoresOfRouteDay(routeDay:IRouteDay):Promise<IResponse<IRouteDayStores[]>> {
-  /*
-    Getting the particular stores that belongs to the route day.
-    In addition, this query provides the position of each store in the day.
-  */
-  let resultAllStoresInRoute:IResponse<IRouteDayStores[]> = {
-    responseCode: 500,
-    data: [],
-  };
-  const storesInTheRoute:IRouteDayStores[] = [];
-
-  resultAllStoresInRoute = await repository.getAllStoresInARouteDay(routeDay.id_route_day);
-
-  let allStoreInRoute:IRouteDayStores[] = getDataFromApiResponse(resultAllStoresInRoute);
-
-  allStoreInRoute.forEach((storeInRouteDay) => { storesInTheRoute.push(storeInRouteDay); });
-
-  resultAllStoresInRoute.data = storesInTheRoute;
-
-
-  return resultAllStoresInRoute;
-}
-
 /*
   Function that sets the information needed for the route day.
 */
@@ -98,6 +73,41 @@ async function getStoresInformation(
   resultGetStores.data = stores;
 
   return resultGetStores;
+}
+
+/*
+  Function to get the stores that belongs to the current day in the route.
+*/
+export async function getStoresOfRouteDay(routeDay:IRouteDay):Promise<IResponse<IRouteDayStores[]>> {
+  /*
+    Getting the particular stores that belongs to the route day.
+    In addition, this query provides the position of each store in the day.
+  */
+  let resultAllStoresInRoute:IResponse<IRouteDayStores[]> = {
+    responseCode: 500,
+    data: [],
+  };
+  const storesInTheRoute:IRouteDayStores[] = [];
+
+  resultAllStoresInRoute = await repository.getAllStoresInARouteDay(routeDay.id_route_day);
+
+  let allStoreInRoute:IRouteDayStores[] = getDataFromApiResponse(resultAllStoresInRoute);
+
+  allStoreInRoute.forEach((storeInRouteDay) => { storesInTheRoute.push(storeInRouteDay); });
+
+  resultAllStoresInRoute.data = storesInTheRoute;
+
+
+  return resultAllStoresInRoute;
+}
+
+
+
+/*
+  Get stores of the current work day.
+*/
+export async function getStoresOfTheCurrentWorkDay():Promise<IResponse<(IStore&IStoreStatusDay)[]>> {
+  return await getStores();
 }
 
 // Related to create the list of the stores

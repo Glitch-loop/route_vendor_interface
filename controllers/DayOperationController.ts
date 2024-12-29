@@ -6,6 +6,7 @@ import {
   insertDayOperations,
   insertDayOperation,
   deleteAllDayOperations,
+  getDayOperations,
 } from '../queries/SQLite/sqlLiteQueries';
 
 // Interfaces
@@ -206,3 +207,6 @@ export async function cleanAllDayOperationsFromDatabase() {
   return await deleteAllDayOperations();
 }
 
+export async function getDayOperationsOfTheWorkDay():Promise<IResponse<IDayOperation[]>> {
+  return await getDayOperations();
+}

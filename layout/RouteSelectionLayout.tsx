@@ -2,28 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import tw from 'twrnc';
-import 'react-native-get-random-values'; // Necessary for uuid
 import { ActivityIndicator } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 
-// Databases
-// Main database
-import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
-
-// Embedded database
-import {
-  insertUser,
-  getUsers,
-  getDayOperations,
-  getProducts,
-  getStores,
-  getWorkDay,
-} from '../queries/SQLite/sqlLiteQueries';
-
 // Redux States and reducers
 import { useDispatch, useSelector } from 'react-redux';
-import store, { AppDispatch, RootState } from '../redux/store';
-import { setUser } from '../redux/slices/userSlice';
+import { AppDispatch, RootState } from '../redux/store';
 import { setArrayDayOperations } from '../redux/slices/dayOperationsSlice';
 import {
   setDayInformation,
@@ -32,6 +16,8 @@ import {
   setAllGeneralInformation,
 } from '../redux/slices/routeDaySlice';
 import { setCurrentOperation } from '../redux/slices/currentOperationSlice';
+import { setProductInventory } from '../redux/slices/productsInventorySlice';
+import { setStores } from '../redux/slices/storesSlice';
 
 // Components
 import Card from '../components/Card';
@@ -45,131 +31,20 @@ import {
   IDayOperation,
   IResponse,
   IRoute,
-  IRouteDay,
-  IUser,
 } from '../interfaces/interfaces';
 
 // Utils
 import DAYS from '../lib/days';
 import { current_day_name } from '../utils/momentFormat';
-import { capitalizeFirstLetter } from '../utils/generalFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
-import { apiResponseProcess } from '../utils/apiResponse';
+import { getDataFromApiResponse } from '../utils/apiResponse';
 
-
-// Testing
-import { testingUser } from '../moocks/user';
-import { setProductInventory } from '../redux/slices/productsInventorySlice';
-import { setStores } from '../redux/slices/storesSlice';
-
-// Initializing database repository.
-let repository = RepositoryFactory.createRepository('supabase');
-
-// Extract queriyes
-const {
-  getAllRoutesByVendor,
-  getAllDaysByRoute,
-} = repository;
-
-async function formattingDaysOfTheVendor(vendor:IUser):Promise<ICompleteRoute[]> {
-  try {
-    console.log("Formatting")
-    let completeRoutes:ICompleteRoute[] = [];
-    let currentRoute: ICompleteRoute;
-    let routes:IRoute[] = [];
-    let daysOfRoute:IRouteDay[] = [];
-    let completeDaysOfRoute: ICompleteRouteDay[] = [];
-
-    // Responses
-    const settingResponseRoutesByVendor:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de los dias las rutas',
-      toastMessageError: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente',
-    };
-    const settingResponseDaysOfRoutesByVendor:any = {
-      showErrorMessage: true,
-      toastTitleError: 'Error durante la consulta de los dias de rutas',
-      toastMessageError: 'Ha habido un error durante la consulta de los dias de la ruta, por favor intente nuevamente.',
-    };
-
-    // Getting all vendor's routes
-    console.log("consulting all route")
-    routes = apiResponseProcess(await getAllRoutesByVendor(vendor.id_vendor),
-    settingResponseRoutesByVendor);
-    console.log("routes: ", routes)
-    
-    // Getting all the days in a route
-    console.log("Consulting all days of the route")
-    for (let i = 0; i < routes.length; i++) {
-      daysOfRoute = apiResponseProcess(await getAllDaysByRoute(routes[i].id_route),
-        settingResponseDaysOfRoutesByVendor);
-
-      /* Once all the days of a route have been gotten */
-      // From the current days of a route, get the remaining information for each route.
-      daysOfRoute.forEach(routeDay => {
-        let completeRouteDay:ICompleteRouteDay = {
-          ...routeDay,
-          day: DAYS[routeDay.id_day],
-        };
-        completeDaysOfRoute.push(completeRouteDay);
-      });
-
-      // Ordering days of the route.
-      completeDaysOfRoute.sort((a, b) => a.day.order_to_show - b.day.order_to_show);
-
-      /*
-        Storing the current route (this information contains both the complete information of the
-        route and the information of each days that made up the route).
-      */
-      currentRoute = {
-        ...routes[i],
-        description: capitalizeFirstLetter(routes[i].description),
-        route_name: capitalizeFirstLetter(routes[i].route_name),
-        routeDays: completeDaysOfRoute,
-      };
-      // Avoiding store routes without days.
-      if(completeDaysOfRoute[0] !== undefined) {
-        completeRoutes.push(currentRoute);
-      }
-    }
-
-    return completeRoutes;
-  } catch (error) {
-    console.log("This is the error: ", error)
-
-    Toast.show({type: 'error',
-      text1:'Error durante la consulta de las rutas',
-      text2: 'Ha habido un error durante la consulta de las rutas que tiene asignado el vendedor, por favor intente nuevamente',
-    });
-
-    return [];
-  }
-}
-
-// Determining if there is an initialized day.
-const settingResponseDayOperations:any = {
-  showErrorMessage: true,
-  toastTitleError: 'Error durante la consulta de las operaciones',
-  toastMessageError: 'Al momento de intentar consultar las operaciones del dia de hoy ha habido un error, por favor intente nuevamente',
-};
-
-const settingResponseWorkDay:any = {
-  showErrorMessage: true,
-  toastTitleError: 'Error durante la consulta del dia de trabajo',
-  toastMessageError: 'Al momento de intentar consultar la información general del dia ha habido un error, por favor intente nuevamente',
-};
-
-const settingResponseProducts:any = {
-  showErrorMessage: true,
-  toastTitleError: 'Error durante la consulta de los productos',
-  toastMessageError: 'Al momento de intentar consultar los productos para hacer el inventario ha habido un error, por favor intente nuevamente',
-};
-
-const settingResponseStores:any = {
-  showErrorMessage: true,
-  toastTitleError: 'Error durante la consulta de las tiendas',
-  toastMessageError: 'Al momento de intentar consultar las tiendas para cargar el dia ha habido un error, por favor intente nuevamente',
-};
+// Controllers
+import { getDayOperationsOfTheWorkDay } from '../controllers/DayOperationController';
+import { getAvailableRoutesForTheVendor } from '../controllers/RoutesController';
+import { getWorkDayFromToday } from '../controllers/WorkDayController';
+import { getCurrentVendorInventory } from '../controllers/InventoryController';
+import { getStoresOfTheCurrentWorkDay } from '../controllers/StoreController';
 
 const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   // Redux (context definitions)
@@ -184,12 +59,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
     = useState<ICompleteRouteDay|undefined>(undefined);
 
 
-  // Setting the john doe user for testing
-  /*
-    TODO: This request is made at the beginning of the application (login)
-  */
-
-
   // Setting the current operation 'start shift inventory' (first operation of the day).
   dispatch(setCurrentOperation({
     id_day_operation: '', // Specifying that this operation belongs to this day.
@@ -200,76 +69,47 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   }));
 
   useEffect(() => {
-    // Store information in state.
-    // dispatch(setUser(testingUser));
-    /*
-      In the system can exist different routes (route 1, route 2, route 3), each
-      route is made by "route day" this concept refers that each route will have
-      stores to visit by each day.
-
-      Wrapping up:
-      vendor <-(has a vendor) route <-(belongs to a route) day route
-
-      So, monday of route 1 to thursday of route 1 can differ in the stores that must visit.
-
-      In addition, each route will have assigend a vendor who is in charge of maintin the route.
-    */
-    getDayOperations()
+    getDayOperationsOfTheWorkDay()
     .then(async (dayOperationsResponse:IResponse<IDayOperation[]>) => {
-
-      let dayOperations:IDayOperation[] = apiResponseProcess(
-        dayOperationsResponse,
-        settingResponseDayOperations
-      );
-
-      if (dayOperations.length > 0) {
-        // console.log(currentOp)
-        // console.log(dayOp)
-        // console.log(productsInventory)
-        // console.log(routeDay)
-        // console.log(stores)
-        /*
-          It means it is a day operation, so it is necessary to get retrieve the information and
-          set it in the context.
-        */
-
-        // Getting general information of the day.
-        console.log("GETTING OPERATION OF THE DAY")
-
+      let dayOperations:IDayOperation[] = getDataFromApiResponse(dayOperationsResponse);
+      if (dayOperations.length > 0) { // A day operation exists ()
+        /* Retrieving information of the current day. */
         Toast.show({type: 'info',
           text1:'Consultando información',
           text2: 'Recuperando la información del dia.'});
 
         dispatch(setAllGeneralInformation(
-          apiResponseProcess(await getWorkDay(), settingResponseWorkDay)));
+          getDataFromApiResponse(await getWorkDayFromToday())));
 
-        // // Setting the operations of the day
-        console.log("Getting the day operations")
         dispatch(setArrayDayOperations(dayOperations));
 
-        // // Setting inventory of the day
-        // console.log("Getting products")
-        dispatch(setProductInventory(
-          apiResponseProcess(await getProducts(), settingResponseProducts)));
+        dispatch(setProductInventory(await getCurrentVendorInventory()));
 
-        // // Setting the information of the stores to visit
-        console.log("Getting stores")
-        dispatch(setStores(apiResponseProcess(await getStores(), settingResponseStores)));
+        dispatch(setStores(getDataFromApiResponse(await getStoresOfTheCurrentWorkDay())));
 
-        console.log("Navigation")
         navigation.navigate('routeOperationMenu');
       } else {
-        console.log("NEW DAY")
         /* It is a new 'work' day. */
         // Getting all the routes assigned to a vendor
         Toast.show({type: 'info',
           text1:'Consultando rutas',
           text2: 'Consultando rutas disponibles para el vendedor'});
 
-        formattingDaysOfTheVendor(testingUser)
-          .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); })
-          .catch((error) => {console.log(error)});
+        getAvailableRoutesForTheVendor(user)
+        .then((routesOfVendor:ICompleteRoute[]) => { setRoutes(routesOfVendor); })
+        .catch(() => {
+          Toast.show({type: 'error',
+            text1:'Error durante la consulta de las rutas',
+            text2: 'Ha habido un error durante la consulta de las rutas del vendedor, por favor intente nuevamente',
+          });
+        });
       }
+    })
+    .catch(() => {
+      Toast.show({type: 'error',
+        text1:'Error durante la recuperación de la información',
+        text2: 'Ha habido un error durante la consulta de la información de las rutas, por favor intente nuevamente',
+      });
     });
   },[]);
 
@@ -291,36 +131,6 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
 
     //Storing information related to the relation between the route and the day.
     dispatch(setRouteDay(routeDay));
-
-    /*
-      As part of the configuration for the initial day, it is necessary to store information related
-      to the work day operation
-    */
-
-    // Verifying there is not a registerd user.
-    getUsers().then(async (userResponse:IResponse<IUser[]>) => {
-      const settingResponseUser:any = {
-        showErrorMessage: true,
-        toastTitleError: 'Error durante la obtención de los datos del usuario',
-        toastMessageError: 'Ha ocurrido un error al momento de consultar la información del vendedor, por favor intente nuevamente',
-      };
-
-      let responseUsers:IUser[] = apiResponseProcess(userResponse, settingResponseUser);
-
-      const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
-        return responseUser.id_vendor === testingUser.id_vendor;
-      });
-
-      if (userFound === undefined) {
-        // Store information in embeddded database.
-        await insertUser(testingUser);
-      } else {
-        /*
-          It means the user already exists, so it is not necessary to save the user or vendor.
-        */
-      }
-    })
-    .catch((error:any) => {console.log('There was an error consulting the database: ', error); });
 
     navigation.navigate('selectionRouteOperation');
   };

@@ -348,6 +348,38 @@ export async function getUsers():Promise<IResponse<IUser[]>> {
   }
 }
 
+export async function getUserDataByCellphone(user: IUser):Promise<IResponse<IUser>> {
+  const emptyUser:IUser = {
+    id_vendor:  '',
+    cellphone:  '',
+    name:       '',
+    password:   '',
+    status:     0,
+  };
+  try {
+    const { cellphone } = user;
+
+    let users:IUser = emptyUser;
+
+    if (cellphone !== undefined) {
+      const sqlite = await createSQLiteConnection();
+      const result = await sqlite.executeSql(`SELECT * FROM ${EMBEDDED_TABLES.USER} WHERE cellphone = ?`, [cellphone]);
+
+      result.forEach((record:any) => {
+        for (let index = 0; index < record.rows.length; index++) {
+          users = record.rows.item(index);
+        }
+      });
+
+      return createApiResponse<IUser>(200, users, null, 'The user has been retrieved successfully.');
+    } else {
+      return createApiResponse<IUser>(400, emptyUser, null, 'Something was wrong: Cellphone not provided.');
+    }
+  } catch(error) {
+    return createApiResponse<IUser>(500, emptyUser, null, 'Failed getting users.');
+  }
+}
+
 // Related to products
 /*
   Fucntion for starting a day.

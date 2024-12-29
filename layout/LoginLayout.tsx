@@ -19,16 +19,20 @@ import Toast from 'react-native-toast-message';
 
 
 const LoginLayout = ({ navigation }:{navigation:any}) => {
-
+  // Redux states
   const dispatch:AppDispatch = useDispatch();
 
+  // Declaring states
   const [inputCellphone, setInputCellphone] = useState<string>('');
   const [inputPassword, setInputPassword] = useState<string>('');
 
-
-
   // Handlers
   const handlerLogin = async (cellphone:string, password:string) => {
+    Toast.show({type: 'info',
+      text1:'Validando información.',
+      text2: 'Validando credenciales para acceder.',
+    });
+
     const response:IResponse<IUser> = await loginUser({
       id_vendor: '',
       cellphone: cellphone,
@@ -36,7 +40,7 @@ const LoginLayout = ({ navigation }:{navigation:any}) => {
       password: password,
       status: 0,
     });
-
+    
     const { responseCode, data } = response;
 
     if(responseCode === 200) {
@@ -51,7 +55,6 @@ const LoginLayout = ({ navigation }:{navigation:any}) => {
         text2: 'Ha habido un error durante la autenticación de las credenciales.',
       });
     }
-
   };
 
   return (

@@ -265,8 +265,9 @@ export class SupabaseRepository implements IRepository {
       } else {
         const { data, error } = await supabase.from(TABLES.VENDORS)
         .select()
-        .eq('number', cellphone);
+        .eq('cellphone', cellphone);
 
+        console.log(error)
         if (error) {
           return createApiResponse<IUser>(
             determinigSQLSupabaseError(error),
