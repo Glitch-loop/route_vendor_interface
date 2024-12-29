@@ -138,6 +138,8 @@ const RouteSelectionLayout = ({ navigation }:{navigation:any}) => {
   //Handlers
   const handlerOnSelectARoute = (route:IRoute, routeDay:ICompleteRouteDay) => {
     // Verifying that the selected route actually corresponds to make today.
+    console.log("Current day: ", current_day_name().toLocaleLowerCase())
+    console.log("day selected: ", DAYS[routeDay.id_day].day_name.toLocaleLowerCase())
     if (current_day_name().toLocaleLowerCase()
       === DAYS[routeDay.id_day].day_name.toLocaleLowerCase()){
       // The route selected is the route that corresponds to make today.

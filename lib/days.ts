@@ -11,7 +11,7 @@ const DAYS:any = {
   },
   'f99e5c5f-931d-4466-9e4a-bb4297891c96': {
     id_day: 'f99e5c5f-931d-4466-9e4a-bb4297891c96',
-    day_name: 'Miercoles',
+    day_name: 'Miércoles',
     order_to_show: 3,
   },
   '32e6bbe3-75f9-4554-909e-4759b3300b5b': {
@@ -26,7 +26,7 @@ const DAYS:any = {
   },
   '792014f7-e29b-45b8-b5fe-0c542a25f2b4': {
     id_day: '792014f7-e29b-45b8-b5fe-0c542a25f2b4',
-    day_name: 'Sabado',
+    day_name: 'Sábado',
     order_to_show: 6,
   },
 };
