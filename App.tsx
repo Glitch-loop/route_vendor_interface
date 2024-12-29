@@ -60,7 +60,7 @@ export type RootStackParamList = {
 async function appInitialization() {
   try {
     // Dropping database
-    console.log("deleting database")
+    //console.log("deleting database")
     // await dropEmbeddedDatabase();
 
     // Creating database
