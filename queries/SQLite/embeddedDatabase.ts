@@ -19,7 +19,7 @@ export const userEmbeddedTable = `
   CREATE TABLE IF NOT EXISTS ${EMBEDDED_TABLES.USER} (
     id_vendor TEXT NOT NULL UNIQUE, 
     cellphone TEXT NOT NULL UNIQUE,
-    name      TEXT NOT NULL UNIQUE,
+    name      TEXT NOT NULL,
     password  TEXT NOT NULL UNIQUE,
     status    INT NOT NULL
   );

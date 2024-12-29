@@ -40,7 +40,7 @@ const LoginLayout = ({ navigation }:{navigation:any}) => {
       password: password,
       status: 0,
     });
-    
+
     const { responseCode, data } = response;
 
     if(responseCode === 200) {
