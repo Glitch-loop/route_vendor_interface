@@ -40,6 +40,7 @@ import { getColorContextOfStore } from '../utils/routesFunctions';
 import DAYS_OPERATIONS from '../lib/day_operations';
 import Toast from 'react-native-toast-message';
 import ActionDialog from '../components/ActionDialog';
+import { maintainUserTable } from '../services/authenticationService';
 
 const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   // Redux (context definitions)
@@ -47,6 +48,7 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
   const dayOperations = useSelector((state: RootState) => state.dayOperations);
   const routeDay = useSelector((state: RootState) => state.routeDay);
   const stores = useSelector((state: RootState) => state.stores);
+  const user = useSelector((state: RootState) => state.user);
 
   // States for logic of the layout
   const [isDayWorkClosed, setIsDayWorkClosed] = useState<boolean>(false);
@@ -169,8 +171,12 @@ const RouteOperationMenuLayout = ({ navigation }:{ navigation:any }) => {
         // Creating database with new information.
         const resultCreateDatabase:IResponse<null> = await createEmbeddedDatabase();
 
+        // Maintaining user's table
+        const resultMaintainUsersTable:IResponse<null> = await maintainUserTable(user);
+
         if(apiResponseStatus(resultCleanDatabase, 200)
-        && apiResponseStatus(resultCreateDatabase, 201)) {
+        && apiResponseStatus(resultCreateDatabase, 201)
+        && apiResponseStatus(resultMaintainUsersTable, 200)) {
           // Clean states
           cleanCurrentOperation();
           cleanCurrentOperationsList();

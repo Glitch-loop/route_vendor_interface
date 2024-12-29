@@ -138,6 +138,27 @@ export async function cleanEmbeddedDatbase():Promise<IResponse<null>> {
   }
 }
 
+export async function dropUsersEmbeddedTable():Promise<IResponse<null>> {
+  try {
+    const tablesToDelete:string[] = [
+      EMBEDDED_TABLES.USER,
+    ];
+    const sqlite = await createSQLiteConnection();
+
+    await sqlite.transaction(async (tx) => {
+      const dropTablePromises:any[] = tablesToDelete
+      .map((tableName:string) => {
+        return tx.executeSql(`DROP TABLE IF EXISTS ${tableName};`);
+      });
+
+      Promise.all(dropTablePromises);
+    });
+    return createApiResponse(200, null, null, 'Users embedded table dropped successfully.');
+  } catch(error) {
+    return createApiResponse(500, null, null, 'Failed dropping users embedded table.');
+  }
+}
+
 // Related to work day
 export async function insertWorkDay(workday:IRoute&IDayGeneralInformation&IDay&IRouteDay):
   Promise<IResponse<IRoute&IDayGeneralInformation&IDay&IRouteDay>> {

@@ -6,7 +6,7 @@ import { RepositoryFactory } from '../queries/repositories/RepositoryFactory';
 // Interfaces
 import { IResponse, IUser } from '../interfaces/interfaces';
 import { apiResponseProcess, apiResponseStatus, createApiResponse, getDataFromApiResponse } from '../utils/apiResponse';
-import { getUserDataByCellphone, getUsers, insertUser } from '../queries/SQLite/sqlLiteQueries';
+import { dropUsersEmbeddedTable, getUserDataByCellphone, getUsers, insertUser } from '../queries/SQLite/sqlLiteQueries';
 
 // Initializing database connection
 let repository = RepositoryFactory.createRepository('supabase');
@@ -126,25 +126,46 @@ async function loginUserUsingEmbeddedDatabase(userToLog:IUser):Promise<IResponse
   );
 }
 
-async function update(userToLog:IUser):Promise<void> {
-  // Verifying there is not a registerd user.
-  const allUsers:IResponse<IUser[]> = await getUsers();
+/*
+  The idea here is to maintian the table as small as possbile, in theory, this table should only
+  store the information of the vendor (current user of the device and he is who is doing the 
+  work day).
+*/
+export async function maintainUserTable(currentUser:IUser):Promise<IResponse<null>> {
+  let finalResponseCode:number = 400;
+  let finalMessage:string = '';
 
-  let responseUsers:IUser[] = apiResponseProcess(userResponse, settingResponseUser);
-  
-  const userFound:IUser|undefined = responseUsers.find((responseUser:IUser) => {
-    return responseUser.id_vendor === testingUser.id_vendor;
-  });
-  
-  if (userFound === undefined) {
-    // Store information in embeddded database.
-    await insertUser(testingUser);
-  } else {
-    /*
-      It means the user already exists, so it is not necessary to save the user or vendor.
-    */
+  const { cellphone, password, name } = currentUser;
+
+    if (cellphone && password && name !== '') {
+      const responseGetUserByCellphone = await repository.getUserDataByCellphone(currentUser);
+
+      if(apiResponseStatus(responseGetUserByCellphone, 200)) {
+        const responseDropUsersTable:IResponse<null> = await dropUsersEmbeddedTable();
+
+        if(apiResponseStatus(responseDropUsersTable, 200)) {
+          const responseInsertUser:IResponse<IUser> = await insertUser(currentUser);
+
+          if (apiResponseStatus(responseInsertUser, 201)) {
+            finalResponseCode = 200;
+            finalMessage = 'Process finalized successfully';
+          }
+        } else {
+          finalResponseCode = 400;
+          finalMessage = 'Something was wrong during droping the users table';
+        }
+      } else {
+        finalResponseCode = 400;
+        finalMessage = 'Something was wrong during retreving of user\'s information.';
+      }
+    } else {
+      finalResponseCode = 400;
+      finalMessage = 'Some information is being missing';
+    }
+
+  return createApiResponse(finalResponseCode, null, null, finalMessage);
   }
-}
+
 export async function loginUser(userToLog:IUser):Promise<IResponse<IUser>> {
   const emptyUser:IUser = {
     id_vendor:  '',
@@ -158,14 +179,10 @@ export async function loginUser(userToLog:IUser):Promise<IResponse<IUser>> {
 
   const responseLoginUsingEmbeddedDatabase = await loginUserUsingEmbeddedDatabase(userToLog);
 
-  console.log("userToLog: ", userToLog)
   if(apiResponseStatus(responseLoginUsingEmbeddedDatabase , 200)) {
     finalResponse = responseLoginUsingEmbeddedDatabase;
-    console.log(responseLoginUsingEmbeddedDatabase)
-    console.log("Embedded database")
   } else {
     const responseLoginUsingCentralDatabase = await loginUserUsingCentralDatabase(userToLog);
-    console.log("Central database")
     if(apiResponseStatus(responseLoginUsingCentralDatabase, 200)) {
       // That means the user is not in the embedded database
 
@@ -173,7 +190,6 @@ export async function loginUser(userToLog:IUser):Promise<IResponse<IUser>> {
 
       finalResponse = await insertUser(userInformation);
       if (apiResponseStatus(finalResponse, 201)) {
-        console.log("inserting user")
         finalResponse = responseLoginUsingCentralDatabase;
       } else {
         finalResponse = wrongAnswer;
